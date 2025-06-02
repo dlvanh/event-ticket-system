@@ -55,7 +55,7 @@ public class LoginController {
         }
 
         //Kiểm tra mật khẩu
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mật khẩu không đúng");
         }
 

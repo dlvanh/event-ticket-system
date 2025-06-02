@@ -6,13 +6,13 @@ import org.apache.ibatis.annotations.*;
 @Mapper
 public interface AccountMapper {
 
-    @Select("select email email, password password from users where email = #{email}")
+    @Select("select email email, password_hash password_hash from users where email = #{email}")
     User findByEmail(String email);
 
-    @Insert("INSERT INTO users(email, password, full_name) VALUES(#{email}, #{password}, #{fullName})")
+    @Insert("INSERT INTO users(email, password_hash, full_name) VALUES(#{email}, #{password_hash}, #{fullName})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insertAccount(User user);
 
-    @Update("update users set password = #{password} where email = #{email}")
+    @Update("update users set password_hash = #{passwordHash} where email = #{email}")
     int updatePassword(User user);
 }

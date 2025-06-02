@@ -29,8 +29,8 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void createAccount(User user) {
-        String encodedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(encodedPassword);
+        String encodedPassword = passwordEncoder.encode(user.getPasswordHash());
+        user.setPasswordHash(encodedPassword);
         accountMapper.insertAccount(user);
     }
 

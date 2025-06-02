@@ -84,7 +84,7 @@ public class PasswordResetController {
         }
 
         // Cập nhật mật khẩu mới (mã hóa trước khi lưu)
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         accountService.updateAccount(user);
 
         return ResponseEntity.ok("Đặt lại mật khẩu thành công!");

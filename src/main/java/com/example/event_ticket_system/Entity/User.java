@@ -47,19 +47,6 @@ public class User {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @Size(max = 255)
-    @NotNull
-    @Column(name = "password", nullable = false)
-    private String password;
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public Integer getId() {
         return id;
     }

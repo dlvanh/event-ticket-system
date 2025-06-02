@@ -55,7 +55,7 @@ public class RegistrationController {
         // Tạo tài khoản mới (mật khẩu sẽ được mã hóa trong service)
         User user = new User();
         user.setEmail(registerRequestDTO.getEmail());
-        user.setPassword(registerRequestDTO.getPassword());
+        user.setPasswordHash(registerRequestDTO.getPassword());
         user.setFullName(registerRequestDTO.getFullName());
         accountService.createAccount(user);
 
