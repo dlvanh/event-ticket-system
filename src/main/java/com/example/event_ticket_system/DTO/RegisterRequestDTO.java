@@ -1,8 +1,8 @@
 package com.example.event_ticket_system.DTO;
 
+import com.example.event_ticket_system.ValidLogin.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 
 public class RegisterRequestDTO {
@@ -11,7 +11,7 @@ public class RegisterRequestDTO {
     private String email;
 
     @NotBlank(message = "Mật khẩu là bắt buộc")
-    @Size(min = 8, message = "Mật khẩu phải có ít nhất 8 ký tự")
+    @ValidPassword
     private String password;
 
     @NotBlank(message = "Xác nhận mật khẩu là bắt buộc")
