@@ -27,7 +27,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/login", "/api/register", "/api/verifyCode", "/api/sendVerificationCode", "/api/send-code", "/api/reset-password-by-code").permitAll()
+                        .requestMatchers("/api/login", "/api/register",
+                                "/api/verifyCode", "/api/sendVerificationCode",
+                                "/api/send-code", "/api/reset-password-by-code").permitAll()
 //                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 //                        .requestMatchers("/api/v1/user/**").hasAnyRole("CUSTOMER", "ORGANIZER" , "ADMIN")
                         .anyRequest().authenticated()
@@ -39,7 +41,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:3000"); // Cho phép gọi từ origin này
+        configuration.addAllowedOrigin("http://localhost:4200"); // Cho phép gọi từ origin này
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true); // Nếu bạn cần gửi cookie hoặc thông tin xác thực khác
