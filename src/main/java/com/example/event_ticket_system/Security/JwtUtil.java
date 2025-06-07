@@ -22,17 +22,17 @@ public class JwtUtil {
     }
 
     // Tạo token từ fullname và vai trò
-    public String generateToken(String fullname, String role, Long id) {
-        System.out.println("Generating token for: fullname=" + fullname + ", role=" + role + ", id=" + id);
+    public String generateToken(String fullName, String role, Long id) {
+        System.out.println("Generating token for: fullname=" + fullName + ", role=" + role + ", id=" + id);
         System.out.println("Secret Key: " + SECRET_KEY);
         return Jwts.builder()
-                .setSubject(String.valueOf(id))
-                .claim("fullname", fullname)
-                .claim("role", role)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 giờ
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
+            .setSubject(String.valueOf(id))
+            .claim("user_fullName", fullName)
+            .claim("user_role", role)
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 tiếng
+            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+            .compact();
     }
 
     // Giải mã token và lấy id người dùng
@@ -42,12 +42,12 @@ public class JwtUtil {
 
     // Giải mã token và lấy thông tin fullname
     public String extractFullname(String token) {
-        return extractClaim(token, claims -> claims.get("fullname", String.class));
+        return extractClaim(token, claims -> claims.get("user_fullName", String.class));
     }
 
     // Giải mã token và lấy thông tin vai trò
     public String extractRole(String token) {
-        return extractClaim(token, claims -> claims.get("role", String.class));
+        return extractClaim(token, claims -> claims.get("user_role", String.class));
     }
 
     // Giải mã toàn bộ claims
