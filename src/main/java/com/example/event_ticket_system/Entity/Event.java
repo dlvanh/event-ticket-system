@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class Event {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @Column(name="event_id")
     private Integer eventId;
 
     @ManyToOne

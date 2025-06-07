@@ -1,30 +1,30 @@
 package com.example.event_ticket_system.Entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "order_tickets")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
-@IdClass(OrderTicketsIds.class)
 public class OrderTicket {
     @Id
-    @ManyToOne
-    @JoinColumn(name = "order_id", referencedColumnName = "order_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_ticket_id")
+    private Integer orderTicketId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "ticket_id", referencedColumnName = "ticket_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ticket_id", nullable = false)
     private Ticket ticket;
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    @Column(nullable = false)
+    private int quantity;
 
-    @Column(name="unit_price", nullable = false)
-    private Double unitPrice;
+    @Column(name = "unit_price", nullable = false)
+    private double unitPrice;
 }

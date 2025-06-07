@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 public class Order {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @Column(name = "order_id")
     private Integer orderId;
 
     @ManyToOne

@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class Ticket {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @Column(name = "ticket_id")
     private Integer ticketId;
 
     @ManyToOne
