@@ -32,6 +32,7 @@ public class SecurityConfig {
                                 "/api/verifyCode", "/api/sendVerificationCode",
                                 "/api/send-code", "/api/reset-password-by-code")
                         .permitAll()
+//                        .requestMatchers("/api/**").permitAll()
 
                         // Endpoints for Admin
                         .requestMatchers("/api/v1/admin/**").hasRole("admin")
