@@ -30,6 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/login", "/api/register",
                                 "/api/verifyCode", "/api/sendVerificationCode",
                                 "/api/send-code", "/api/reset-password-by-code").permitAll()
+//                        .requestMatchers("/api/**").permitAll()
 //                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 //                        .requestMatchers("/api/v1/user/**").hasAnyRole("CUSTOMER", "ORGANIZER" , "ADMIN")
                         .anyRequest().authenticated()

@@ -2,7 +2,6 @@ package com.example.event_ticket_system.Entity;
 
 import com.example.event_ticket_system.Enums.PaymentStatus;
 import jakarta.persistence.*;
-import jdk.jfr.Enabled;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

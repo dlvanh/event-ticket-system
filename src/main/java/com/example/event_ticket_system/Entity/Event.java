@@ -1,5 +1,6 @@
 package com.example.event_ticket_system.Entity;
 
+import com.example.event_ticket_system.Enums.ApprovalStatus;
 import com.example.event_ticket_system.Enums.EventStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -49,4 +50,7 @@ public class Event {
     @Column(name="updated_at", nullable = false)
     private java.time.LocalDateTime updatedAt;
 
+    @Column(name="approval_status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ApprovalStatus approvalStatus = ApprovalStatus.pending;
 }
