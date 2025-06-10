@@ -17,15 +17,15 @@ public class EmailService {
     /**
      * Gửi email xác thực với nội dung xác thực được truyền vào.
      *
-     * @param to      địa chỉ email người nhận
-     * @param content nội dung email (ví dụ: "Mã xác thực của bạn là: 123456")
+     * @param toUserEmail      địa chỉ email người nhận
+     * @param verificationCode nội dung email (ví dụ: "Mã xác thực của bạn là: 123456")
      */
-    public void sendVerificationEmail(String to, String content) {
+    public void sendVerificationEmail(String toUserEmail, String verificationCode) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("thuongmaidientu.022025@gmail.com");
-        message.setTo(to);
-        message.setSubject("Xác thực Email của bạn");
-        message.setText(content);
+        message.setFrom("dlvietanh2k4@gmail.com");
+        message.setTo(toUserEmail);
+        message.setSubject("Mã xác thực Email");
+        message.setText("Mã xác thực email của bạn là: " + verificationCode + "\nMã này có hiệu lực trong 5 phút.");
         mailSender.send(message);
     }
 }

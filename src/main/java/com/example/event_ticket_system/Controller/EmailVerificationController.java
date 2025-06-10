@@ -3,7 +3,6 @@ package com.example.event_ticket_system.Controller;
 import com.example.event_ticket_system.DTO.SendCodeRequest;
 import com.example.event_ticket_system.DTO.VerifyCodeDTO;
 import com.example.event_ticket_system.Service.AccountService;
-import com.example.event_ticket_system.Service.EmailService;
 import com.example.event_ticket_system.Service.VerificationCodeService;
 import com.example.event_ticket_system.Service.VerifiedEmailService;
 import jakarta.validation.Valid;
@@ -12,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,24 +30,24 @@ public class EmailVerificationController {
     private static final Logger logger = LoggerFactory.getLogger(EmailVerificationController.class);
 
     private final VerificationCodeService verificationCodeService;
-    private final EmailService emailService; // Service gửi email
+    private final JavaMailSender mailSender;
     private final VerifiedEmailService verifiedEmailService;
     private final AccountService accountService;
 
     @Autowired
     public EmailVerificationController(VerificationCodeService verificationCodeService,
-                                       EmailService emailService,
+                                       JavaMailSender mailSender,
                                        VerifiedEmailService verifiedEmailService,
                                        AccountService accountService) {
         this.verificationCodeService = verificationCodeService;
-        this.emailService = emailService;
+        this.mailSender = mailSender;
         this.verifiedEmailService = verifiedEmailService;
         this.accountService = accountService;
     }
 
     // API gửi mã xác thực đến email
     @PostMapping("/sendVerificationCode")
-    public ResponseEntity<?> sendVerificationCode(@Valid @RequestBody SendCodeRequest sendCodeRequest,
+    public ResponseEntity<?> sendVerificationCode(@Valid @RequestBody SendCodeRequest request,
                                                   BindingResult bindingResult) {
         // Kiểm tra lỗi validate đầu vào
         if (bindingResult.hasErrors()) {
@@ -56,7 +57,7 @@ public class EmailVerificationController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
         }
 
-        String email = sendCodeRequest.getEmail();
+        String email = request.getEmail();
 
         // Kiểm tra xem email đã tồn tại trong hệ thống chưa
         if (accountService.existsByEmail(email)) {
@@ -67,9 +68,16 @@ public class EmailVerificationController {
         String code = verificationCodeService.generateAndSaveCode(email);
 
         // TODO: Thực hiện gửi email chứa mã xác thực đến địa chỉ email trên
+        // Gửi email chứa mã xác thực
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(request.getEmail());
+        mailMessage.setSubject("Mã xác thực email");
+        mailMessage.setText("Mã xác thực của bạn là: " + code + "\nMã này có hiệu lực trong 5 phút.");
+        mailSender.send(mailMessage);
+
         // Ví dụ: emailService.sendVerificationEmail(email, code);
 
-        return ResponseEntity.ok("Mã xác thực đã được gửi tới email");
+        return ResponseEntity.ok("Mã xác thực đã được gửi tới email. Vui lòng kiểm tra email của bạn.");
     }
 
     // API xác thực mã
@@ -96,7 +104,7 @@ public class EmailVerificationController {
             // Trả về JSON kiểu { "error": "Mã xác thực không hợp lệ..." } + status 400
             Map<String, String> response = new HashMap<>();
             response.put("error", "Mã xác thực không hợp lệ hoặc đã hết hạn");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.badRequest().body(response);
         }
     }
 

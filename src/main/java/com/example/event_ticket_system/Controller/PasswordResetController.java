@@ -1,6 +1,7 @@
 package com.example.event_ticket_system.Controller;
 
 import com.example.event_ticket_system.DTO.ResetPasswordByCodeRequest;
+import com.example.event_ticket_system.DTO.SendCodeRequest;
 import com.example.event_ticket_system.Entity.User;
 import com.example.event_ticket_system.Service.AccountService;
 import com.example.event_ticket_system.Service.VerificationCodeService;
@@ -42,7 +43,7 @@ public class PasswordResetController {
 
     // Endpoint gửi mã xác thực đến email của người dùng (giữ nguyên)
     @PostMapping("/send-code")
-    public ResponseEntity<?> sendVerificationCode(@Valid @RequestBody com.example.event_ticket_system.DTO.SendCodeRequest request) {
+    public ResponseEntity<?> sendVerificationCode(@Valid @RequestBody SendCodeRequest request) {
         User user = accountService.findByEmail(request.getEmail());
         if (user == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email không tồn tại");
