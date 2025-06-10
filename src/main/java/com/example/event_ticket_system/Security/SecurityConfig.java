@@ -27,12 +27,24 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints
                         .requestMatchers("/api/login", "/api/register",
                                 "/api/verifyCode", "/api/sendVerificationCode",
-                                "/api/send-code", "/api/reset-password-by-code").permitAll()
+                                "/api/send-code", "/api/reset-password-by-code")
+                        .permitAll()
 //                        .requestMatchers("/api/**").permitAll()
-//                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-//                        .requestMatchers("/api/v1/user/**").hasAnyRole("CUSTOMER", "ORGANIZER" , "ADMIN")
+
+                        // Endpoints for Admin
+                        .requestMatchers("/api/v1/admin/**").hasRole("admin")
+
+                        // Endpoints for Customer
+                        .requestMatchers("/api/v1/customer/**").hasRole("customer")
+
+                        // Endpoints for Organizer
+                        .requestMatchers("/api/v1/organizer/**").hasRole("organizer")
+
+                        //
+                        .requestMatchers("/api/v1/user/**").hasAnyRole("customer", "organizer" , "admin")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.*;
 @Mapper
 public interface AccountMapper {
 
-    @Select("select email email, password_hash passwordHash from users where email = #{email}")
+    @Select("select user_id id, role role, full_name fullName, email email, password_hash passwordHash from users where email = #{email}")
     User findByEmail(String email);
 
     @Insert("INSERT INTO users(email, password_hash, full_name) VALUES(#{email}, #{passwordHash}, #{fullName})")
