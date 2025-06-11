@@ -1,7 +1,7 @@
 package com.example.event_ticket_system.Controller;
 
-import com.example.event_ticket_system.DTO.ResetPasswordByCodeRequest;
-import com.example.event_ticket_system.DTO.SendCodeRequest;
+import com.example.event_ticket_system.DTO.request.ResetPasswordByCodeRequest;
+import com.example.event_ticket_system.DTO.request.SendCodeRequest;
 import com.example.event_ticket_system.Entity.User;
 import com.example.event_ticket_system.Service.AccountService;
 import com.example.event_ticket_system.Service.EmailService;

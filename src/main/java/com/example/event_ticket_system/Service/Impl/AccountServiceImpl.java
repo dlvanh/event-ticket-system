@@ -1,7 +1,8 @@
-package com.example.event_ticket_system.Service;
+package com.example.event_ticket_system.Service.Impl;
 
 import com.example.event_ticket_system.Entity.User;
 import com.example.event_ticket_system.Mapper.AccountMapper;
+import com.example.event_ticket_system.Service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;

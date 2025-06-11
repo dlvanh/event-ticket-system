@@ -1,7 +1,7 @@
 package com.example.event_ticket_system.Controller;
 
-import com.example.event_ticket_system.DTO.SendCodeRequest;
-import com.example.event_ticket_system.DTO.VerifyCodeDTO;
+import com.example.event_ticket_system.DTO.request.SendCodeRequest;
+import com.example.event_ticket_system.DTO.request.VerifyCodeDTO;
 import com.example.event_ticket_system.Service.AccountService;
 import com.example.event_ticket_system.Service.EmailService;
 import com.example.event_ticket_system.Service.VerificationCodeService;

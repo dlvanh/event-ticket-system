@@ -32,19 +32,19 @@ public class SecurityConfig {
                                 "/api/verifyCode", "/api/sendVerificationCode",
                                 "/api/send-code", "/api/reset-password-by-code")
                         .permitAll()
-//                        .requestMatchers("/api/**").permitAll()
-
-                        // Endpoints for Admin
-                        .requestMatchers("/api/v1/admin/**").hasRole("admin")
-
-                        // Endpoints for Customer
-                        .requestMatchers("/api/v1/customer/**").hasRole("customer")
-
-                        // Endpoints for Organizer
-                        .requestMatchers("/api/v1/organizer/**").hasRole("organizer")
-
-                        //
-                        .requestMatchers("/api/v1/user/**").hasAnyRole("customer", "organizer" , "admin")
+                        .requestMatchers("/api/**").permitAll()
+//
+//                        // Endpoints for Admin
+//                        .requestMatchers("/api/v1/admin/**").hasRole("admin")
+//
+//                        // Endpoints for Customer
+//                        .requestMatchers("/api/v1/customer/**").hasRole("customer")
+//
+//                        // Endpoints for Organizer
+//                        .requestMatchers("/api/v1/organizer/**").hasRole("organizer")
+//
+//                        /
+//                        .requestMatchers("/api/v1/user/**").hasAnyRole("customer", "organizer" , "admin")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

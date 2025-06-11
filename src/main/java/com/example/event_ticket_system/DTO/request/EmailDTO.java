@@ -1,4 +1,4 @@
-package com.example.event_ticket_system.DTO;
+package com.example.event_ticket_system.DTO.request;
 
 public class EmailDTO {
     private String email;
