@@ -4,13 +4,12 @@ import com.example.event_ticket_system.DTO.ResetPasswordByCodeRequest;
 import com.example.event_ticket_system.DTO.SendCodeRequest;
 import com.example.event_ticket_system.Entity.User;
 import com.example.event_ticket_system.Service.AccountService;
+import com.example.event_ticket_system.Service.EmailService;
 import com.example.event_ticket_system.Service.VerificationCodeService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,17 +26,17 @@ public class PasswordResetController {
 
     private final AccountService accountService;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final JavaMailSender mailSender;
+    private final EmailService emailService;
     private final VerificationCodeService verificationCodeService;
 
     @Autowired
     public PasswordResetController(AccountService accountService,
                                    BCryptPasswordEncoder passwordEncoder,
-                                   JavaMailSender mailSender,
+                                   EmailService emailService,
                                    VerificationCodeService verificationCodeService) {
         this.accountService = accountService;
         this.passwordEncoder = passwordEncoder;
-        this.mailSender = mailSender;
+        this.emailService = emailService;
         this.verificationCodeService = verificationCodeService;
     }
 
@@ -51,13 +50,7 @@ public class PasswordResetController {
 
         // Tạo mã xác thực và lưu trữ
         String code = verificationCodeService.generateAndSaveCode(request.getEmail());
-
-        // Gửi email chứa mã xác thực
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(request.getEmail());
-        mailMessage.setSubject("Mã xác thực đặt lại mật khẩu");
-        mailMessage.setText("Mã xác thực của bạn là: " + code + "\nMã này có hiệu lực trong 5 phút.");
-        mailSender.send(mailMessage);
+        emailService.sendVerificationEmail(request.getEmail(), code);
 
         return ResponseEntity.ok("Mã xác thực đã được gửi đến email của bạn.");
     }

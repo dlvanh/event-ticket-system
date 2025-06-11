@@ -3,6 +3,7 @@ package com.example.event_ticket_system.Controller;
 import com.example.event_ticket_system.DTO.SendCodeRequest;
 import com.example.event_ticket_system.DTO.VerifyCodeDTO;
 import com.example.event_ticket_system.Service.AccountService;
+import com.example.event_ticket_system.Service.EmailService;
 import com.example.event_ticket_system.Service.VerificationCodeService;
 import com.example.event_ticket_system.Service.VerifiedEmailService;
 import jakarta.validation.Valid;
@@ -11,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,17 +29,17 @@ public class EmailVerificationController {
     private static final Logger logger = LoggerFactory.getLogger(EmailVerificationController.class);
 
     private final VerificationCodeService verificationCodeService;
-    private final JavaMailSender mailSender;
+    private final EmailService emailService;
     private final VerifiedEmailService verifiedEmailService;
     private final AccountService accountService;
 
     @Autowired
     public EmailVerificationController(VerificationCodeService verificationCodeService,
-                                       JavaMailSender mailSender,
+                                       EmailService emailService,
                                        VerifiedEmailService verifiedEmailService,
                                        AccountService accountService) {
         this.verificationCodeService = verificationCodeService;
-        this.mailSender = mailSender;
+        this.emailService = emailService;
         this.verifiedEmailService = verifiedEmailService;
         this.accountService = accountService;
     }
@@ -60,22 +59,13 @@ public class EmailVerificationController {
         String email = request.getEmail();
 
         // Kiểm tra xem email đã tồn tại trong hệ thống chưa
-        if (accountService.existsByEmail(email)) {
+        if (accountService.existsByEmail(request.getEmail())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Email đã được sử dụng");
         }
 
         // Tạo và lưu mã xác thực cho email
         String code = verificationCodeService.generateAndSaveCode(email);
-
-        // TODO: Thực hiện gửi email chứa mã xác thực đến địa chỉ email trên
-        // Gửi email chứa mã xác thực
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(request.getEmail());
-        mailMessage.setSubject("Mã xác thực email");
-        mailMessage.setText("Mã xác thực của bạn là: " + code + "\nMã này có hiệu lực trong 5 phút.");
-        mailSender.send(mailMessage);
-
-        // Ví dụ: emailService.sendVerificationEmail(email, code);
+        emailService.sendVerificationEmail(email, code);
 
         return ResponseEntity.ok("Mã xác thực đã được gửi tới email. Vui lòng kiểm tra email của bạn.");
     }
