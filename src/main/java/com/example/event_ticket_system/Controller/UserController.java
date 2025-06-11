@@ -124,4 +124,28 @@ public class UserController {
             );
         }
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> getUserById(@PathVariable Integer id) {
+        try {
+            return APIResponse.responseBuilder(
+                    userService.getUserById(id),
+                    "User retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during retrieving user by ID", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while retrieving user",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }
