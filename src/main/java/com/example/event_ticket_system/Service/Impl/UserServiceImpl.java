@@ -148,4 +148,10 @@ public class UserServiceImpl implements UserService {
         return dto;
     }
 
+    @Override
+    public UserResponseDto getUserById(Integer id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+        return convertToDTO(user);
+    }
 }
