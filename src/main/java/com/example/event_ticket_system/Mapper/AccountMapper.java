@@ -15,4 +15,5 @@ public interface AccountMapper {
 
     @Update("update users set password_hash = #{passwordHash} where email = #{email}")
     int updatePassword(User user);
+
 }

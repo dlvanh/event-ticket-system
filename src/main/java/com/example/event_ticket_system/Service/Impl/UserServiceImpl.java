@@ -1,0 +1,151 @@
+package com.example.event_ticket_system.Service.Impl;
+
+import com.example.event_ticket_system.DTO.response.UserResponseDto;
+import com.example.event_ticket_system.Entity.User;
+import com.example.event_ticket_system.Enums.UserStatus;
+import com.example.event_ticket_system.Repository.UserRepository;
+import com.example.event_ticket_system.Security.JwtUtil;
+import com.example.event_ticket_system.Service.UserService;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class UserServiceImpl implements UserService {
+    private final UserRepository userRepository;
+
+    @Autowired
+    private final JwtUtil jwtUtil;
+
+    @Override
+    public void deleteUsersByIds(List<Integer> ids, HttpServletRequest request) {
+        String role = jwtUtil.extractRole(jwtUtil.extractRole(request.getHeader("Authorization").substring(7)));
+        if (!role.equals("admin")) {
+            throw new SecurityException("You do not have permission to delete users.");
+        }
+        List<User> usersToDelete = userRepository.findAllById(ids);
+
+        List<Integer> existingIds = usersToDelete.stream()
+                .map(User::getId)
+                .toList();
+
+        List<Integer> notFoundIds = ids.stream()
+                .filter(id -> !existingIds.contains(id))
+                .toList();
+
+        if (!notFoundIds.isEmpty()) {
+            throw new EntityNotFoundException("Users not found for ids: " + notFoundIds);
+        }
+
+        userRepository.deleteAll(usersToDelete);
+    }
+
+    @Override
+    public void disableUsersByIds(List<Integer> ids, HttpServletRequest request) {
+//        String role = jwtUtil.extractRole(jwtUtil.extractRole(request.getHeader("Authorization").substring(7)));
+//        if (!"admin".equals(role)) {
+//            throw new SecurityException("You do not have permission to disable users.");
+//        }
+
+        // Lấy danh sách người dùng thực tế từ DB
+        List<User> usersToDisable = userRepository.findAllById(ids);
+
+        // Tìm các ID không tồn tại
+        Set<Integer> foundIds = usersToDisable.stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
+
+        List<Integer> notFoundIds = ids.stream()
+                .filter(id -> !foundIds.contains(id))
+                .toList();
+
+        if (!notFoundIds.isEmpty()) {
+            throw new EntityNotFoundException("Users not found for IDs: " + notFoundIds);
+        }
+
+        // Tìm các user đã bị vô hiệu hóa
+        List<Integer> alreadyInactiveIds = usersToDisable.stream()
+                .filter(user -> user.getStatus() == UserStatus.inactive)
+                .map(User::getId)
+                .toList();
+
+        if (!alreadyInactiveIds.isEmpty()) {
+            throw new IllegalStateException("The following users ids are already inactive: " + alreadyInactiveIds);
+        }
+
+        // Cập nhật status cho các user còn lại
+        for (User user : usersToDisable) {
+            user.setStatus(UserStatus.inactive);
+        }
+
+        userRepository.saveAll(usersToDisable);
+    }
+
+
+    @Override
+    public Map<String, Object> getAllUsers(HttpServletRequest request, String status, String role, Integer page, Integer size) {
+//        String userRole = jwtUtil.extractRole(jwtUtil.extractRole(request.getHeader("Authorization").substring(7)));
+//        if (!"admin".equals(userRole)) {
+//            throw new SecurityException("You do not have permission to view user list.");
+//        }
+
+        if (page > 0) {
+            page = page - 1;
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Specification<User> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (status != null && !status.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            }
+            if (role != null && !role.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("role"), role));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<User> pageUser = userRepository.findAll(specification, pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("listUsers", pageUser.getContent().stream().map(this::convertToDTO).collect(Collectors.toList()));
+        response.put("pageSize", pageUser.getSize());
+        response.put("pageNo", pageUser.getNumber() + 1);
+        response.put("totalPage", pageUser.getTotalPages());
+
+        return response;
+    }
+
+    private UserResponseDto convertToDTO(User user) {
+        UserResponseDto dto = new UserResponseDto();
+        dto.setId(user.getId());
+        dto.setFullName(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setRole(String.valueOf(user.getRole()));
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setGender(String.valueOf(user.getGender()));
+        dto.setAddress(user.getAddress());
+        dto.setBio(user.getBio());
+        dto.setStatus(String.valueOf(user.getStatus()));
+        dto.setCreatedAt(user.getCreatedAt().toString());
+        dto.setUpdatedAt(user.getUpdatedAt() != null ? user.getUpdatedAt().toString() : null);
+        return dto;
+    }
+
+}

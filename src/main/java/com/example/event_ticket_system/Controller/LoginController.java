@@ -1,6 +1,6 @@
 package com.example.event_ticket_system.Controller;
 
-import com.example.event_ticket_system.DTO.LoginRequestDTO;
+import com.example.event_ticket_system.DTO.request.LoginRequestDTO;
 import com.example.event_ticket_system.Entity.User;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.AccountService;

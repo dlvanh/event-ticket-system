@@ -1,4 +1,4 @@
-package com.example.event_ticket_system.DTO;
+package com.example.event_ticket_system.DTO.request;
 import com.example.event_ticket_system.ValidLogin.PasswordMatches;
 import com.example.event_ticket_system.ValidLogin.ValidPassword;
 import jakarta.validation.constraints.Email;
