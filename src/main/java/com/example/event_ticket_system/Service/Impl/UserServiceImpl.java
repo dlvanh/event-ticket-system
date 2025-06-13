@@ -218,4 +218,12 @@ public class UserServiceImpl implements UserService {
 
         return user.getProfilePicture();
     }
+
+    @Override
+    public UserResponseDto getCurrentUserProfile(HttpServletRequest request) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        return convertToDTO(user);
+    }
 }
