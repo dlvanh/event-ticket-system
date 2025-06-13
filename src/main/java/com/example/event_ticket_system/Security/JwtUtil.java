@@ -36,8 +36,8 @@ public class JwtUtil {
     }
 
     // Giải mã token và lấy id người dùng
-    public Long extractUserId(String token) {
-        return Long.valueOf(extractAllClaims(token).getSubject());
+    public Integer extractUserId(String token) {
+        return Math.toIntExact(Long.parseLong(extractAllClaims(token).getSubject()));
     }
 
     // Giải mã token và lấy thông tin fullname

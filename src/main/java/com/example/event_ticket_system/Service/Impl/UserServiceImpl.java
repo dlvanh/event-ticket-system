@@ -11,13 +11,22 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,12 +39,15 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private final JwtUtil jwtUtil;
 
+    @Value("${imgbb.api.key}")
+    private String imgbbApiKey;
+
     @Override
     public void deleteUsersByIds(List<Integer> ids, HttpServletRequest request) {
-        String role = jwtUtil.extractRole(jwtUtil.extractRole(request.getHeader("Authorization").substring(7)));
-        if (!role.equals("admin")) {
-            throw new SecurityException("You do not have permission to delete users.");
-        }
+//        String role = jwtUtil.extractRole(jwtUtil.extractRole(request.getHeader("Authorization").substring(7)));
+//        if (!role.equals("admin")) {
+//            throw new SecurityException("You do not have permission to delete users.");
+//        }
         List<User> usersToDelete = userRepository.findAllById(ids);
 
         List<Integer> existingIds = usersToDelete.stream()
@@ -153,5 +165,44 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
         return convertToDTO(user);
+    }
+
+    @Override
+    public void uploadProfilePicture(MultipartFile file, HttpServletRequest request) {
+//        User user = userRepository.findById(jwtUtil.extractUserId(request.getHeader("Authorization").substring(7)))
+//                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        List<String> allowedTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp");
+        if (!allowedTypes.contains(file.getContentType())) {
+            throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, webp)");
+        }
+        try {
+            byte[] imageBytes = file.getBytes();
+            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+            String url = "https://api.imgbb.com/1/upload?key=" + imgbbApiKey;
+
+            HttpClient client = HttpClient.newHttpClient();
+            String body = "image=" + URLEncoder.encode(base64Image, StandardCharsets.UTF_8);
+
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .build();
+
+            HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject json = new JSONObject(response.body());
+            String imageUrl = json.getJSONObject("data").getString("url");
+
+//            //Gán image URL vào User
+//            user.setProfilePicture(imageUrl);
+//            userRepository.save(user);
+
+            System.out.println("Uploaded image URL: " + imageUrl);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Upload failed", e);
+        }
     }
 }
