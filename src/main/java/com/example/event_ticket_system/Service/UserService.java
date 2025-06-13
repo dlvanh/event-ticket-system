@@ -10,7 +10,9 @@ import java.util.Map;
 public interface UserService {
     UserResponseDto getUserById(Integer id);
     void uploadProfilePicture(MultipartFile file, HttpServletRequest request);
+    String getProfilePictureUrl( HttpServletRequest request);
     void deleteUsersByIds(List<Integer> ids, HttpServletRequest request);
     void disableUsersByIds(List<Integer> ids, HttpServletRequest request);
     Map<String,Object> getAllUsers(HttpServletRequest request, String status, String role, Integer page, Integer size);
+
 }
