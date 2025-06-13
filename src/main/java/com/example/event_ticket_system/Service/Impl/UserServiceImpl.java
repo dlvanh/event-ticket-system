@@ -205,4 +205,17 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Upload failed", e);
         }
     }
+
+    @Override
+    public String getProfilePictureUrl(HttpServletRequest request) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        if (user.getProfilePicture() == null || user.getProfilePicture().isEmpty()) {
+            return "https://i.ibb.co/21Lgqmdq/1c36d32072ca.png";
+        }
+
+        return user.getProfilePicture();
+    }
 }

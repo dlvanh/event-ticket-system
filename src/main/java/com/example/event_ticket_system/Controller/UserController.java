@@ -180,4 +180,29 @@ public class UserController {
             );
         }
     }
+
+    @GetMapping("/profile-picture")
+    public ResponseEntity<Object> getProfilePictureUrl(HttpServletRequest request) {
+        try {
+            String imageUrl = userService.getProfilePictureUrl(request);
+            return APIResponse.responseBuilder(
+                    imageUrl,
+                    "Profile picture URL retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during retrieving profile picture URL", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while retrieving profile picture URL",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }
