@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -144,6 +145,37 @@ public class UserController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while retrieving user",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PostMapping("/upload-profile-picture")
+    public ResponseEntity<Object> uploadProfilePicture(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
+        try {
+            userService.uploadProfilePicture(file, request);
+            return APIResponse.responseBuilder(
+                    null,
+                    "Profile picture uploaded successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        }catch (IllegalArgumentException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during profile picture upload", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while uploading profile picture",
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
