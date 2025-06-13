@@ -205,4 +205,28 @@ public class UserController {
             );
         }
     }
+
+    @GetMapping("/current-profile")
+    public ResponseEntity<Object> getCurrentUserProfile(HttpServletRequest request) {
+        try {
+            return APIResponse.responseBuilder(
+                    userService.getCurrentUserProfile(request),
+                    "Current user profile retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during retrieving current user profile", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while retrieving current user profile",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

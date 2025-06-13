@@ -9,6 +9,7 @@ import java.util.Map;
 
 public interface UserService {
     UserResponseDto getUserById(Integer id);
+    UserResponseDto getCurrentUserProfile(HttpServletRequest request);
     void uploadProfilePicture(MultipartFile file, HttpServletRequest request);
     String getProfilePictureUrl( HttpServletRequest request);
     void deleteUsersByIds(List<Integer> ids, HttpServletRequest request);
