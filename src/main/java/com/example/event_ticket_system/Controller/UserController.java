@@ -1,5 +1,6 @@
 package com.example.event_ticket_system.Controller;
 
+import com.example.event_ticket_system.DTO.request.UpdateProfileRequest;
 import com.example.event_ticket_system.DTO.response.APIResponse;
 import com.example.event_ticket_system.DTO.request.DeleteRequest;
 import com.example.event_ticket_system.Service.UserService;
@@ -225,6 +226,45 @@ public class UserController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while retrieving current user profile",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<Object> updateUserProfile(@RequestBody UpdateProfileRequest updateProfileRequestequest, HttpServletRequest request) {
+        try {
+            if (updateProfileRequestequest.getId() == null || updateProfileRequestequest.getId().describeConstable().isEmpty()) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "User ID is required for updating profile",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+
+            userService.updateUserProfile(updateProfileRequestequest, request);
+            return APIResponse.responseBuilder(
+                    null,
+                    "User profile updated successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (IllegalArgumentException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during updating user profile", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while updating user profile",
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }

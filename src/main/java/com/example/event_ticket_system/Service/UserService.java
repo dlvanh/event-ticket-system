@@ -1,5 +1,6 @@
 package com.example.event_ticket_system.Service;
 
+import com.example.event_ticket_system.DTO.request.UpdateProfileRequest;
 import com.example.event_ticket_system.DTO.response.UserResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,5 +16,5 @@ public interface UserService {
     void deleteUsersByIds(List<Integer> ids, HttpServletRequest request);
     void disableUsersByIds(List<Integer> ids, HttpServletRequest request);
     Map<String,Object> getAllUsers(HttpServletRequest request, String status, String role, Integer page, Integer size);
-
+    void updateUserProfile(UpdateProfileRequest request, HttpServletRequest httpServletRequest);
 }
