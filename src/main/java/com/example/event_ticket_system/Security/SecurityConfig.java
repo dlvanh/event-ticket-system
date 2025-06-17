@@ -1,5 +1,6 @@
 package com.example.event_ticket_system.Security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,29 +26,33 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
+        http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
+                        // TODO: cho các endpoints của auth vào 1 file
                         .requestMatchers("/api/login", "/api/register",
                                 "/api/verifyCode", "/api/sendVerificationCode",
-                                "/api/send-code", "/api/reset-password-by-code")
+                                "/api/send-code", "/api/reset-password-by-code",
+                                "/api/public/**")
                         .permitAll()
-                        .requestMatchers("/api/**").permitAll()
-//
-//                        // Endpoints for Admin
-//                        .requestMatchers("/api/v1/admin/**").hasRole("admin")
-//
-//                        // Endpoints for Customer
-//                        .requestMatchers("/api/v1/customer/**").hasRole("customer")
-//
-//                        // Endpoints for Organizer
-//                        .requestMatchers("/api/v1/organizer/**").hasRole("organizer")
-//
-//                        /
-//                        .requestMatchers("/api/v1/user/**").hasAnyRole("customer", "organizer" , "admin")
+                        //.requestMatchers("/api/**").permitAll()
+                        // Role based endpoints
+                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_admin")
+                        .requestMatchers("/api/customer/**").hasAuthority("ROLE_customer")
+                        .requestMatchers("/api/organizer/**").hasAuthority("ROLE_organizer")
+
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(exh -> exh
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("Unauthorized: " + authException.getMessage());
+                        })
+                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
