@@ -28,8 +28,9 @@ public class Event {
     @Column(name="description")
     private String description;
 
-    @Column(name="location", nullable = false)
-    private String location;
+    @ManyToOne
+    @JoinColumn(name="ward_id", referencedColumnName = "ward_id", nullable = false)
+    private Ward ward;
 
     @Column(name="start_time", nullable = false)
     private java.time.LocalDateTime startTime;
@@ -53,4 +54,7 @@ public class Event {
     @Column(name="approval_status", nullable = false)
     @Enumerated(EnumType.STRING)
     private ApprovalStatus approvalStatus = ApprovalStatus.pending;
+
+    @Column(name="address_detail")
+    private String addressDetail;
 }
