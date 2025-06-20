@@ -263,4 +263,26 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
     }
+
+    @Override
+    public void approveOrganizer(Integer userId, HttpServletRequest request) {
+        String role = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+        if (!"ROLE_admin".equals(role)) {
+            throw new SecurityException("You do not have permission to approve organizers.");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        if (user.getRole() == com.example.event_ticket_system.Enums.UserRole.organizer) {
+            throw new IllegalStateException("User is already an organizer.");
+        }
+
+        if (user.getStatus() != UserStatus.active) {
+            throw new IllegalStateException("User must be active to be approved as an organizer.");
+        }
+
+        user.setRole(com.example.event_ticket_system.Enums.UserRole.organizer);
+        userRepository.save(user);
+    }
 }

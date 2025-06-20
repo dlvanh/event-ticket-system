@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -265,6 +266,44 @@ public class UserController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while updating user profile",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PostMapping("/admin/approve-organizer")
+    @PreAuthorize("hasAuthority('ROLE_admin')")
+    public ResponseEntity<Object> approveOrganizer(@RequestParam("userId") Integer userId, HttpServletRequest request) {
+        try {
+            userService.approveOrganizer(userId, request);
+            return APIResponse.responseBuilder(
+                    null,
+                    "Organizer approved successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (IllegalArgumentException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (IllegalStateException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.CONFLICT
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during approving organizer", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while approving organizer",
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }

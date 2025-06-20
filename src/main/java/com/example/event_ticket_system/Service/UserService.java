@@ -17,4 +17,5 @@ public interface UserService {
     void disableUsersByIds(List<Integer> ids, HttpServletRequest request);
     Map<String,Object> getAllUsers(HttpServletRequest request, String status, String role, Integer page, Integer size);
     void updateUserProfile(UpdateProfileRequest request, HttpServletRequest httpServletRequest);
+    void approveOrganizer(Integer userId, HttpServletRequest request);
 }
