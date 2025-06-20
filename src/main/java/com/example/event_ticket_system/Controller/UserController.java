@@ -6,6 +6,7 @@ import com.example.event_ticket_system.DTO.request.DeleteRequest;
 import com.example.event_ticket_system.Service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -233,17 +234,10 @@ public class UserController {
     }
 
     @PutMapping("/update-profile")
-    public ResponseEntity<Object> updateUserProfile(@RequestBody UpdateProfileRequest updateProfileRequestequest, HttpServletRequest request) {
+    @PreAuthorize("hasAnyAuthority('ROLE_user', 'ROLE_organizer', 'ROLE_admin')")
+    public ResponseEntity<Object> updateUserProfile(@Valid @RequestBody UpdateProfileRequest updateProfileRequest, HttpServletRequest request) {
         try {
-            if (updateProfileRequestequest.getId() == null || updateProfileRequestequest.getId().describeConstable().isEmpty()) {
-                return APIResponse.responseBuilder(
-                        null,
-                        "User ID is required for updating profile",
-                        HttpStatus.BAD_REQUEST
-                );
-            }
-
-            userService.updateUserProfile(updateProfileRequestequest, request);
+            userService.updateUserProfile(updateProfileRequest, request);
             return APIResponse.responseBuilder(
                     null,
                     "User profile updated successfully",

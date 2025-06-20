@@ -1,14 +1,17 @@
 package com.example.event_ticket_system.Controller;
 
-import com.example.event_ticket_system.DTO.request.LoginRequestDTO;
-import com.example.event_ticket_system.DTO.request.RegisterRequestDTO;
+import com.example.event_ticket_system.DTO.request.*;
 import com.example.event_ticket_system.DTO.response.APIResponse;
 import com.example.event_ticket_system.Entity.User;
+import com.example.event_ticket_system.Enums.UserRole;
 import com.example.event_ticket_system.Enums.UserStatus;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.AccountService;
+import com.example.event_ticket_system.Service.EmailService;
+import com.example.event_ticket_system.Service.VerificationCodeService;
 import com.example.event_ticket_system.Service.VerifiedEmailService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -38,10 +42,16 @@ public class AuthController {
     private AccountService accountService;
 
     @Autowired
+    private EmailService emailService;
+
+    @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
     private VerifiedEmailService verifiedEmailService;
+
+    @Autowired
+    private VerificationCodeService verificationCodeService;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerAccount(@Valid @RequestBody RegisterRequestDTO registerRequestDTO, BindingResult bindingResult) {
@@ -75,7 +85,7 @@ public class AuthController {
             user.setEmail(registerRequestDTO.getEmail());
             user.setPasswordHash(registerRequestDTO.getPassword());
             user.setFullName(registerRequestDTO.getFullName());
-            user.setRole(com.example.event_ticket_system.Enums.UserRole.customer);
+            user.setRole(UserRole.customer);
             accountService.createAccount(user);
 
             // Sau khi đăng ký thành công, xóa email khỏi danh sách đã xác thực
@@ -112,7 +122,7 @@ public class AuthController {
             }
 
             // Kiểm tra trạng thái tài khoản
-            if (user.getStatus() != UserStatus.active) {
+            if (user.getStatus() == null || user.getStatus() != UserStatus.active) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Tài khoản không hoạt động.");
             }
 
@@ -152,7 +162,7 @@ public class AuthController {
                 user = new User();
                 user.setEmail(email);
                 user.setFullName(fullName);
-                user.setRole(com.example.event_ticket_system.Enums.UserRole.customer);
+                user.setRole(UserRole.customer);
                 user.setPasswordHash(passwordEncoder.encode(UUID.randomUUID().toString())); // Mật khẩu ngẫu nhiên cho OAuth2
                 user.setStatus(UserStatus.active);
                 accountService.createAccount(user);
@@ -177,6 +187,104 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi hệ thống: " + e.getMessage());
+        }
+    }
+
+    // Endpoint gửi mã xác thực đến email của người dùng (giữ nguyên)
+    @PostMapping("/send-code")
+    public ResponseEntity<?> sendVerificationCode(@Valid @RequestBody SendCodeRequest request) {
+        User user = accountService.findByEmail(request.getEmail());
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email không tồn tại");
+        }
+
+        // Tạo mã xác thực và lưu trữ
+        String code = verificationCodeService.generateAndSaveCode(request.getEmail());
+        emailService.sendVerificationEmail(request.getEmail(), code);
+
+        return ResponseEntity.ok("Mã xác thực đã được gửi đến email của bạn.");
+    }
+
+    // Endpoint đặt lại mật khẩu bằng mã xác thực, sử dụng ResetPasswordByCodeRequest với validate tự động
+    @PostMapping("/reset-password-by-code")
+    public ResponseEntity<?> resetPasswordByCode(@Valid @RequestBody ResetPasswordByCodeRequest request,
+                                                 BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.toList());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+
+        // Kiểm tra mã xác thực
+        boolean valid = verificationCodeService.verifyCode(request.getEmail(), request.getCode());
+        if (!valid) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mã xác thực không hợp lệ hoặc đã hết hạn.");
+        }
+
+        User user = accountService.findByEmail(request.getEmail());
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Không tìm thấy tài khoản với email đã cung cấp.");
+        }
+
+        // Cập nhật mật khẩu mới (mã hóa trước khi lưu)
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        accountService.updateAccount(user);
+
+        return ResponseEntity.ok("Đặt lại mật khẩu thành công!");
+    }
+
+    // API gửi mã xác thực đến email
+    @PostMapping("/sendVerificationCode")
+    public ResponseEntity<?> sendVerificationCode(@Valid @RequestBody SendCodeRequest request,
+                                                  BindingResult bindingResult) {
+        // Kiểm tra lỗi validate đầu vào
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.toList());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+
+        String email = request.getEmail();
+
+        // Kiểm tra xem email đã tồn tại trong hệ thống chưa
+        if (accountService.existsByEmail(request.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email đã được sử dụng");
+        }
+
+        // Tạo và lưu mã xác thực cho email
+        String code = verificationCodeService.generateAndSaveCode(email);
+        emailService.sendVerificationEmail(email, code);
+
+        return ResponseEntity.ok("Mã xác thực đã được gửi tới email. Vui lòng kiểm tra email của bạn.");
+    }
+
+    // API xác thực mã
+    @PostMapping("/verifyCode")
+    public ResponseEntity<Map<String, String>> verifyCode(@RequestBody VerifyCodeDTO verifyCodeDTO) {
+        String email = verifyCodeDTO.getEmail();
+        String code = verifyCodeDTO.getCode();
+        log.info("Nhận yêu cầu xác thực cho email {} với mã: {}", email, code);
+
+        boolean isValid = verificationCodeService.verifyCode(email, code);
+        if (isValid) {
+            log.info("Email {} đã xác thực thành công", email);
+            // Đánh dấu email đã xác thực
+            verifiedEmailService.markEmailVerified(email);
+
+            // Trả về JSON kiểu { "message": "Email xác thực thành công" }
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Email xác thực thành công");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+
+        } else {
+            log.warn("Mã xác thực không hợp lệ hoặc đã hết hạn cho email {}", email);
+
+            // Trả về JSON kiểu { "error": "Mã xác thực không hợp lệ..." } + status 400
+            Map<String, String> response = new HashMap<>();
+            response.put("error", "Mã xác thực không hợp lệ hoặc đã hết hạn");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 }

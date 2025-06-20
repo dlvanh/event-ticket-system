@@ -30,15 +30,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints
-                        // TODO: cho các endpoints của auth vào 1 file
-                        .requestMatchers("/api/login", "/api/register",
-                                "/api/verifyCode", "/api/sendVerificationCode",
-                                "/api/send-code", "/api/reset-password-by-code",
-                                "/api/public/**")
-                        .permitAll()
-                        //.requestMatchers("/api/**").permitAll()
-                        // Role based endpoints
+                        // Authentication endpoints
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // Role-based endpoints
+                        .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_admin")
                         .requestMatchers("/api/customer/**").hasAuthority("ROLE_customer")
                         .requestMatchers("/api/organizer/**").hasAuthority("ROLE_organizer")
