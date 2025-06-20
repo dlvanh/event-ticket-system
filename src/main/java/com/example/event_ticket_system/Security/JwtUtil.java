@@ -16,41 +16,39 @@ public class JwtUtil {
 
     @Value("${jwt.secret}")
     private String SECRET_KEY;
+    private static final long EXPIRATION_TIME = 86400000; // 1 ngày
 
     private Key getSigningKey() {
+        byte[] keyBytes = SECRET_KEY.getBytes();
+        if (keyBytes.length < 64) {
+            throw new IllegalArgumentException("JWT secret key must be at least 64 bytes for HS512");
+        }
         return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
     }
 
-    // Tạo token từ fullname và vai trò
-    public String generateToken(String fullName, String role, Long id) {
-        System.out.println("Generating token for: fullname=" + fullName + ", role=" + role + ", id=" + id);
-        System.out.println("Secret Key: " + SECRET_KEY);
+    public String generateToken(String fullName, String role, Integer id) {
         return Jwts.builder()
-            .setSubject(String.valueOf(id))
-            .claim("user_fullName", fullName)
-            .claim("user_role", role)
-            .setIssuedAt(new Date(System.currentTimeMillis()))
-            .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 tiếng
-            .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-            .compact();
+                .subject(String.valueOf(id))
+                .claim("full_name", fullName)
+                .claim("role", "ROLE_" + role)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .compact();
     }
 
-    // Giải mã token và lấy id người dùng
     public Integer extractUserId(String token) {
-        return Math.toIntExact(Long.parseLong(extractAllClaims(token).getSubject()));
+        return Integer.parseInt(extractAllClaims(token).getSubject());
     }
 
-    // Giải mã token và lấy thông tin fullname
-    public String extractFullname(String token) {
-        return extractClaim(token, claims -> claims.get("user_fullName", String.class));
+    public String extractFullName(String token) {
+        return extractClaim(token, claims -> claims.get("full_name", String.class));
     }
 
-    // Giải mã token và lấy thông tin vai trò
     public String extractRole(String token) {
-        return extractClaim(token, claims -> claims.get("user_role", String.class));
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    // Giải mã toàn bộ claims
     public Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .setSigningKey(getSigningKey())
@@ -59,22 +57,19 @@ public class JwtUtil {
                 .getBody();
     }
 
-    // Hàm trích xuất một claim cụ thể
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    // Kiểm tra token có hợp lệ không
     public boolean validateToken(String token, String fullname) {
         try {
-            return fullname.equals(extractFullname(token)) && !isTokenExpired(token);
+            return fullname.equals(extractFullName(token)) && !isTokenExpired(token);
         } catch (Exception e) {
             return false;
         }
     }
 
-    // Kiểm tra token hết hạn chưa
     private boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
     }
