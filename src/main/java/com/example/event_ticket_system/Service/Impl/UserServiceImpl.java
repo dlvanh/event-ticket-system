@@ -1,10 +1,12 @@
 package com.example.event_ticket_system.Service.Impl;
 
+import com.example.event_ticket_system.DTO.request.UpdateProfileRequest;
 import com.example.event_ticket_system.DTO.response.UserResponseDto;
 import com.example.event_ticket_system.Entity.User;
 import com.example.event_ticket_system.Enums.UserStatus;
 import com.example.event_ticket_system.Repository.UserRepository;
 import com.example.event_ticket_system.Security.JwtUtil;
+import com.example.event_ticket_system.Service.AccountService;
 import com.example.event_ticket_system.Service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
@@ -27,6 +29,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,6 +44,9 @@ public class UserServiceImpl implements UserService {
 
     @Value("${imgbb.api.key}")
     private String imgbbApiKey;
+
+    @Autowired
+    private final AccountService accountService;
 
     @Override
     public void deleteUsersByIds(List<Integer> ids, HttpServletRequest request) {
@@ -225,5 +231,60 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
         return convertToDTO(user);
+    }
+
+    @Override
+    public void updateUserProfile(UpdateProfileRequest request, HttpServletRequest httpServletRequest) {
+        Integer userId = jwtUtil.extractUserId(httpServletRequest.getHeader("Authorization").substring(7));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+
+        if (request.getFullName() != null && !request.getFullName().isBlank()) {
+            user.setFullName(request.getFullName());
+        }
+        if (request.getEmail() != null && !request.getEmail().isBlank() && !request.getEmail().equals(user.getEmail())) {
+            if (accountService.existsByEmail(request.getEmail())) {
+                throw new IllegalArgumentException("Email này đã được sử dụng.");
+            }
+            user.setEmail(request.getEmail());
+        }
+        if (request.getPhoneNumber() != null) {
+            user.setPhoneNumber(request.getPhoneNumber().isBlank() ? null : request.getPhoneNumber());
+        }
+        if (request.getGender() != null) {
+            user.setGender(request.getGender());
+        }
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress().isBlank() ? null : request.getAddress());
+        }
+        if (request.getBio() != null) {
+            user.setBio(request.getBio().isBlank() ? null : request.getBio());
+        }
+
+        user.setUpdatedAt(Instant.now());
+        userRepository.save(user);
+    }
+
+    @Override
+    public void approveOrganizer(Integer userId, HttpServletRequest request) {
+        String role = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+        if (!"ROLE_admin".equals(role)) {
+            throw new SecurityException("You do not have permission to approve organizers.");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        if (user.getRole() == com.example.event_ticket_system.Enums.UserRole.organizer) {
+            throw new IllegalStateException("User is already an organizer.");
+        }
+
+        if (user.getStatus() != UserStatus.active) {
+            throw new IllegalStateException("User must be active to be approved as an organizer.");
+        }
+
+        user.setRole(com.example.event_ticket_system.Enums.UserRole.organizer);
+        userRepository.save(user);
     }
 }

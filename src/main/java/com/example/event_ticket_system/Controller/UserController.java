@@ -1,15 +1,18 @@
 package com.example.event_ticket_system.Controller;
 
+import com.example.event_ticket_system.DTO.request.UpdateProfileRequest;
 import com.example.event_ticket_system.DTO.response.APIResponse;
 import com.example.event_ticket_system.DTO.request.DeleteRequest;
 import com.example.event_ticket_system.Service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -225,6 +228,76 @@ public class UserController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while retrieving current user profile",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PutMapping("/update-profile")
+    @PreAuthorize("hasAnyAuthority('ROLE_user', 'ROLE_organizer', 'ROLE_admin')")
+    public ResponseEntity<Object> updateUserProfile(@Valid @RequestBody UpdateProfileRequest updateProfileRequest, HttpServletRequest request) {
+        try {
+            userService.updateUserProfile(updateProfileRequest, request);
+            return APIResponse.responseBuilder(
+                    null,
+                    "User profile updated successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (IllegalArgumentException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during updating user profile", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while updating user profile",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PostMapping("/admin/approve-organizer")
+    @PreAuthorize("hasAuthority('ROLE_admin')")
+    public ResponseEntity<Object> approveOrganizer(@RequestParam("userId") Integer userId, HttpServletRequest request) {
+        try {
+            userService.approveOrganizer(userId, request);
+            return APIResponse.responseBuilder(
+                    null,
+                    "Organizer approved successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (IllegalArgumentException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (IllegalStateException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.CONFLICT
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during approving organizer", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while approving organizer",
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }

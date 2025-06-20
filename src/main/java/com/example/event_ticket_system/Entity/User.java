@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
@@ -52,7 +53,6 @@ public class User {
     @Setter
     @Getter
     @ColumnDefault("'customer'")
-    @Lob
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private UserRole role;
@@ -67,6 +67,7 @@ public class User {
     @Getter
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "updated_at")
+    @UpdateTimestamp
     private Instant updatedAt;
 
     public @Size(max = 255) String getProfilePicture() {
@@ -90,7 +91,7 @@ public class User {
     @Getter
     @Column(name="status")
     @Enumerated(EnumType.STRING)
-    private UserStatus status = UserStatus.active;
+    private UserStatus status;
 
     @Setter
     @Getter
