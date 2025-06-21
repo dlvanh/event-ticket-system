@@ -20,6 +20,9 @@ public class Ticket {
     @JoinColumn(name = "event_id", referencedColumnName = "event_id", nullable = false)
     private Event event;
 
+    @Column(name = "price", nullable = false)
+    private Double price;
+
     @Column(name="ticket_type", nullable = false)
     private String ticketType;
 
