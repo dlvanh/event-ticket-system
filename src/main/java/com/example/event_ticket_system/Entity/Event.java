@@ -57,4 +57,7 @@ public class Event {
 
     @Column(name="address_detail")
     private String addressDetail;
+
+    @Column(name="address_name")
+    private String addressName;
 }
