@@ -60,4 +60,10 @@ public class Event {
 
     @Column(name="address_name")
     private String addressName;
+
+    @Column(name="logo_url")
+    private String logoUrl;
+
+    @Column(name="background_url")
+    private String backgroundUrl;
 }

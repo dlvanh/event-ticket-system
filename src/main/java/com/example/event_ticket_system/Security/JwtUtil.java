@@ -38,7 +38,7 @@ public class JwtUtil {
     }
 
     public Integer extractUserId(String token) {
-        return Integer.parseInt(extractAllClaims(token).getSubject());
+        return Integer.parseInt(extractClaim(token, Claims::getSubject));
     }
 
     public String extractFullName(String token) {

@@ -50,10 +50,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUsersByIds(List<Integer> ids, HttpServletRequest request) {
-//        String role = jwtUtil.extractRole(jwtUtil.extractRole(request.getHeader("Authorization").substring(7)));
-//        if (!role.equals("admin")) {
-//            throw new SecurityException("You do not have permission to delete users.");
-//        }
+        String userRole = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+        if (!"ROLE_admin".equals(userRole)) {
+            throw new SecurityException("You do not have permission to delete user.");
+        }
         List<User> usersToDelete = userRepository.findAllById(ids);
 
         List<Integer> existingIds = usersToDelete.stream()
@@ -73,10 +73,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void disableUsersByIds(List<Integer> ids, HttpServletRequest request) {
-//        String role = jwtUtil.extractRole(jwtUtil.extractRole(request.getHeader("Authorization").substring(7)));
-//        if (!"admin".equals(role)) {
-//            throw new SecurityException("You do not have permission to disable users.");
-//        }
+        String userRole = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+        if (!"ROLE_admin".equals(userRole)) {
+            throw new SecurityException("You do not have permission to disable user.");
+        }
 
         // Lấy danh sách người dùng thực tế từ DB
         List<User> usersToDisable = userRepository.findAllById(ids);
@@ -115,10 +115,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Map<String, Object> getAllUsers(HttpServletRequest request, String status, String role, Integer page, Integer size) {
-//        String userRole = jwtUtil.extractRole(jwtUtil.extractRole(request.getHeader("Authorization").substring(7)));
-//        if (!"admin".equals(userRole)) {
-//            throw new SecurityException("You do not have permission to view user list.");
-//        }
+        String userRole = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+        if (!"ROLE_admin".equals(userRole)) {
+            throw new SecurityException("You do not have permission to view user list.");
+        }
 
         if (page > 0) {
             page = page - 1;
@@ -175,8 +175,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void uploadProfilePicture(MultipartFile file, HttpServletRequest request) {
-//        User user = userRepository.findById(jwtUtil.extractUserId(request.getHeader("Authorization").substring(7)))
-//                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        User user = userRepository.findById(jwtUtil.extractUserId(request.getHeader("Authorization").substring(7)))
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         List<String> allowedTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp");
         if (!allowedTypes.contains(file.getContentType())) {
             throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, webp)");
@@ -201,9 +201,9 @@ public class UserServiceImpl implements UserService {
             JSONObject json = new JSONObject(response.body());
             String imageUrl = json.getJSONObject("data").getString("url");
 
-//            //Gán image URL vào User
-//            user.setProfilePicture(imageUrl);
-//            userRepository.save(user);
+            //Gán image URL vào User
+            user.setProfilePicture(imageUrl);
+            userRepository.save(user);
 
             System.out.println("Uploaded image URL: " + imageUrl);
 
