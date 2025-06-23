@@ -45,7 +45,7 @@ public class OrderController {
             Integer orderId = orderService.createOrder(orderRequestDto,request);
             return APIResponse.responseBuilder(
                     orderId,
-                    "Event created successfully",
+                    "Order successfully created",
                     HttpStatus.CREATED
             );
         } catch (SecurityException e) {
