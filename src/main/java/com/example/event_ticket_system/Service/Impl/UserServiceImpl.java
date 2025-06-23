@@ -243,12 +243,12 @@ public class UserServiceImpl implements UserService {
         if (request.getFullName() != null && !request.getFullName().isBlank()) {
             user.setFullName(request.getFullName());
         }
-        if (request.getEmail() != null && !request.getEmail().isBlank() && !request.getEmail().equals(user.getEmail())) {
-            if (accountService.existsByEmail(request.getEmail())) {
-                throw new IllegalArgumentException("Email này đã được sử dụng.");
-            }
-            user.setEmail(request.getEmail());
-        }
+//        if (request.getEmail() != null && !request.getEmail().isBlank() && !request.getEmail().equals(user.getEmail())) {
+//            if (accountService.existsByEmail(request.getEmail())) {
+//                throw new IllegalArgumentException("Email này đã được sử dụng.");
+//            }
+//            user.setEmail(request.getEmail());
+//        }
         if (request.getPhoneNumber() != null) {
             user.setPhoneNumber(request.getPhoneNumber().isBlank() ? null : request.getPhoneNumber());
         }
