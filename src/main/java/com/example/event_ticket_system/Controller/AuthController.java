@@ -9,7 +9,6 @@ import com.example.event_ticket_system.Repository.UserRepository;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.AccountService;
 import com.example.event_ticket_system.Service.EmailService;
-import com.example.event_ticket_system.Service.Impl.UserServiceImpl;
 import com.example.event_ticket_system.Service.VerificationCodeService;
 import com.example.event_ticket_system.Service.VerifiedEmailService;
 import jakarta.validation.Valid;
@@ -23,6 +22,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,16 +34,16 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/auth")
 public class AuthController {
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private JwtUtil jwtUtil;
 
     @Autowired
-    private AccountService accountService;
+    private EmailService emailService;
 
     @Autowired
-    private EmailService emailService;
+    private UserRepository userRepository;
+
+    @Autowired
+    private AccountService accountService;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -53,8 +53,6 @@ public class AuthController {
 
     @Autowired
     private VerificationCodeService verificationCodeService;
-    @Autowired
-    private UserServiceImpl userServiceImpl;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerAccount(@Valid @RequestBody RegisterRequestDTO registerRequestDTO, BindingResult bindingResult) {
@@ -204,7 +202,6 @@ public class AuthController {
             String fullName = oauth2User.getAttribute("name");
             String profilePicture = oauth2User.getAttribute("picture");
 
-            log.info("Profile picture URL: {}", profilePicture);
             log.info("Google auth request for email: {}", email);
 
             if (email == null || fullName == null) {
@@ -226,6 +223,7 @@ public class AuthController {
                 user.setPasswordHash(passwordEncoder.encode(UUID.randomUUID().toString()));
                 user.setStatus(UserStatus.active);
                 user.setProfilePicture(profilePicture);
+                user.setCreatedAt(Instant.now());
                 userRepository.save(user);
                 log.info("User registered successfully via Google: {}", email);
             }
