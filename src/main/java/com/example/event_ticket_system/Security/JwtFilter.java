@@ -32,24 +32,33 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+        logger.info("Filtering request: " + request.getRequestURI());
+
+        // Bỏ qua các endpoint OAuth2
+        if (request.getRequestURI().startsWith("/oauth2/") || request.getRequestURI().startsWith("/login/oauth2/")) {
+            logger.debug("Bypassing JWT filter for OAuth2 endpoint: " + request.getRequestURI());
+            chain.doFilter(request, response);
+            return;
+        }
         final String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            logger.debug("No JWT token found in request headers " + request.getRequestURI());
             chain.doFilter(request, response);
             return;
         }
 
         String jwt = authorizationHeader.substring(7);
         String fullname;
-        String role = null;
+        String role;
 
         try {
             fullname = jwtUtil.extractFullName(jwt);
             Claims claims = jwtUtil.extractAllClaims(jwt);
             role = claims.get("role", String.class);
-            System.out.println(role);
+            logger.debug("Extracted role: " + role +" for user: " + fullname);
         } catch (Exception e) {
-            System.out.println("Invalid token: " + e.getMessage());
+            logger.debug("Invalid token: " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid or expired token");
             return;

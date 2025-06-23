@@ -1,6 +1,8 @@
 package com.example.event_ticket_system.Security;
 
+import com.example.event_ticket_system.Service.Impl.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,15 +15,19 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final CustomOAuth2UserService customOAuth2UserService;
+
     private final JwtFilter jwtFilter;
 
     @Autowired
-    public SecurityConfig(JwtFilter jwtFilter) {
+    public SecurityConfig(JwtFilter jwtFilter, CustomOAuth2UserService customOAuth2UserService) {
         this.jwtFilter = jwtFilter;
+        this.customOAuth2UserService = customOAuth2UserService;
     }
 
     @Bean
@@ -31,6 +37,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         // Authentication endpoints
+                        .requestMatchers(
+                                "/oauth2/authorization/google",
+                                "/login/oauth2/code/google"
+                        ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         // Role-based endpoints
                         .requestMatchers("/api/users/**").permitAll()
@@ -40,6 +50,18 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler((request, response, authentication) -> {
+                            log.info("OAuth2 login successful for user: {}", authentication.getPrincipal());
+                            response.sendRedirect("/api/auth/oauth2/google");
+                        })
+                        .failureHandler((request, response, exception) -> {
+                            log.error("OAuth2 login failed: {}", exception.getMessage());
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("OAuth2 login failed: " + exception.getMessage());
+                        })
+                )
                 .exceptionHandling(exh -> exh
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -47,7 +69,6 @@ public class SecurityConfig {
                         })
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
