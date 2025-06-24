@@ -251,10 +251,15 @@ public class UserServiceImpl implements UserService {
 //            user.setEmail(request.getEmail());
 //        }
         if (request.getPhoneNumber() != null) {
-            user.setPhoneNumber(request.getPhoneNumber().isBlank() ? null : request.getPhoneNumber());
-        }
-        if (request.getGender() != null) {
-            user.setGender(request.getGender());
+            String phoneNumber = request.getPhoneNumber().trim();
+            String vnPhoneRegex = "^(\\+84|0)(3[2-9]|5[689]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$";
+
+            if (!phoneNumber.isBlank() && phoneNumber.matches(vnPhoneRegex)) {
+                user.setPhoneNumber(phoneNumber);
+            } else {
+                throw new IllegalArgumentException("Số điện thoại không đúng định dạng Việt Nam"
+                );
+            }
         }
         if (request.getAddress() != null) {
             user.setAddress(request.getAddress().isBlank() ? null : request.getAddress());
