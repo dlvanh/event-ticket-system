@@ -161,6 +161,7 @@ public class UserServiceImpl implements UserService {
         dto.setAddress(user.getAddress());
         dto.setBio(user.getBio());
         dto.setStatus(String.valueOf(user.getStatus()));
+        dto.setAvatarUrl(user.getProfilePicture() != null ? user.getProfilePicture() : "https://i.ibb.co/21Lgqmdq/1c36d32072ca.png");
         dto.setCreatedAt(user.getCreatedAt().toString());
         dto.setUpdatedAt(user.getUpdatedAt() != null ? user.getUpdatedAt().toString() : null);
         return dto;

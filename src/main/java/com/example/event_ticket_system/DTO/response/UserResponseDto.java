@@ -13,6 +13,7 @@ public class UserResponseDto {
     private String gender;
     private String address;
     private String bio;
+    private String avatarUrl;
     private String createdAt;
     private String updatedAt;
 }
