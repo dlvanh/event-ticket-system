@@ -7,14 +7,13 @@ import com.example.event_ticket_system.Enums.UserRole;
 import com.example.event_ticket_system.Enums.UserStatus;
 import com.example.event_ticket_system.Repository.UserRepository;
 import com.example.event_ticket_system.Security.JwtUtil;
-import com.example.event_ticket_system.Service.AccountService;
-import com.example.event_ticket_system.Service.EmailService;
-import com.example.event_ticket_system.Service.VerificationCodeService;
-import com.example.event_ticket_system.Service.VerifiedEmailService;
+import com.example.event_ticket_system.Service.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -35,6 +34,9 @@ import java.util.stream.Collectors;
 public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private EmailService emailService;
@@ -387,6 +389,37 @@ public class AuthController {
             Map<String, String> response = new HashMap<>();
             response.put("error", "Mã xác thực không hợp lệ hoặc đã hết hạn");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
+
+    @PostMapping(value = "/register-organizer", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Object> registerOrganizer(@ModelAttribute OrganizerRequest organizerRequest) {
+        try {
+            userService.registerOrganizer(organizerRequest.getProfilePicture(), organizerRequest);
+            return APIResponse.responseBuilder(
+                    null,
+                    "Organizer registration request submitted successfully",
+                    HttpStatus.CREATED
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (IllegalArgumentException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during organizer registration", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while registering organizer",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }

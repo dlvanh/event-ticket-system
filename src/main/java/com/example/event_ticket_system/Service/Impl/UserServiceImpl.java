@@ -1,8 +1,10 @@
 package com.example.event_ticket_system.Service.Impl;
 
+import com.example.event_ticket_system.DTO.request.OrganizerRequest;
 import com.example.event_ticket_system.DTO.request.UpdateProfileRequest;
 import com.example.event_ticket_system.DTO.response.UserResponseDto;
 import com.example.event_ticket_system.Entity.User;
+import com.example.event_ticket_system.Enums.UserRole;
 import com.example.event_ticket_system.Enums.UserStatus;
 import com.example.event_ticket_system.Repository.UserRepository;
 import com.example.event_ticket_system.Security.JwtUtil;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,6 +50,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private final AccountService accountService;
+
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public void deleteUsersByIds(List<Integer> ids, HttpServletRequest request) {
@@ -257,8 +263,7 @@ public class UserServiceImpl implements UserService {
             if (!phoneNumber.isBlank() && phoneNumber.matches(vnPhoneRegex)) {
                 user.setPhoneNumber(phoneNumber);
             } else {
-                throw new IllegalArgumentException("Số điện thoại không đúng định dạng Việt Nam"
-                );
+                throw new IllegalArgumentException("Số điện thoại không đúng định dạng Việt Nam");
             }
         }
         if (request.getAddress() != null) {
@@ -282,15 +287,99 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
 
-        if (user.getRole() == com.example.event_ticket_system.Enums.UserRole.organizer) {
+        if (user.getRole() == UserRole.organizer) {
             throw new IllegalStateException("User is already an organizer.");
         }
 
-        if (user.getStatus() != UserStatus.active) {
-            throw new IllegalStateException("User must be active to be approved as an organizer.");
+        user.setStatus(UserStatus.active);
+        user.setRole(UserRole.organizer);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void registerOrganizer(MultipartFile file, OrganizerRequest request) {
+        if (accountService.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email này đã được sử dụng.");
         }
 
-        user.setRole(com.example.event_ticket_system.Enums.UserRole.organizer);
+        String passwordRegex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{10,}$";
+        String vnPhoneRegex = "^(\\+84|0)(3[2-9]|5[689]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$";
+
+        if (request.getPassword().isBlank() || request.getConfirmPassword().isBlank()) {
+            throw new IllegalArgumentException("Mật khẩu không được để trống.");
+        }
+
+        if (!request.getPassword().matches(passwordRegex) || !request.getConfirmPassword().matches(passwordRegex)) {
+            throw new IllegalArgumentException
+                    ("Mật khẩu phải có ít nhất 10 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.");
+        }
+
+        if (request.getPassword().matches(passwordRegex) && !request.getConfirmPassword().equals(request.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp.");
+        }
+
+
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) {
+            String phoneNumber = request.getPhoneNumber().trim();
+            if (!phoneNumber.matches(vnPhoneRegex)) {
+                throw new IllegalArgumentException("Số điện thoại không đúng định dạng Việt Nam");
+            }
+        }
+
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new IllegalArgumentException("Tên không được để trống.");
+        }
+
+        if (request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Email không được để trống.");
+        }
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Ảnh đại diện không được để trống.");
+        }
+
+        User user = new User();
+
+        List<String> allowedTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp");
+        if (!allowedTypes.contains(file.getContentType())) {
+            throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, webp)");
+        }
+        try {
+            byte[] imageBytes = file.getBytes();
+            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+            String url = "https://api.imgbb.com/1/upload?key=" + imgbbApiKey;
+
+            HttpClient client = HttpClient.newHttpClient();
+            String body = "image=" + URLEncoder.encode(base64Image, StandardCharsets.UTF_8);
+
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .build();
+
+            HttpResponse<String> response = client.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+            JSONObject json = new JSONObject(response.body());
+            String imageUrl = json.getJSONObject("data").getString("url");
+
+            //Gán image URL vào User
+            user.setProfilePicture(imageUrl);
+
+            System.out.println("Uploaded image URL: " + imageUrl);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Upload failed", e);
+        }
+        user.setFullName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setBio(request.getBio());
+        user.setPhoneNumber(request.getPhoneNumber());
+        user.setStatus(UserStatus.pending);
+        user.setRole(UserRole.customer);
         userRepository.save(user);
+
     }
 }

@@ -1,5 +1,6 @@
 package com.example.event_ticket_system.Service;
 
+import com.example.event_ticket_system.DTO.request.OrganizerRequest;
 import com.example.event_ticket_system.DTO.request.UpdateProfileRequest;
 import com.example.event_ticket_system.DTO.response.UserResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,4 +19,5 @@ public interface UserService {
     Map<String,Object> getAllUsers(HttpServletRequest request, String status, String role, Integer page, Integer size);
     void updateUserProfile(UpdateProfileRequest request, HttpServletRequest httpServletRequest);
     void approveOrganizer(Integer userId, HttpServletRequest request);
+    void registerOrganizer(MultipartFile file, OrganizerRequest request);
 }
