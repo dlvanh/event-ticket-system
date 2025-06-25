@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -393,9 +395,23 @@ public class AuthController {
     }
 
     @PostMapping(value = "/register-organizer", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Object> registerOrganizer(@ModelAttribute OrganizerRequest organizerRequest) {
+    public ResponseEntity<Object> registerOrganizerTest(@RequestPart("data") @Valid OrganizerRequest organizerRequest,
+                                                        @RequestPart("profilePicture") MultipartFile profilePicture,
+                                                        BindingResult bindingResult) {
         try {
-            userService.registerOrganizer(organizerRequest.getProfilePicture(), organizerRequest);
+            // Kiểm tra lỗi validate từ đầu vào
+            if (bindingResult.hasErrors()) {
+                List<String> errors = bindingResult.getFieldErrors()
+                        .stream()
+                        .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                        .collect(Collectors.toList());
+                return APIResponse.responseBuilder(
+                        errors,
+                        "Validation failed",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            userService.registerOrganizer(profilePicture, organizerRequest);
             return APIResponse.responseBuilder(
                     null,
                     "Organizer registration request submitted successfully",

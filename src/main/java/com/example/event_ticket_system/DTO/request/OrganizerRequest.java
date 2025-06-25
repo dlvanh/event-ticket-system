@@ -24,8 +24,6 @@ public class OrganizerRequest {
     @NotBlank(message = "Tiểu sử không được để trống")
     private String bio;
 
-    @Size(max = 255)
-    @NotBlank(message = "Ảnh đại diện không được để trống")
     private MultipartFile profilePicture;
 
     @NotBlank(message = "Mật khẩu không được để trống")

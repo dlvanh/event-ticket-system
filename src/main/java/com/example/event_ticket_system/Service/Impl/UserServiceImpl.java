@@ -318,12 +318,12 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp.");
         }
 
+        if (!request.getPhoneNumber().isEmpty()) {
+            throw new IllegalArgumentException("Số điện thoại không được để trống.");
+        }
 
-        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isBlank()) {
-            String phoneNumber = request.getPhoneNumber().trim();
-            if (!phoneNumber.matches(vnPhoneRegex)) {
-                throw new IllegalArgumentException("Số điện thoại không đúng định dạng Việt Nam");
-            }
+        if (!request.getPhoneNumber().matches(vnPhoneRegex)) {
+            throw new IllegalArgumentException("Số điện thoại không đúng định dạng Việt Nam.");
         }
 
         if (request.getName() == null || request.getName().isBlank()) {
