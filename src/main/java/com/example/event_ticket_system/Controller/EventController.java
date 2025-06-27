@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,6 +69,51 @@ public class EventController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while creating the event",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/by-organizer")
+    public ResponseEntity<Object> getEventsByOrganizer(
+            HttpServletRequest request,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String approveStatus,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startTime,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endTime,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        try {
+            if(page<=0&&size<=0) {
+            page = 1;
+            size = 1;
+            }
+            Map<String, Object> response = eventService.getEventsByOrganizer(request, approveStatus, startTime, endTime, name, page, size);
+            return APIResponse.responseBuilder(
+                    response,
+                    "Events retrieved successfully",
+                    HttpStatus.OK
+            );
+        }  catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        }catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while retrieving events",
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }

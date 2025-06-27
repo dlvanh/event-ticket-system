@@ -1,6 +1,7 @@
 package com.example.event_ticket_system.Service.Impl;
 
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
+import com.example.event_ticket_system.DTO.response.GetEventsByOrganizerResponseDto;
 import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.Ticket;
 import com.example.event_ticket_system.Entity.User;
@@ -13,11 +14,17 @@ import com.example.event_ticket_system.Repository.WardRepository;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.EventService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,8 +35,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -130,6 +138,80 @@ public class EventServiceImpl implements EventService {
         JSONObject json = new JSONObject(response.body());
 
         return json.getJSONObject("data").getString("url");
+    }
+
+    @Override
+    public Map<String, Object> getEventsByOrganizer(HttpServletRequest request,
+                                                    String approveStatus,
+                                                    LocalDateTime startTime,
+                                                    LocalDateTime endTime,
+                                                    String name,
+                                                    Integer page,
+                                                    Integer size) {
+        Integer organizerId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(organizerId)
+                .orElseThrow(() -> new EntityNotFoundException("Organizer not found with id: " + organizerId));
+
+        if (!UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to view events.");
+        }
+
+        if (page > 0) {
+            page = page - 1;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+
+        Specification<Event> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("organizer").get("id"), organizerId));
+
+            if (approveStatus != null && !approveStatus.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("approvalStatus"), approveStatus));
+            }
+            if (startTime != null && endTime != null) {
+                // Check if event overlaps with [startTime, endTime]
+                predicates.add(criteriaBuilder.and(
+                        criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime),
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime)
+                ));
+            } else {
+                if (startTime != null) {
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime));
+                }
+                if (endTime != null) {
+                    predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime));
+                }
+            }
+            if (name != null && !name.isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("eventName")), "%" + name.toLowerCase() + "%"));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Event> eventPage = eventRepository.findAll(specification, pageable);
+
+        List<GetEventsByOrganizerResponseDto> eventDTOs = eventPage.getContent().stream().map(event -> {
+            GetEventsByOrganizerResponseDto dto = new GetEventsByOrganizerResponseDto();
+            dto.setEventId(event.getEventId());
+            dto.setEventName(event.getEventName());
+            dto.setApprovalStatus(event.getApprovalStatus().name());
+            dto.setStartTime(event.getStartTime().toString());
+            dto.setEndTime(event.getEndTime().toString());
+            dto.setUpdateAt(event.getUpdatedAt().toString());
+            return dto;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("listEvents", eventDTOs);
+        response.put("pageSize", eventPage.getSize());
+        response.put("pageNo", eventPage.getNumber() + 1);
+        response.put("totalPages", eventPage.getTotalPages());
+
+        return response;
     }
 
 }
