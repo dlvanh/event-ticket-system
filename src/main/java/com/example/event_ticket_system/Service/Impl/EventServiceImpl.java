@@ -240,6 +240,16 @@ public class EventServiceImpl implements EventService {
         responseDto.setApprovalStatus(event.getApprovalStatus().name());
         responseDto.setLogoUrl(event.getLogoUrl());
         responseDto.setBackgroundUrl(event.getBackgroundUrl());
+        responseDto.setOrganizerId(event.getOrganizer().getId());
+        responseDto.setOrganizerName(event.getOrganizer().getFullName());
+        responseDto.setOrganizerEmail(event.getOrganizer().getEmail());
+        List<Ticket> tickets = ticketRepository.findByEvent(event);
+        Map<String, Integer> ticketSoldMap = new HashMap<>();
+        for (Ticket ticket : tickets) {
+            ticketSoldMap.put(ticket.getTicketType(), ticket.getQuantitySold());
+        }
+        responseDto.setTicketsSold(ticketSoldMap);
+
 
         return responseDto;
     }

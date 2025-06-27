@@ -2,6 +2,8 @@ package com.example.event_ticket_system.DTO.response;
 
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 public class DetailEventResponseDto {
     private Integer eventId;
@@ -17,4 +19,9 @@ public class DetailEventResponseDto {
     private String approvalStatus;
     private String logoUrl;
     private String backgroundUrl;
+    private Integer organizerId;
+    private String organizerName;
+    private String organizerEmail;
+    private String organizerPhoneNumber;
+    private Map<String, Integer> ticketsSold;
 }
