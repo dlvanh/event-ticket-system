@@ -1,6 +1,7 @@
 package com.example.event_ticket_system.Service.Impl;
 
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
+import com.example.event_ticket_system.DTO.response.DetailEventResponseDto;
 import com.example.event_ticket_system.DTO.response.GetEventsByOrganizerResponseDto;
 import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.Ticket;
@@ -214,4 +215,32 @@ public class EventServiceImpl implements EventService {
         return response;
     }
 
+    @Override
+    public DetailEventResponseDto getEventById(Integer eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+
+        DetailEventResponseDto responseDto = new DetailEventResponseDto();
+        responseDto.setEventId(event.getEventId());
+        responseDto.setEventName(event.getEventName());
+        responseDto.setDescription(event.getDescription());
+        responseDto.setAddress(
+                (event.getAddressName() != null ? event.getAddressName() + ", " : "") +
+                        (event.getAddressDetail() != null ? event.getAddressDetail() + ", " : "") +
+                        event.getWard().getName() + ", " +
+                        event.getWard().getDistrict().getName() + ", " +
+                        event.getWard().getDistrict().getProvince().getName()
+        );
+        responseDto.setStartTime(event.getStartTime().toString());
+        responseDto.setEndTime(event.getEndTime().toString());
+        responseDto.setCategory(event.getCategory());
+        responseDto.setStatus(event.getStatus().name());
+        responseDto.setCreatedAt(event.getCreatedAt().toString());
+        responseDto.setUpdatedAt(event.getUpdatedAt().toString());
+        responseDto.setApprovalStatus(event.getApprovalStatus().name());
+        responseDto.setLogoUrl(event.getLogoUrl());
+        responseDto.setBackgroundUrl(event.getBackgroundUrl());
+
+        return responseDto;
+    }
 }

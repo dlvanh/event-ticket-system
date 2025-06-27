@@ -2,6 +2,7 @@ package com.example.event_ticket_system.Controller;
 
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
 import com.example.event_ticket_system.DTO.response.APIResponse;
+import com.example.event_ticket_system.DTO.response.DetailEventResponseDto;
 import com.example.event_ticket_system.Service.EventService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -114,6 +115,30 @@ public class EventController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while retrieving events",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/{eventId}")
+    public ResponseEntity<Object> getEventById(@PathVariable Integer eventId) {
+        try {
+            DetailEventResponseDto event = eventService.getEventById(eventId);
+            return APIResponse.responseBuilder(
+                    event,
+                    "Event retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while retrieving the event",
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
