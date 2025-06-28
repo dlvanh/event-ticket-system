@@ -8,6 +8,8 @@ import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.Ticket;
 import com.example.event_ticket_system.Entity.User;
 import com.example.event_ticket_system.Entity.Ward;
+import com.example.event_ticket_system.Enums.ApprovalStatus;
+import com.example.event_ticket_system.Enums.EventStatus;
 import com.example.event_ticket_system.Enums.UserRole;
 import com.example.event_ticket_system.Repository.EventRepository;
 import com.example.event_ticket_system.Repository.TicketRepository;
@@ -287,6 +289,12 @@ public class EventServiceImpl implements EventService {
 
         Specification<Event> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            // Approval status must be APPROVED
+            predicates.add(criteriaBuilder.equal(root.get("approvalStatus"), ApprovalStatus.approved));
+
+            // Event status must be UPCOMING
+            predicates.add(criteriaBuilder.equal(root.get("status"), EventStatus.upcoming));
 
             if (category != null && !category.isEmpty()) {
                 predicates.add(criteriaBuilder.equal(root.get("category"), category));
