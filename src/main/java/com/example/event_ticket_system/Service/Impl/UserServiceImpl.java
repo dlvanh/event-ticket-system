@@ -33,6 +33,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -302,8 +303,12 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email này đã được sử dụng.");
         }
 
+        if (accountService.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại này đã được sử dụng.");
+        }
+
         String passwordRegex = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{10,}$";
-        String vnPhoneRegex = "^(\\+84|0)(3[2-9]|5[689]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$";
+        String vnPhoneRegex = "^(\\+84|0)(2(0[3-9]|1[0-69]|2[025-9]|3[2-9]|4[0-9]|5[124-9]|6[039]|7[0-7]|8[0-9]|9[0-47-9])|3[2-9]|5[5689]|7[06-9]|8[0-689]|9[0-46-9])[0-9]{7}$";
 
         if (request.getPassword().isBlank() || request.getConfirmPassword().isBlank()) {
             throw new IllegalArgumentException("Mật khẩu không được để trống.");
@@ -318,7 +323,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Mật khẩu và xác nhận mật khẩu không khớp.");
         }
 
-        if (!request.getPhoneNumber().isEmpty()) {
+        if (request.getPhoneNumber() == null || request.getPhoneNumber().isBlank()) {
             throw new IllegalArgumentException("Số điện thoại không được để trống.");
         }
 
@@ -379,6 +384,7 @@ public class UserServiceImpl implements UserService {
         user.setPhoneNumber(request.getPhoneNumber());
         user.setStatus(UserStatus.pending);
         user.setRole(UserRole.customer);
+        user.setCreatedAt(LocalDateTime.now().toInstant(java.time.ZoneOffset.UTC));
         userRepository.save(user);
 
     }
