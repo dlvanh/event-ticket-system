@@ -16,4 +16,7 @@ public interface AccountMapper {
     @Update("update users set password_hash = #{passwordHash} where email = #{email}")
     int updatePassword(User user);
 
+    @Select("select * from users where phone_number = #{phoneNumber}")
+    User findByPhoneNumber(String phoneNumber);
+
 }

@@ -28,6 +28,10 @@ public class AccountServiceImpl implements AccountService {
         return accountMapper.findByEmail(email) != null;
     }
 
+    public boolean existsByPhoneNumber(String phoneNumber) {
+        return accountMapper.findByPhoneNumber(phoneNumber) != null;
+    }
+
     @Override
     public void createAccount(User user) {
         String encodedPassword = passwordEncoder.encode(user.getPasswordHash());
