@@ -44,6 +44,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Role-based endpoints
                         .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers("/api/events/recommend").permitAll()
+                        .requestMatchers("/api/events/by-organizer").authenticated()
+                        .requestMatchers("/api/events").authenticated()
+                        .requestMatchers("/api/events/*").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_admin")
                         .requestMatchers("/api/customer/**").hasAuthority("ROLE_customer")
                         .requestMatchers("/api/organizer/**").hasAuthority("ROLE_organizer")

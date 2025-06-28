@@ -3,6 +3,7 @@ package com.example.event_ticket_system.Service.Impl;
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
 import com.example.event_ticket_system.DTO.response.DetailEventResponseDto;
 import com.example.event_ticket_system.DTO.response.GetEventsByOrganizerResponseDto;
+import com.example.event_ticket_system.DTO.response.RecommendEventsResponseDto;
 import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.Ticket;
 import com.example.event_ticket_system.Entity.User;
@@ -216,7 +217,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public DetailEventResponseDto getEventById(Integer eventId) {
+    public DetailEventResponseDto getEventById(Integer eventId, HttpServletRequest request) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
@@ -243,14 +244,128 @@ public class EventServiceImpl implements EventService {
         responseDto.setOrganizerId(event.getOrganizer().getId());
         responseDto.setOrganizerName(event.getOrganizer().getFullName());
         responseDto.setOrganizerEmail(event.getOrganizer().getEmail());
-        List<Ticket> tickets = ticketRepository.findByEvent(event);
-        Map<String, Integer> ticketSoldMap = new HashMap<>();
-        for (Ticket ticket : tickets) {
-            ticketSoldMap.put(ticket.getTicketType(), ticket.getQuantitySold());
-        }
-        responseDto.setTicketsSold(ticketSoldMap);
 
+        List<Ticket> tickets = ticketRepository.findByEvent(event);
+        Map<String, Double> ticketPrices = new HashMap<>();
+        for (Ticket ticket : tickets) {
+            ticketPrices.put(ticket.getTicketType(), ticket.getPrice());
+        }
+        responseDto.setTicketPrices(ticketPrices);
+
+        // Check if Authorization header exists
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                Integer userId = jwtUtil.extractUserId(authHeader.substring(7));
+                User currentUser = userRepository.findById(userId)
+                        .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+                if (!UserRole.customer.equals(currentUser.getRole())) {
+                    Map<String, Integer> ticketSoldMap = new HashMap<>();
+                    for (Ticket ticket : tickets) {
+                        ticketSoldMap.put(ticket.getTicketType(), ticket.getQuantitySold());
+                    }
+                    responseDto.setTicketsSold(ticketSoldMap);
+                }
+            } catch (Exception e) {
+                // log.warn("Invalid token or user not found", e);
+                // Do nothing, just skip showing ticketsSold
+            }
+        }
+        // if no Authorization header -> no ticketsSold
 
         return responseDto;
+    }
+
+
+    @Override
+    public Map<String, Object> getRecommendEvents(String category, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size) {
+        if (page > 0) {
+            page = page - 1;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+
+        Specification<Event> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (category != null && !category.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("category"), category));
+            }
+            if (address != null && !address.isEmpty()) {
+                String pattern = "%" + address.toLowerCase() + "%";
+
+                Predicate addressNameLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("addressName")), pattern);
+
+                Predicate addressDetailLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("addressDetail")), pattern);
+
+                Predicate wardLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("ward").get("name")), pattern);
+
+                Predicate districtLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("ward").get("district").get("name")), pattern);
+
+                Predicate provinceLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), pattern);
+
+                predicates.add(criteriaBuilder.or(addressNameLike, addressDetailLike, wardLike, districtLike, provinceLike));
+            }
+            if (startTime != null && endTime != null) {
+                // Check if event overlaps with [startTime, endTime]
+                predicates.add(criteriaBuilder.and(
+                        criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime),
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime)
+                ));
+            } else {
+                if (startTime != null) {
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime));
+                }
+                if (endTime != null) {
+                    predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime));
+                }
+            }
+            if (name != null && !name.isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("eventName")), "%" + name.toLowerCase() + "%"));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Event> eventPage = eventRepository.findAll(specification, pageable);
+
+        List<RecommendEventsResponseDto> eventDTOs = eventPage.getContent().stream().map(event -> {
+            RecommendEventsResponseDto dto = new RecommendEventsResponseDto();
+            dto.setEventId(event.getEventId());
+            dto.setEventName(event.getEventName());
+            dto.setAddress(
+                    (event.getAddressName() != null ? event.getAddressName() + ", " : "") +
+                            (event.getAddressDetail() != null ? event.getAddressDetail() + ", " : "") +
+                            event.getWard().getName() + ", " +
+                            event.getWard().getDistrict().getName() + ", " +
+                            event.getWard().getDistrict().getProvince().getName()
+            );
+            dto.setStartTime(event.getStartTime().toString());
+            dto.setEndTime(event.getEndTime().toString());
+            dto.setCategory(event.getCategory());
+            dto.setLogoUrl(event.getLogoUrl());
+            List<Ticket> tickets = ticketRepository.findByEvent(event);
+            String minPrice = tickets.stream()
+                    .map(Ticket::getPrice)
+                    .min(Double::compareTo)
+                    .map(String::valueOf)
+                    .orElse("0.0");
+            dto.setMinPrice(minPrice);
+            dto.setBackgroundUrl(event.getBackgroundUrl());
+            return dto;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("listEvents", eventDTOs);
+        response.put("pageSize", eventPage.getSize());
+        response.put("pageNo", eventPage.getNumber() + 1);
+        response.put("totalPages", eventPage.getTotalPages());
+        return response;
     }
 }
