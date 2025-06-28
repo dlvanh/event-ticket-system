@@ -23,5 +23,6 @@ public class DetailEventResponseDto {
     private String organizerName;
     private String organizerEmail;
     private String organizerPhoneNumber;
+    private Map<String, Double> ticketPrices;
     private Map<String, Integer> ticketsSold;
 }

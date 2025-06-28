@@ -121,9 +121,9 @@ public class EventController {
     }
 
     @GetMapping("/{eventId}")
-    public ResponseEntity<Object> getEventById(@PathVariable Integer eventId) {
+    public ResponseEntity<Object> getEventById(@PathVariable Integer eventId, HttpServletRequest request) {
         try {
-            DetailEventResponseDto event = eventService.getEventById(eventId);
+            DetailEventResponseDto event = eventService.getEventById(eventId, request);
             return APIResponse.responseBuilder(
                     event,
                     "Event retrieved successfully",
@@ -139,6 +139,39 @@ public class EventController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while retrieving the event",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/recommend")
+    public ResponseEntity<Object> getRecommendEvents(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startTime,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endTime,
+            @RequestParam(required = false) String name,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        try {
+            if(page<=0&&size<=0) {
+                page = 1;
+                size = 1;
+            }
+            Map<String, Object> response = eventService.getRecommendEvents(category, address, startTime, endTime, name, page, size);
+            return APIResponse.responseBuilder(
+                    response,
+                    "Recommended events retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while retrieving recommended events",
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
