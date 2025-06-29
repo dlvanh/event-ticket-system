@@ -13,4 +13,6 @@ public interface EventService {
     DetailEventResponseDto getEventById(Integer eventId, HttpServletRequest request);
     Map<String,Object> getEventsByOrganizer(HttpServletRequest request, String approveStatus, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size);
     Map<String, Object> getRecommendEvents(String category, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size);
+    Map<String, Object> getPendingEvents(HttpServletRequest request,String address, LocalDateTime startTime, LocalDateTime endTime, String name,  Integer page, Integer size);
+    Map<String, Object> getListEvents(HttpServletRequest request,String status, String approvalStatus, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size);
 }

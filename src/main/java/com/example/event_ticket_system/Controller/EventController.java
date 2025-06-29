@@ -176,4 +176,97 @@ public class EventController {
             );
         }
     }
+
+    @GetMapping("/pending")
+    public ResponseEntity<Object> getPendingEvents(
+            HttpServletRequest request,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startTime,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endTime,
+            @RequestParam(required = false) String name,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        try {
+            if(page<=0&&size<=0) {
+                page = 1;
+                size = 1;
+            }
+            Map<String, Object> response = eventService.getPendingEvents(request,address,startTime,endTime,name, page, size);
+            return APIResponse.responseBuilder(
+                    response,
+                    "Pending events retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        }
+        catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while retrieving pending events",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping()
+        public ResponseEntity<Object> getListEvents(
+                HttpServletRequest request,
+                @RequestParam(required = false) String status,
+                @RequestParam(required = false) String approvalStatus,
+                @RequestParam(required = false) String address,
+                @RequestParam(required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                LocalDateTime startTime,
+                @RequestParam(required = false)
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                LocalDateTime endTime,
+                @RequestParam(required = false) String name,
+                @RequestParam(defaultValue = "1") Integer page,
+                @RequestParam(defaultValue = "10") Integer size) {
+        try {
+            if(page<=0&&size<=0) {
+                page = 1;
+                size = 1;
+            }
+            Map<String, Object> response = eventService.getListEvents(request, status, approvalStatus, address, startTime, endTime, name, page, size);
+            return APIResponse.responseBuilder(
+                    response,
+                    "Events retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while retrieving events",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

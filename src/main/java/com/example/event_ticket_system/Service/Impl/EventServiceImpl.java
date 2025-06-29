@@ -3,6 +3,7 @@ package com.example.event_ticket_system.Service.Impl;
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
 import com.example.event_ticket_system.DTO.response.DetailEventResponseDto;
 import com.example.event_ticket_system.DTO.response.GetEventsByOrganizerResponseDto;
+import com.example.event_ticket_system.DTO.response.GetEventsResponseDto;
 import com.example.event_ticket_system.DTO.response.RecommendEventsResponseDto;
 import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.Ticket;
@@ -366,6 +367,176 @@ public class EventServiceImpl implements EventService {
                     .orElse("0.0");
             dto.setMinPrice(minPrice);
             dto.setBackgroundUrl(event.getBackgroundUrl());
+            return dto;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("listEvents", eventDTOs);
+        response.put("pageSize", eventPage.getSize());
+        response.put("pageNo", eventPage.getNumber() + 1);
+        response.put("totalPages", eventPage.getTotalPages());
+        return response;
+    }
+
+    @Override
+    public Map<String, Object> getPendingEvents(HttpServletRequest request,String address, LocalDateTime startTime, LocalDateTime endTime, String name,  Integer page, Integer size) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        if (!UserRole.admin.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to view pending events.");
+        }
+        if (page > 0) {
+            page = page - 1;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+
+        Specification<Event> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (address != null && !address.isEmpty()) {
+                String pattern = "%" + address.toLowerCase() + "%";
+
+                Predicate addressNameLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("addressName")), pattern);
+
+                Predicate addressDetailLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("addressDetail")), pattern);
+
+                Predicate wardLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("ward").get("name")), pattern);
+
+                Predicate districtLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("ward").get("district").get("name")), pattern);
+
+                Predicate provinceLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), pattern);
+
+                predicates.add(criteriaBuilder.or(addressNameLike, addressDetailLike, wardLike, districtLike, provinceLike));
+            }
+            if (startTime != null && endTime != null) {
+                // Check if event overlaps with [startTime, endTime]
+                predicates.add(criteriaBuilder.and(
+                        criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime),
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime)
+                ));
+            } else {
+                if (startTime != null) {
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime));
+                }
+                if (endTime != null) {
+                    predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime));
+                }
+            }
+            if (name != null && !name.isEmpty()) {
+                predicates.add(criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("eventName")), "%" + name.toLowerCase() + "%"));
+            }
+            predicates.add(criteriaBuilder.equal(root.get("approvalStatus"), ApprovalStatus.pending));
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Event> eventPage = eventRepository.findAll(specification, pageable);
+
+        List<GetEventsResponseDto> eventDTOs = eventPage.getContent().stream().map(event -> {
+            GetEventsResponseDto dto = new GetEventsResponseDto();
+            dto.setEventId(event.getEventId());
+            dto.setEventName(event.getEventName());
+            dto.setStatus(event.getStatus().name());
+            dto.setApprovalStatus(event.getApprovalStatus().name());
+            dto.setStartTime(event.getStartTime().toString());
+            dto.setEndTime(event.getEndTime().toString());
+            dto.setUpdateAt(event.getUpdatedAt().toString());
+            dto.setOrganizerName(event.getOrganizer().getFullName());
+            return dto;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("listEvents", eventDTOs);
+        response.put("pageSize", eventPage.getSize());
+        response.put("pageNo", eventPage.getNumber() + 1);
+        response.put("totalPages", eventPage.getTotalPages());
+
+        return response;
+    }
+
+    @Override
+    public Map<String, Object> getListEvents(HttpServletRequest request, String status, String approvalStatus, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        if (!UserRole.admin.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to view all events.");
+        }
+
+        if (page > 0) {
+            page = page - 1;
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+
+        Specification<Event> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (address != null && !address.isEmpty()) {
+                String pattern = "%" + address.toLowerCase() + "%";
+
+                Predicate addressNameLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("addressName")), pattern);
+
+                Predicate addressDetailLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("addressDetail")), pattern);
+
+                Predicate wardLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("ward").get("name")), pattern);
+
+                Predicate districtLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("ward").get("district").get("name")), pattern);
+
+                Predicate provinceLike = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), pattern);
+
+                predicates.add(criteriaBuilder.or(addressNameLike, addressDetailLike, wardLike, districtLike, provinceLike));
+            }
+            if (startTime != null && endTime != null) {
+                // Check if event overlaps with [startTime, endTime]
+                predicates.add(criteriaBuilder.and(
+                        criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime),
+                        criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime)
+                ));
+            } else {
+                if (startTime != null) {
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime));
+                }
+                if (endTime != null) {
+                    predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime));
+                }
+            }
+            if (name != null && !name.isEmpty()) {
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("eventName")), "%" + name.toLowerCase() + "%"));
+            }
+            if (status != null && !status.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            }
+            if (approvalStatus != null && !approvalStatus.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("approvalStatus"), approvalStatus));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Event> eventPage = eventRepository.findAll(specification, pageable);
+        List<GetEventsResponseDto> eventDTOs = eventPage.getContent().stream().map(event -> {
+            GetEventsResponseDto dto = new GetEventsResponseDto();
+            dto.setEventId(event.getEventId());
+            dto.setEventName(event.getEventName());
+            dto.setStatus(event.getStatus().name());
+            dto.setApprovalStatus(event.getApprovalStatus().name());
+            dto.setStartTime(event.getStartTime().toString());
+            dto.setEndTime(event.getEndTime().toString());
+            dto.setUpdateAt(event.getUpdatedAt().toString());
+            dto.setOrganizerName(event.getOrganizer().getFullName());
             return dto;
         }).collect(Collectors.toList());
 
