@@ -147,6 +147,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public Map<String, Object> getEventsByOrganizer(HttpServletRequest request,
+                                                    String status,
                                                     String approveStatus,
                                                     LocalDateTime startTime,
                                                     LocalDateTime endTime,
@@ -172,6 +173,9 @@ public class EventServiceImpl implements EventService {
 
             predicates.add(criteriaBuilder.equal(root.get("organizer").get("id"), organizerId));
 
+            if (status != null && !status.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            }
             if (approveStatus != null && !approveStatus.isEmpty()) {
                 predicates.add(criteriaBuilder.equal(root.get("approvalStatus"), approveStatus));
             }
@@ -207,7 +211,6 @@ public class EventServiceImpl implements EventService {
             dto.setStartTime(event.getStartTime().toString());
             dto.setEndTime(event.getEndTime().toString());
             dto.setUpdateAt(event.getUpdatedAt().toString());
-            dto.setRejectReason(event.getRejectionReason() != null ? event.getRejectionReason() : "N/A");
             return dto;
         }).collect(Collectors.toList());
 
@@ -276,7 +279,7 @@ public class EventServiceImpl implements EventService {
             }
         }
         // if no Authorization header -> no ticketsSold
-
+        responseDto.setRejectReason( event.getRejectionReason() != null ? event.getRejectionReason() : "N/A");
         return responseDto;
     }
 

@@ -25,4 +25,5 @@ public class DetailEventResponseDto {
     private String organizerPhoneNumber;
     private Map<String, Double> ticketPrices;
     private Map<String, Integer> ticketsSold;
+    private String rejectReason;
 }

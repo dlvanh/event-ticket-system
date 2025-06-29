@@ -79,6 +79,7 @@ public class EventController {
     public ResponseEntity<Object> getEventsByOrganizer(
             HttpServletRequest request,
             @RequestParam(required = false) String name,
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) String approveStatus,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
@@ -93,7 +94,7 @@ public class EventController {
             page = 1;
             size = 1;
             }
-            Map<String, Object> response = eventService.getEventsByOrganizer(request, approveStatus, startTime, endTime, name, page, size);
+            Map<String, Object> response = eventService.getEventsByOrganizer(request, status, approveStatus, startTime, endTime, name, page, size);
             return APIResponse.responseBuilder(
                     response,
                     "Events retrieved successfully",
