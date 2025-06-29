@@ -66,4 +66,7 @@ public class Event {
 
     @Column(name="background_url")
     private String backgroundUrl;
+
+    @Column(name="rejection_reason")
+    private String rejectionReason;
 }
