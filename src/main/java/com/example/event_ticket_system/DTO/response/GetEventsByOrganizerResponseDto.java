@@ -10,4 +10,5 @@ public class GetEventsByOrganizerResponseDto {
     private String startTime;
     private String endTime;
     private String updateAt;
+    private String rejectReason;
 }

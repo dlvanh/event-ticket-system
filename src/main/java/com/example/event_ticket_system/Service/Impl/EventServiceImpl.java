@@ -207,6 +207,7 @@ public class EventServiceImpl implements EventService {
             dto.setStartTime(event.getStartTime().toString());
             dto.setEndTime(event.getEndTime().toString());
             dto.setUpdateAt(event.getUpdatedAt().toString());
+            dto.setRejectReason(event.getRejectionReason() != null ? event.getRejectionReason() : "N/A");
             return dto;
         }).collect(Collectors.toList());
 
