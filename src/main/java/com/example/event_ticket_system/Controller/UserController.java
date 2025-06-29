@@ -1,5 +1,6 @@
 package com.example.event_ticket_system.Controller;
 
+import com.example.event_ticket_system.DTO.request.EventRejectionReasonRequest;
 import com.example.event_ticket_system.DTO.request.UpdateProfileRequest;
 import com.example.event_ticket_system.DTO.response.APIResponse;
 import com.example.event_ticket_system.DTO.request.DeleteRequest;
@@ -298,6 +299,72 @@ public class UserController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while approving organizer",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PutMapping("/admin/approve-event")
+    @PreAuthorize("hasAuthority('ROLE_admin')")
+    public ResponseEntity<Object> approveEvent(@RequestParam("eventId") Integer eventId, HttpServletRequest request) {
+        try {
+            userService.approveEvent(eventId, request);
+            return APIResponse.responseBuilder(
+                    null,
+                    "Event approved successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (RuntimeException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during approving event", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while approving event",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PutMapping("/admin/reject-event")
+    @PreAuthorize("hasAuthority('ROLE_admin')")
+    public ResponseEntity<Object> rejectEvent(@RequestParam("eventId") Integer eventId,
+                                              @Valid @RequestBody EventRejectionReasonRequest eventRejectionReasonRequest,
+                                              HttpServletRequest request) {
+        try {
+            userService.rejectEvent(eventId, request, eventRejectionReasonRequest);
+            return APIResponse.responseBuilder(
+                    null,
+                    "Event rejected successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (RuntimeException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during rejecting event", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while rejecting event",
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }

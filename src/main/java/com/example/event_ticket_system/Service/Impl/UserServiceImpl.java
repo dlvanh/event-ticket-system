@@ -1,11 +1,16 @@
 package com.example.event_ticket_system.Service.Impl;
 
+import com.example.event_ticket_system.DTO.request.EventRejectionReasonRequest;
 import com.example.event_ticket_system.DTO.request.OrganizerRequest;
 import com.example.event_ticket_system.DTO.request.UpdateProfileRequest;
 import com.example.event_ticket_system.DTO.response.UserResponseDto;
+import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.User;
+import com.example.event_ticket_system.Enums.ApprovalStatus;
+import com.example.event_ticket_system.Enums.EventStatus;
 import com.example.event_ticket_system.Enums.UserRole;
 import com.example.event_ticket_system.Enums.UserStatus;
+import com.example.event_ticket_system.Repository.EventRepository;
 import com.example.event_ticket_system.Repository.UserRepository;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.AccountService;
@@ -54,6 +59,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    @Autowired
+    private EventRepository eventRepository;
 
     @Override
     public void deleteUsersByIds(List<Integer> ids, HttpServletRequest request) {
@@ -387,5 +395,77 @@ public class UserServiceImpl implements UserService {
         user.setCreatedAt(LocalDateTime.now().toInstant(java.time.ZoneOffset.UTC));
         userRepository.save(user);
 
+    }
+
+    @Override
+    public void approveEvent(Integer eventId, HttpServletRequest request) {
+        String role = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+        if (!"ROLE_admin".equals(role)) {
+            throw new SecurityException("You do not have permission to approve events.");
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+
+        if (event.getStatus().equals(EventStatus.completed)) {
+            throw new IllegalStateException("Event is already ended.");
+        }
+
+        if (event.getStatus().equals(EventStatus.cancelled)) {
+            throw new IllegalStateException("Event is already cancelled.");
+        }
+
+        if (event.getApprovalStatus().equals(ApprovalStatus.approved)) {
+            throw new IllegalStateException("Event is already approved.");
+        }
+
+        if (event.getApprovalStatus().equals(ApprovalStatus.rejected)) {
+            throw new IllegalStateException("Event is already rejected.");
+        }
+
+        if (event.getApprovalStatus().equals(ApprovalStatus.pending)) {
+            event.setApprovalStatus(ApprovalStatus.approved);
+            event.setUpdatedAt(LocalDateTime.now());
+            eventRepository.save(event);
+        } else {
+            throw new RuntimeException("Approval failed.");
+        }
+    }
+
+    @Override
+    public void rejectEvent(Integer eventId, HttpServletRequest request, EventRejectionReasonRequest eventRejectionReasonRequest) {
+        String role = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+        if (!"ROLE_admin".equals(role)) {
+            throw new SecurityException("You do not have permission to reject events.");
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+
+        if (event.getStatus().equals(EventStatus.completed)) {
+            throw new IllegalStateException("Event is already ended.");
+        }
+
+        if (event.getStatus().equals(EventStatus.cancelled)) {
+            throw new IllegalStateException("Event is already cancelled.");
+        }
+
+        if (event.getApprovalStatus().equals(ApprovalStatus.approved)) {
+            throw new IllegalStateException("Event is already approved.");
+        }
+
+        if (event.getApprovalStatus().equals(ApprovalStatus.rejected)) {
+            throw new IllegalStateException("Event is already rejected.");
+        }
+
+        if (event.getApprovalStatus().equals(ApprovalStatus.pending)) {
+            event.setStatus(EventStatus.cancelled);
+            event.setApprovalStatus(ApprovalStatus.rejected);
+            event.setRejectionReason(eventRejectionReasonRequest.getRejectionReason());
+            event.setUpdatedAt(LocalDateTime.now());
+            eventRepository.save(event);
+        } else {
+            throw new RuntimeException("Rejection failed.");
+        }
     }
 }
