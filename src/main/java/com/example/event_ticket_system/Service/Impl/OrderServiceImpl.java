@@ -46,7 +46,10 @@ public class OrderServiceImpl implements OrderService {
         for (OrderRequestDto.OrderTicketRequestDto ticketDto : dto.getTickets()) {
             Ticket ticket = ticketRepository.findById(ticketDto.getTicketId())
                     .orElseThrow(() -> new EntityNotFoundException("Ticket not found"));
-
+            // Số lượng vé không được quá 5
+            if (ticketDto.getQuantity() <= 0 || ticketDto.getQuantity() > 5) {
+                throw new IllegalArgumentException("Số lượng vé phải phải lớn hơn 0 và không được quá 5");
+            }
             // Kiểm tra vé có thuộc sự kiện
             if (!ticket.getEvent().getEventId().equals(dto.getEventId())) {
                 throw new IllegalArgumentException("Ticket không thuộc event");
