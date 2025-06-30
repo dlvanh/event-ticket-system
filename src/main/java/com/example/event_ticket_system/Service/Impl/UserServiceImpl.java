@@ -6,10 +6,7 @@ import com.example.event_ticket_system.DTO.request.UpdateProfileRequest;
 import com.example.event_ticket_system.DTO.response.UserResponseDto;
 import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.User;
-import com.example.event_ticket_system.Enums.ApprovalStatus;
-import com.example.event_ticket_system.Enums.EventStatus;
-import com.example.event_ticket_system.Enums.UserRole;
-import com.example.event_ticket_system.Enums.UserStatus;
+import com.example.event_ticket_system.Enums.*;
 import com.example.event_ticket_system.Repository.EventRepository;
 import com.example.event_ticket_system.Repository.UserRepository;
 import com.example.event_ticket_system.Security.JwtUtil;
@@ -255,19 +252,13 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
 
-
-        if (request.getFullName() != null && !request.getFullName().isBlank()) {
+        if (request.getFullName() != null && !request.getFullName().trim().isEmpty()) {
             user.setFullName(request.getFullName());
         }
-//        if (request.getEmail() != null && !request.getEmail().isBlank() && !request.getEmail().equals(user.getEmail())) {
-//            if (accountService.existsByEmail(request.getEmail())) {
-//                throw new IllegalArgumentException("Email này đã được sử dụng.");
-//            }
-//            user.setEmail(request.getEmail());
-//        }
+
         if (request.getPhoneNumber() != null) {
             String phoneNumber = request.getPhoneNumber().trim();
-            String vnPhoneRegex = "^(\\+84|0)(3[2-9]|5[689]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$";
+            String vnPhoneRegex = "^(\\+84|0)(2(0[3-9]|1[0-69]|2[025-9]|3[2-9]|4[0-9]|5[124-9]|6[039]|7[0-7]|8[0-9]|9[0-47-9])|3[2-9]|5[5689]|7[06-9]|8[0-689]|9[0-46-9])[0-9]{7}$";
 
             if (!phoneNumber.isBlank() && phoneNumber.matches(vnPhoneRegex)) {
                 user.setPhoneNumber(phoneNumber);
@@ -275,11 +266,20 @@ public class UserServiceImpl implements UserService {
                 throw new IllegalArgumentException("Số điện thoại không đúng định dạng Việt Nam");
             }
         }
-        if (request.getAddress() != null) {
-            user.setAddress(request.getAddress().isBlank() ? null : request.getAddress());
-        }
-        if (request.getBio() != null) {
-            user.setBio(request.getBio().isBlank() ? null : request.getBio());
+
+        user.setAddress(request.getAddress() != null && !request.getAddress().isEmpty() ? request.getAddress() : null);
+
+        user.setBio(request.getBio() != null && !request.getBio().isEmpty() ? request.getBio() : null);
+
+        if (request.getGender() != null && !request.getGender().isEmpty()) {
+            try {
+                Gender gender = Gender.valueOf(String.valueOf(request.getGender()));
+                user.setGender(gender);
+            } catch (IllegalArgumentException e) { //? chưa biết why ko dc
+                throw new IllegalArgumentException("Phải là 1 trong 3 giá trị này: Male, Female, Other");
+            }
+        } else {
+            user.setGender(null);
         }
 
         user.setUpdatedAt(Instant.now());
@@ -407,6 +407,7 @@ public class UserServiceImpl implements UserService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
+        //TODO: refine this
         if (event.getStatus().equals(EventStatus.completed)) {
             throw new IllegalStateException("Event is already ended.");
         }
