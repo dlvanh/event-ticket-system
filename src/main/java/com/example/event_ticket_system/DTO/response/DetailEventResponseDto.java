@@ -21,6 +21,8 @@ public class DetailEventResponseDto {
     private String backgroundUrl;
     private Integer organizerId;
     private String organizerName;
+    private String organizerBio;
+    private String organizerAvatarUrl;
     private String organizerEmail;
     private String organizerPhoneNumber;
     private Map<String, Double> ticketPrices;

@@ -251,6 +251,8 @@ public class EventServiceImpl implements EventService {
         responseDto.setOrganizerId(event.getOrganizer().getId());
         responseDto.setOrganizerName(event.getOrganizer().getFullName());
         responseDto.setOrganizerEmail(event.getOrganizer().getEmail());
+        responseDto.setOrganizerBio(event.getOrganizer().getBio());
+        responseDto.setOrganizerAvatarUrl(event.getOrganizer().getProfilePicture());
 
         List<Ticket> tickets = ticketRepository.findByEvent(event);
         Map<String, Double> ticketPrices = new HashMap<>();
