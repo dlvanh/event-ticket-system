@@ -4,4 +4,8 @@ public enum Gender {
     Male,
     Female,
     Other;
+
+    public boolean isEmpty() {
+        return this.name().isEmpty();
+    }
 }
