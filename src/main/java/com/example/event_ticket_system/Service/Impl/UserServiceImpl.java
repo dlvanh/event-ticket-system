@@ -469,4 +469,12 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Rejection failed.");
         }
     }
+
+    @Override
+    public void deleteAccount(HttpServletRequest request) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        userRepository.delete(currentUser);
+    }
 }

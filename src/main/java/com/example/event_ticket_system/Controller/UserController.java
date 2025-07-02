@@ -369,4 +369,29 @@ public class UserController {
             );
         }
     }
+
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<Object> deleteAccount(HttpServletRequest request) {
+        try {
+            userService.deleteAccount(request);
+            return APIResponse.responseBuilder(
+                    null,
+                    "Account deleted successfully",
+                    HttpStatus.OK
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during account deletion", e);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while deleting account",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

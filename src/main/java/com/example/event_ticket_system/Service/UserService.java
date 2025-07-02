@@ -23,5 +23,5 @@ public interface UserService {
     void registerOrganizer(MultipartFile file, OrganizerRequest request);
     void approveEvent(Integer eventId, HttpServletRequest request);
     void rejectEvent(Integer eventId, HttpServletRequest request, EventRejectionReasonRequest eventRejectionReasonRequest);
-
+    void deleteAccount(HttpServletRequest request);
 }
