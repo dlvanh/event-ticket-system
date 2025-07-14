@@ -1,6 +1,7 @@
 package com.example.event_ticket_system.Controller;
 
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
+import com.example.event_ticket_system.DTO.request.UpdateEventRequestDto;
 import com.example.event_ticket_system.DTO.response.APIResponse;
 import com.example.event_ticket_system.DTO.response.DetailEventResponseDto;
 import com.example.event_ticket_system.Service.EventService;
@@ -266,6 +267,61 @@ public class EventController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while retrieving events",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PutMapping(value = "/{eventId}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<Object> updateEvent(
+            @PathVariable Integer eventId,
+            @RequestPart("data") @Valid UpdateEventRequestDto eventRequestDto,
+            @RequestPart(value = "logo", required = false) MultipartFile logoFile,
+            @RequestPart(value = "background", required = false) MultipartFile backgroundFile,
+            BindingResult bindingResult,
+            HttpServletRequest request) {
+        try {
+            Map<String, String> errors = new HashMap<>();
+            if (bindingResult.hasErrors()) {
+                bindingResult.getFieldErrors().forEach(error ->
+                        errors.put(error.getField(), error.getDefaultMessage())
+                );
+            }
+            if (!errors.isEmpty()) {
+                return APIResponse.responseBuilder(
+                        errors,
+                        "Validation failed",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            eventService.updateEvent(eventId, eventRequestDto, logoFile, backgroundFile, request);
+            return APIResponse.responseBuilder(
+                    null,
+                    "Event updated successfully",
+                    HttpStatus.OK
+            );
+        }catch (IllegalArgumentException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while updating the event",
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }

@@ -1,6 +1,7 @@
 package com.example.event_ticket_system.Service.Impl;
 
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
+import com.example.event_ticket_system.DTO.request.UpdateEventRequestDto;
 import com.example.event_ticket_system.DTO.response.DetailEventResponseDto;
 import com.example.event_ticket_system.DTO.response.GetEventsByOrganizerResponseDto;
 import com.example.event_ticket_system.DTO.response.GetEventsResponseDto;
@@ -552,5 +553,109 @@ public class EventServiceImpl implements EventService {
         response.put("pageNo", eventPage.getNumber() + 1);
         response.put("totalPages", eventPage.getTotalPages());
         return response;
+    }
+
+    @Override
+    public void updateEvent(Integer eventId, UpdateEventRequestDto eventRequestDto, MultipartFile logoFile, MultipartFile backgroundFile, HttpServletRequest request) {
+        Integer organizerId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(organizerId)
+                .orElseThrow(() -> new EntityNotFoundException("Organizer not found with id: " + organizerId));
+
+        if (!UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to update events.");
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+
+        if (!event.getOrganizer().getId().equals(organizerId)) {
+            throw new SecurityException("You do not have permission to update this event.");
+        }
+
+        if (eventRequestDto.getStartTime().isAfter(eventRequestDto.getEndTime())) {
+            throw new IllegalArgumentException("Start time must be before end time.");
+        }
+
+        // Kiểm tra định dạng ảnh
+        List<String> allowedTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp");
+        if (logoFile != null && !allowedTypes.contains(logoFile.getContentType())) {
+            throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, webp)");
+        }
+        if (backgroundFile != null && !allowedTypes.contains(backgroundFile.getContentType())) {
+            throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, webp)");
+        }
+
+        try {
+            if (logoFile != null) {
+                String logoUrl = uploadImageToImgbb(logoFile);
+                event.setLogoUrl(logoUrl);
+            }
+            if (backgroundFile != null) {
+                String backgroundUrl = uploadImageToImgbb(backgroundFile);
+                event.setBackgroundUrl(backgroundUrl);
+            }
+
+            // Cập nhật thông tin sự kiện
+            event.setEventName(eventRequestDto.getEventName());
+            event.setDescription(eventRequestDto.getDescription());
+            event.setAddressName(eventRequestDto.getAddressName());
+            event.setAddressDetail(eventRequestDto.getAddressDetail());
+            Ward ward = wardRepository.findById(eventRequestDto.getWardId())
+                    .orElseThrow(() -> new EntityNotFoundException("Ward not found with id: " + eventRequestDto.getWardId()));
+            event.setWard(ward);
+            event.setStartTime(eventRequestDto.getStartTime());
+            event.setEndTime(eventRequestDto.getEndTime());
+            event.setCategory(eventRequestDto.getCategory());
+            event.setUpdatedAt(LocalDateTime.now());
+
+            // Reset approval status
+            event.setApprovalStatus(ApprovalStatus.pending);
+
+            eventRepository.save(event);
+            // Xử lý tickets
+            List<UpdateEventRequestDto.TicketTypeDto> ticketDtos = eventRequestDto.getTicketTypes();
+            if (ticketDtos != null) {
+                // Tạo set các ticketType gửi lên
+                Set<String> incomingTicketTypes = ticketDtos.stream()
+                        .map(UpdateEventRequestDto.TicketTypeDto::getTicketType)
+                        .collect(Collectors.toSet());
+
+                // Lấy tất cả ticket hiện có
+                List<Ticket> existingTickets = ticketRepository.findByEvent(event);
+
+                // Xóa ticket không còn trong payload
+                for (Ticket existing : existingTickets) {
+                    if (!incomingTicketTypes.contains(existing.getTicketType())) {
+                        ticketRepository.delete(existing);
+                    }
+                }
+
+                // Cập nhật hoặc thêm mới
+                for (UpdateEventRequestDto.TicketTypeDto dto : ticketDtos) {
+                    // tìm xem ticket này đã tồn tại chưa
+                    Optional<Ticket> existingOpt = existingTickets.stream()
+                            .filter(t -> t.getTicketType().equals(dto.getTicketType()))
+                            .findFirst();
+
+                    if (existingOpt.isPresent()) {
+                        // Update
+                        Ticket ticket = existingOpt.get();
+                        ticket.setQuantityTotal(dto.getQuantityTotal());
+                        ticket.setPrice(dto.getPrice());
+                        ticketRepository.save(ticket);
+                    } else {
+                        // Thêm mới
+                        Ticket newTicket = new Ticket();
+                        newTicket.setTicketType(dto.getTicketType());
+                        newTicket.setQuantityTotal(dto.getQuantityTotal());
+                        newTicket.setPrice(dto.getPrice());
+                        newTicket.setEvent(event);
+                        ticketRepository.save(newTicket);
+                    }
+                }
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Cập nhật sự kiện thất bại: " + e.getMessage(), e);
+        }
     }
 }
