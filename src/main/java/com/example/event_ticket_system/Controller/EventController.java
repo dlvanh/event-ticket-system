@@ -158,13 +158,14 @@ public class EventController {
             LocalDateTime endTime,
             @RequestParam(required = false) String name,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size) {
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) String sortBy) {
         try {
             if(page<=0&&size<=0) {
                 page = 1;
                 size = 1;
             }
-            Map<String, Object> response = eventService.getRecommendEvents(category, address, startTime, endTime, name, page, size);
+            Map<String, Object> response = eventService.getRecommendEvents(category, address, startTime, endTime, name, page, size, sortBy);
             return APIResponse.responseBuilder(
                     response,
                     "Recommended events retrieved successfully",

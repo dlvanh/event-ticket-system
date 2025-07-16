@@ -13,10 +13,7 @@ import com.example.event_ticket_system.Entity.Ward;
 import com.example.event_ticket_system.Enums.ApprovalStatus;
 import com.example.event_ticket_system.Enums.EventStatus;
 import com.example.event_ticket_system.Enums.UserRole;
-import com.example.event_ticket_system.Repository.EventRepository;
-import com.example.event_ticket_system.Repository.TicketRepository;
-import com.example.event_ticket_system.Repository.UserRepository;
-import com.example.event_ticket_system.Repository.WardRepository;
+import com.example.event_ticket_system.Repository.*;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.EventService;
 import jakarta.persistence.EntityNotFoundException;
@@ -55,6 +52,8 @@ public class EventServiceImpl implements EventService {
     private final WardRepository wardRepository;
 
     private final TicketRepository ticketRepository;
+
+    private final OrderTicketRepository orderTicketRepository;
 
     @Autowired
     private final JwtUtil jwtUtil;
@@ -288,20 +287,35 @@ public class EventServiceImpl implements EventService {
 
 
     @Override
-    public Map<String, Object> getRecommendEvents(String category, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size) {
+    public Map<String, Object> getRecommendEvents(
+            String category, String address, LocalDateTime startTime, LocalDateTime endTime,
+            String name, Integer page, Integer size, String sortBy) {
+
         if (page > 0) {
             page = page - 1;
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        // Default sort
+        String sortField = "updatedAt";
+        String sortDirection = "DESC";
+
+        if (sortBy != null && !sortBy.isEmpty()) {
+            String[] parts = sortBy.split(":");
+            if (parts.length == 2) {
+                sortField = parts[0];
+                sortDirection = parts[1];
+            }
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        if (!"totalTicketSold".equals(sortField)) {
+            Sort.Direction direction = "ASC".equalsIgnoreCase(sortDirection) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        }
 
         Specification<Event> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-
-            // Approval status must be APPROVED
             predicates.add(criteriaBuilder.equal(root.get("approvalStatus"), ApprovalStatus.approved));
-
-            // Event status must be UPCOMING
             predicates.add(criteriaBuilder.equal(root.get("status"), EventStatus.upcoming));
 
             if (category != null && !category.isEmpty()) {
@@ -309,26 +323,15 @@ public class EventServiceImpl implements EventService {
             }
             if (address != null && !address.isEmpty()) {
                 String pattern = "%" + address.toLowerCase() + "%";
-
-                Predicate addressNameLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("addressName")), pattern);
-
-                Predicate addressDetailLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("addressDetail")), pattern);
-
-                Predicate wardLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("ward").get("name")), pattern);
-
-                Predicate districtLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("ward").get("district").get("name")), pattern);
-
-                Predicate provinceLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), pattern);
+                Predicate addressNameLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("addressName")), pattern);
+                Predicate addressDetailLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("addressDetail")), pattern);
+                Predicate wardLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("ward").get("name")), pattern);
+                Predicate districtLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("ward").get("district").get("name")), pattern);
+                Predicate provinceLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), pattern);
 
                 predicates.add(criteriaBuilder.or(addressNameLike, addressDetailLike, wardLike, districtLike, provinceLike));
             }
             if (startTime != null && endTime != null) {
-                // Check if event overlaps with [startTime, endTime]
                 predicates.add(criteriaBuilder.and(
                         criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime),
                         criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime)
@@ -342,10 +345,8 @@ public class EventServiceImpl implements EventService {
                 }
             }
             if (name != null && !name.isEmpty()) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("eventName")), "%" + name.toLowerCase() + "%"));
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("eventName")), "%" + name.toLowerCase() + "%"));
             }
-
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
 
@@ -374,8 +375,18 @@ public class EventServiceImpl implements EventService {
                     .orElse("0.0");
             dto.setMinPrice(minPrice);
             dto.setBackgroundUrl(event.getBackgroundUrl());
+            dto.setTotalTicketSold(orderTicketRepository.sumQuantityByEvent(event));
             return dto;
         }).collect(Collectors.toList());
+
+        // If sorting by totalTicketSold, sort in Java
+        if ("totalTicketSold".equals(sortField)) {
+            if ("ASC".equalsIgnoreCase(sortDirection)) {
+                eventDTOs.sort(Comparator.comparingLong(RecommendEventsResponseDto::getTotalTicketSold));
+            } else {
+                eventDTOs.sort(Comparator.comparingLong(RecommendEventsResponseDto::getTotalTicketSold).reversed());
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("listEvents", eventDTOs);

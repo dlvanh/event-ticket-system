@@ -13,4 +13,5 @@ public class RecommendEventsResponseDto {
     private String logoUrl;
     private String minPrice;
     private String backgroundUrl;
+    private Long totalTicketSold;
 }
