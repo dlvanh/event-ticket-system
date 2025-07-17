@@ -17,4 +17,6 @@ public interface EventService {
     Map<String, Object> getPendingEvents(HttpServletRequest request,String address, LocalDateTime startTime, LocalDateTime endTime, String name,  Integer page, Integer size);
     void updateEvent(Integer eventId, UpdateEventRequestDto eventRequestDto, MultipartFile logoFile, MultipartFile backgroundFile, HttpServletRequest request);
     Map<String, Object> getListEvents(HttpServletRequest request,String status, String approvalStatus, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size);
+    byte[] generateExcelReport(HttpServletRequest request, Integer eventId);
+    byte[] generatePdfReport(HttpServletRequest request, Integer eventId);
 }

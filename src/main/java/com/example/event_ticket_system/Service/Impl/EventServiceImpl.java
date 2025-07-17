@@ -2,10 +2,7 @@ package com.example.event_ticket_system.Service.Impl;
 
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
 import com.example.event_ticket_system.DTO.request.UpdateEventRequestDto;
-import com.example.event_ticket_system.DTO.response.DetailEventResponseDto;
-import com.example.event_ticket_system.DTO.response.GetEventsByOrganizerResponseDto;
-import com.example.event_ticket_system.DTO.response.GetEventsResponseDto;
-import com.example.event_ticket_system.DTO.response.RecommendEventsResponseDto;
+import com.example.event_ticket_system.DTO.response.*;
 import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.Ticket;
 import com.example.event_ticket_system.Entity.User;
@@ -16,10 +13,19 @@ import com.example.event_ticket_system.Enums.UserRole;
 import com.example.event_ticket_system.Repository.*;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.EventService;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +37,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -40,7 +48,10 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 @Service
 @RequiredArgsConstructor
@@ -125,6 +136,7 @@ public class EventServiceImpl implements EventService {
             throw new RuntimeException("Tạo sự kiện thất bại: " + e.getMessage(), e);
         }
     }
+
     private String uploadImageToImgbb(MultipartFile file) throws IOException, InterruptedException {
         byte[] imageBytes = file.getBytes();
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
@@ -273,7 +285,7 @@ public class EventServiceImpl implements EventService {
         }
         responseDto.setTicketsSold(ticketSoldMap);
 
-        responseDto.setRejectReason( event.getRejectionReason() != null ? event.getRejectionReason() : "N/A");
+        responseDto.setRejectReason(event.getRejectionReason() != null ? event.getRejectionReason() : "N/A");
         return responseDto;
     }
 
@@ -388,7 +400,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Map<String, Object> getPendingEvents(HttpServletRequest request,String address, LocalDateTime startTime, LocalDateTime endTime, String name,  Integer page, Integer size) {
+    public Map<String, Object> getPendingEvents(HttpServletRequest request, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size) {
         Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
@@ -660,4 +672,174 @@ public class EventServiceImpl implements EventService {
             throw new RuntimeException("Cập nhật sự kiện thất bại: " + e.getMessage(), e);
         }
     }
+
+    public List<TicketExportDto> getTicketStatsByEvent(Integer eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+
+        List<Ticket> tickets = ticketRepository.findByEvent(event);
+
+        List<TicketExportDto> dtos = new ArrayList<>();
+        for (Ticket ticket : tickets) {
+            int total = ticket.getQuantityTotal();
+            int sold = orderTicketRepository.sumQuantityByTicket(ticket);
+            int remaining = total - sold;
+            double revenue = sold * ticket.getPrice();
+
+            dtos.add(new TicketExportDto(
+                    ticket.getTicketType(), total, sold, remaining, revenue
+            ));
+        }
+
+        return dtos;
+    }
+
+    @Override
+    public byte[] generateExcelReport(HttpServletRequest request, Integer eventId) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        if (!UserRole.admin.equals(currentUser.getRole()) && !UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to generate reports.");
+        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!event.getOrganizer().getId().equals(userId)) {
+            throw new SecurityException("You do not have permission to access this event.");
+        }
+        try {
+            List<TicketExportDto> dtos = getTicketStatsByEvent(eventId);
+            ByteArrayInputStream in = exportToExcel(dtos);
+            return in.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate Excel report", e);
+        }
+    }
+
+    private ByteArrayInputStream exportToExcel(List<TicketExportDto> dtos) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Ticket Stats");
+
+        // Header row
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"Ticket Type", "Total Quantity", "Sold Quantity", "Remaining Quantity", "Revenue"};
+
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+
+        // Data rows + calculate total revenue
+        int rowIndex = 1;
+        double totalRevenue = 0;
+        for (TicketExportDto dto : dtos) {
+            Row row = sheet.createRow(rowIndex++);
+            row.createCell(0).setCellValue(dto.getTicketType());
+            row.createCell(1).setCellValue(dto.getTotalQuantity());
+            row.createCell(2).setCellValue(dto.getSoldQuantity());
+            row.createCell(3).setCellValue(dto.getRemainingQuantity());
+            row.createCell(4).setCellValue(dto.getRevenue());
+            totalRevenue += dto.getRevenue();
+        }
+
+        // Add total revenue row
+        Row totalRow = sheet.createRow(rowIndex);
+        totalRow.createCell(3).setCellValue("Total Revenue");
+        totalRow.createCell(4).setCellValue(totalRevenue);
+
+        // Auto-size all columns
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Write to stream
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        workbook.close();
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    @Override
+    public byte[] generatePdfReport(HttpServletRequest request, Integer eventId) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        if (!UserRole.admin.equals(currentUser.getRole()) && !UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to generate reports.");
+        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!event.getOrganizer().getId().equals(userId)) {
+            throw new SecurityException("You do not have permission to access this event.");
+        }
+
+        try {
+            List<TicketExportDto> dtos = getTicketStatsByEvent(eventId);
+            return exportToPdf(dtos).readAllBytes();
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating PDF report", e);
+        }
+    }
+
+    private Font loadVietnameseFont(float size, boolean bold) throws IOException, DocumentException {
+        String fontPath = "src/main/resources/fonts/arial.ttf";
+        BaseFont baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+        return new Font(baseFont, size, bold ? Font.BOLD : Font.NORMAL);
+    }
+
+    private ByteArrayInputStream exportToPdf(List<TicketExportDto> dtos) throws DocumentException, IOException {
+        Document document = new Document();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter.getInstance(document, out);
+        document.open();
+
+        // Load font hỗ trợ tiếng Việt
+        Font fontTitle = loadVietnameseFont(16f, true);
+        Font fontHeader = loadVietnameseFont(12f, true);
+        Font fontBody = loadVietnameseFont(12f, false);
+
+        // Tiêu đề
+        Paragraph title = new Paragraph("Thống kê vé sự kiện", fontTitle);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingAfter(20f);
+        document.add(title);
+
+        PdfPTable table = new PdfPTable(5);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{2, 2, 2, 2, 2});
+
+        // Header row
+        Stream.of("Loại vé", "Tổng vé", "Đã bán", "Còn lại", "Doanh thu")
+                .forEach(h -> {
+                    PdfPCell header = new PdfPCell(new Phrase(h, fontHeader));
+                    header.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                    table.addCell(header);
+                });
+
+        double totalRevenue = 0;
+        for (TicketExportDto dto : dtos) {
+            table.addCell(new PdfPCell(new Phrase(dto.getTicketType(), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getTotalQuantity()), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getSoldQuantity()), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getRemainingQuantity()), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getRevenue()), fontBody)));
+            totalRevenue += dto.getRevenue();
+        }
+
+        // Tổng doanh thu row
+        PdfPCell empty = new PdfPCell(new Phrase(""));
+        empty.setColspan(3);
+        empty.setBorder(Rectangle.NO_BORDER);
+        table.addCell(empty);
+
+        table.addCell(new PdfPCell(new Phrase("Tổng doanh thu", fontHeader)));
+        table.addCell(new PdfPCell(new Phrase(String.valueOf(totalRevenue), fontHeader)));
+
+        document.add(table);
+        document.close();
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
 }
