@@ -13,6 +13,11 @@ import com.example.event_ticket_system.Enums.UserRole;
 import com.example.event_ticket_system.Repository.*;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.EventService;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,7 +48,10 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 @Service
 @RequiredArgsConstructor
@@ -748,6 +756,89 @@ public class EventServiceImpl implements EventService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         workbook.write(out);
         workbook.close();
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    @Override
+    public byte[] generatePdfReport(HttpServletRequest request, Integer eventId) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        if (!UserRole.admin.equals(currentUser.getRole()) && !UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to generate reports.");
+        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!event.getOrganizer().getId().equals(userId)) {
+            throw new SecurityException("You do not have permission to access this event.");
+        }
+
+        try {
+            List<TicketExportDto> dtos = getTicketStatsByEvent(eventId);
+            return exportToPdf(dtos).readAllBytes();
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating PDF report", e);
+        }
+    }
+
+    private Font loadVietnameseFont(float size, boolean bold) throws IOException, DocumentException {
+        String fontPath = "src/main/resources/fonts/arial.ttf";
+        BaseFont baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+        return new Font(baseFont, size, bold ? Font.BOLD : Font.NORMAL);
+    }
+
+    private ByteArrayInputStream exportToPdf(List<TicketExportDto> dtos) throws DocumentException, IOException {
+        Document document = new Document();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter.getInstance(document, out);
+        document.open();
+
+        // Load font hỗ trợ tiếng Việt
+        Font fontTitle = loadVietnameseFont(16f, true);
+        Font fontHeader = loadVietnameseFont(12f, true);
+        Font fontBody = loadVietnameseFont(12f, false);
+
+        // Tiêu đề
+        Paragraph title = new Paragraph("Thống kê vé sự kiện", fontTitle);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingAfter(20f);
+        document.add(title);
+
+        PdfPTable table = new PdfPTable(5);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{2, 2, 2, 2, 2});
+
+        // Header row
+        Stream.of("Loại vé", "Tổng vé", "Đã bán", "Còn lại", "Doanh thu")
+                .forEach(h -> {
+                    PdfPCell header = new PdfPCell(new Phrase(h, fontHeader));
+                    header.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                    table.addCell(header);
+                });
+
+        double totalRevenue = 0;
+        for (TicketExportDto dto : dtos) {
+            table.addCell(new PdfPCell(new Phrase(dto.getTicketType(), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getTotalQuantity()), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getSoldQuantity()), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getRemainingQuantity()), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getRevenue()), fontBody)));
+            totalRevenue += dto.getRevenue();
+        }
+
+        // Tổng doanh thu row
+        PdfPCell empty = new PdfPCell(new Phrase(""));
+        empty.setColspan(3);
+        empty.setBorder(Rectangle.NO_BORDER);
+        table.addCell(empty);
+
+        table.addCell(new PdfPCell(new Phrase("Tổng doanh thu", fontHeader)));
+        table.addCell(new PdfPCell(new Phrase(String.valueOf(totalRevenue), fontHeader)));
+
+        document.add(table);
+        document.close();
+
         return new ByteArrayInputStream(out.toByteArray());
     }
 
