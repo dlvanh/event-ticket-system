@@ -261,30 +261,21 @@ public class EventServiceImpl implements EventService {
         }
         responseDto.setTicketPrices(ticketPrices);
 
-        // Check if Authorization header exists
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            try {
-                Integer userId = jwtUtil.extractUserId(authHeader.substring(7));
-                User currentUser = userRepository.findById(userId)
-                        .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
-                if (!UserRole.customer.equals(currentUser.getRole())) {
-                    Map<String, Integer> ticketSoldMap = new HashMap<>();
-                    for (Ticket ticket : tickets) {
-                        ticketSoldMap.put(ticket.getTicketType(), ticket.getQuantitySold());
-                    }
-                    responseDto.setTicketsSold(ticketSoldMap);
-                }
-            } catch (Exception e) {
-                // log.warn("Invalid token or user not found", e);
-                // Do nothing, just skip showing ticketsSold
-            }
+        Map<String, Integer> ticketsTotal = new HashMap<>();
+        for (Ticket ticket : tickets) {
+            ticketsTotal.put(ticket.getTicketType(), ticket.getQuantityTotal());
         }
-        // if no Authorization header -> no ticketsSold
+        responseDto.setTicketsTotal(ticketsTotal);
+
+        Map<String, Integer> ticketSoldMap = new HashMap<>();
+        for (Ticket ticket : tickets) {
+            ticketSoldMap.put(ticket.getTicketType(), ticket.getQuantitySold());
+        }
+        responseDto.setTicketsSold(ticketSoldMap);
+
         responseDto.setRejectReason( event.getRejectionReason() != null ? event.getRejectionReason() : "N/A");
         return responseDto;
     }
-
 
     @Override
     public Map<String, Object> getRecommendEvents(
