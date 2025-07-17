@@ -391,6 +391,7 @@ public class UserServiceImpl implements UserService {
         user.setBio(request.getBio());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setStatus(UserStatus.pending);
+        //TODO: set role to organizer
         user.setRole(UserRole.customer);
         user.setCreatedAt(LocalDateTime.now().toInstant(java.time.ZoneOffset.UTC));
         userRepository.save(user);

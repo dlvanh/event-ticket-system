@@ -43,6 +43,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         // Role-based endpoints
+                        .requestMatchers("/api/payment/**").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/api/events/recommend").permitAll()
                         .requestMatchers("/api/events/by-organizer").authenticated()
@@ -66,12 +67,12 @@ public class SecurityConfig {
                             response.getWriter().write("OAuth2 login failed: " + exception.getMessage());
                         })
                 )
-                .exceptionHandling(exh -> exh
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.getWriter().write("Unauthorized: " + authException.getMessage());
-                        })
-                )
+//                .exceptionHandling(exh -> exh
+//                        .authenticationEntryPoint((request, response, authException) -> {
+//                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                            response.getWriter().write("Unauthorized: " + authException.getMessage());
+//                        })
+//                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thmeleaf.org">
+<head>
+    <link rel="stylesheet" href="/static/style.css"/>
+    <title>Payment Success</title>
+    <script>
+        setTimeout(function() {
+            window.location.href = "/";
+        }, 3000); // Redirect to homepage after 3 seconds
+    </script>
+</head>
+<body>
+<div class="main-box">
+    <h2 class="payment-title">Thanh toán thành công!</h2>
+    <p>Cảm ơn bạn đã sử dụng payOS! Bạn sẽ được chuyển về trang chủ trong giây lát.</p>
+    <p>Nếu có bất kỳ câu hỏi nào, hãy gửi email tới <a href="mailto:support@payos.vn">support@payos.vn</a>.</p>
+    <a id="return-page-btn" href="/">Trở về trang Tạo Link thanh toán</a>
+</div>
+</body>
+</html>
