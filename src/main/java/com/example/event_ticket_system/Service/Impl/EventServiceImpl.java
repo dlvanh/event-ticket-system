@@ -663,6 +663,7 @@ public class EventServiceImpl implements EventService {
                         newTicket.setTicketType(dto.getTicketType());
                         newTicket.setQuantityTotal(dto.getQuantityTotal());
                         newTicket.setPrice(dto.getPrice());
+                        newTicket.setQuantitySold(0); // Mặc định số lượng đã bán là 0
                         newTicket.setEvent(event);
                         ticketRepository.save(newTicket);
                     }
