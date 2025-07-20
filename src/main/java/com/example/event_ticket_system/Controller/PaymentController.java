@@ -40,22 +40,8 @@ public class PaymentController {
             if (order == null) {
                 throw new IllegalArgumentException("Order not found for PayOS order code: " + data.getOrderCode());
             }
-            // Update order status
-//            order.setStatus(data.getDesc().equals("PAID") ?
-//                    OrderStatus.paid :
-//                    OrderStatus.cancelled);
             order.setStatus(OrderStatus.paid);
             orderRepository.save(order);
-
-            // Restore ticket quantities if payment failed
-//            if (!data.getCode().equals("PAID")) {
-//                List<OrderTicket> orderTickets = orderTicketRepository.findByOrder(order);
-//                for (OrderTicket orderTicket : orderTickets) {
-//                    Ticket ticket = orderTicket.getTicket();
-//                    ticket.setQuantitySold(ticket.getQuantitySold() - orderTicket.getQuantity());
-//                    ticketRepository.save(ticket);
-//                }
-//            }
 
             response.put("error", 0);
             response.put("message", "Webhook delivered");

@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
@@ -206,5 +207,27 @@ public class OrderServiceImpl implements OrderService {
             ticketRepository.save(ticket);
         }
         orderRepository.save(order);
+    }
+
+    @Scheduled(fixedRate = 60000) // every 1 minute
+    @Transactional
+    public void autoCancelPendingOrders() throws Exception {
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(15);
+        List<Order> oldPendingOrders = orderRepository.findByStatusAndOrderDateBefore(OrderStatus.pending, cutoff);
+        if (oldPendingOrders.isEmpty()) {
+            return;
+        }
+        for (Order order : oldPendingOrders) {
+            order.setStatus(OrderStatus.cancelled);
+            order.setCancellationReason("Order auto-cancelled due to timeout");
+            payOS.cancelPaymentLink(order.getPayosOrderCode(), "Order auto-cancelled due to timeout");
+            List<OrderTicket> orderTickets = orderTicketRepository.findByOrder(order);
+            for (OrderTicket orderTicket : orderTickets) {
+                Ticket ticket = orderTicket.getTicket();
+                ticket.setQuantitySold(ticket.getQuantitySold() - orderTicket.getQuantity());
+                ticketRepository.save(ticket);
+            }
+            orderRepository.save(order);
+        }
     }
 }
