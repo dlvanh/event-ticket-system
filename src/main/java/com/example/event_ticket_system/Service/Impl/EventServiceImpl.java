@@ -1,10 +1,8 @@
 package com.example.event_ticket_system.Service.Impl;
 
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
-import com.example.event_ticket_system.DTO.response.DetailEventResponseDto;
-import com.example.event_ticket_system.DTO.response.GetEventsByOrganizerResponseDto;
-import com.example.event_ticket_system.DTO.response.GetEventsResponseDto;
-import com.example.event_ticket_system.DTO.response.RecommendEventsResponseDto;
+import com.example.event_ticket_system.DTO.request.UpdateEventRequestDto;
+import com.example.event_ticket_system.DTO.response.*;
 import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.Ticket;
 import com.example.event_ticket_system.Entity.User;
@@ -12,16 +10,22 @@ import com.example.event_ticket_system.Entity.Ward;
 import com.example.event_ticket_system.Enums.ApprovalStatus;
 import com.example.event_ticket_system.Enums.EventStatus;
 import com.example.event_ticket_system.Enums.UserRole;
-import com.example.event_ticket_system.Repository.EventRepository;
-import com.example.event_ticket_system.Repository.TicketRepository;
-import com.example.event_ticket_system.Repository.UserRepository;
-import com.example.event_ticket_system.Repository.WardRepository;
+import com.example.event_ticket_system.Repository.*;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.EventService;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +37,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -42,7 +48,10 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 @Service
 @RequiredArgsConstructor
@@ -54,6 +63,8 @@ public class EventServiceImpl implements EventService {
     private final WardRepository wardRepository;
 
     private final TicketRepository ticketRepository;
+
+    private final OrderTicketRepository orderTicketRepository;
 
     @Autowired
     private final JwtUtil jwtUtil;
@@ -125,6 +136,7 @@ public class EventServiceImpl implements EventService {
             throw new RuntimeException("Tạo sự kiện thất bại: " + e.getMessage(), e);
         }
     }
+
     private String uploadImageToImgbb(MultipartFile file) throws IOException, InterruptedException {
         byte[] imageBytes = file.getBytes();
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
@@ -261,46 +273,52 @@ public class EventServiceImpl implements EventService {
         }
         responseDto.setTicketPrices(ticketPrices);
 
-        // Check if Authorization header exists
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            try {
-                Integer userId = jwtUtil.extractUserId(authHeader.substring(7));
-                User currentUser = userRepository.findById(userId)
-                        .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
-                if (!UserRole.customer.equals(currentUser.getRole())) {
-                    Map<String, Integer> ticketSoldMap = new HashMap<>();
-                    for (Ticket ticket : tickets) {
-                        ticketSoldMap.put(ticket.getTicketType(), ticket.getQuantitySold());
-                    }
-                    responseDto.setTicketsSold(ticketSoldMap);
-                }
-            } catch (Exception e) {
-                // log.warn("Invalid token or user not found", e);
-                // Do nothing, just skip showing ticketsSold
-            }
+        Map<String, Integer> ticketsTotal = new HashMap<>();
+        for (Ticket ticket : tickets) {
+            ticketsTotal.put(ticket.getTicketType(), ticket.getQuantityTotal());
         }
-        // if no Authorization header -> no ticketsSold
-        responseDto.setRejectReason( event.getRejectionReason() != null ? event.getRejectionReason() : "N/A");
+        responseDto.setTicketsTotal(ticketsTotal);
+
+        Map<String, Integer> ticketSoldMap = new HashMap<>();
+        for (Ticket ticket : tickets) {
+            ticketSoldMap.put(ticket.getTicketType(), ticket.getQuantitySold());
+        }
+        responseDto.setTicketsSold(ticketSoldMap);
+
+        responseDto.setRejectReason(event.getRejectionReason() != null ? event.getRejectionReason() : "N/A");
         return responseDto;
     }
 
-
     @Override
-    public Map<String, Object> getRecommendEvents(String category, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size) {
+    public Map<String, Object> getRecommendEvents(
+            String category, String address, LocalDateTime startTime, LocalDateTime endTime,
+            String name, Integer page, Integer size, String sortBy) {
+
         if (page > 0) {
             page = page - 1;
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        // Default sort
+        String sortField = "updatedAt";
+        String sortDirection = "DESC";
+
+        if (sortBy != null && !sortBy.isEmpty()) {
+            String[] parts = sortBy.split(":");
+            if (parts.length == 2) {
+                sortField = parts[0];
+                sortDirection = parts[1];
+            }
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        if (!"totalTicketSold".equals(sortField)) {
+            Sort.Direction direction = "ASC".equalsIgnoreCase(sortDirection) ? Sort.Direction.ASC : Sort.Direction.DESC;
+            pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        }
 
         Specification<Event> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-
-            // Approval status must be APPROVED
             predicates.add(criteriaBuilder.equal(root.get("approvalStatus"), ApprovalStatus.approved));
-
-            // Event status must be UPCOMING
             predicates.add(criteriaBuilder.equal(root.get("status"), EventStatus.upcoming));
 
             if (category != null && !category.isEmpty()) {
@@ -308,26 +326,15 @@ public class EventServiceImpl implements EventService {
             }
             if (address != null && !address.isEmpty()) {
                 String pattern = "%" + address.toLowerCase() + "%";
-
-                Predicate addressNameLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("addressName")), pattern);
-
-                Predicate addressDetailLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("addressDetail")), pattern);
-
-                Predicate wardLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("ward").get("name")), pattern);
-
-                Predicate districtLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("ward").get("district").get("name")), pattern);
-
-                Predicate provinceLike = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), pattern);
+                Predicate addressNameLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("addressName")), pattern);
+                Predicate addressDetailLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("addressDetail")), pattern);
+                Predicate wardLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("ward").get("name")), pattern);
+                Predicate districtLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("ward").get("district").get("name")), pattern);
+                Predicate provinceLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), pattern);
 
                 predicates.add(criteriaBuilder.or(addressNameLike, addressDetailLike, wardLike, districtLike, provinceLike));
             }
             if (startTime != null && endTime != null) {
-                // Check if event overlaps with [startTime, endTime]
                 predicates.add(criteriaBuilder.and(
                         criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime),
                         criteriaBuilder.greaterThanOrEqualTo(root.get("endTime"), startTime)
@@ -341,10 +348,8 @@ public class EventServiceImpl implements EventService {
                 }
             }
             if (name != null && !name.isEmpty()) {
-                predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("eventName")), "%" + name.toLowerCase() + "%"));
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("eventName")), "%" + name.toLowerCase() + "%"));
             }
-
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
 
@@ -373,8 +378,18 @@ public class EventServiceImpl implements EventService {
                     .orElse("0.0");
             dto.setMinPrice(minPrice);
             dto.setBackgroundUrl(event.getBackgroundUrl());
+            dto.setTotalTicketSold(orderTicketRepository.sumQuantityByEvent(event));
             return dto;
         }).collect(Collectors.toList());
+
+        // If sorting by totalTicketSold, sort in Java
+        if ("totalTicketSold".equals(sortField)) {
+            if ("ASC".equalsIgnoreCase(sortDirection)) {
+                eventDTOs.sort(Comparator.comparingLong(RecommendEventsResponseDto::getTotalTicketSold));
+            } else {
+                eventDTOs.sort(Comparator.comparingLong(RecommendEventsResponseDto::getTotalTicketSold).reversed());
+            }
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("listEvents", eventDTOs);
@@ -385,7 +400,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public Map<String, Object> getPendingEvents(HttpServletRequest request,String address, LocalDateTime startTime, LocalDateTime endTime, String name,  Integer page, Integer size) {
+    public Map<String, Object> getPendingEvents(HttpServletRequest request, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size) {
         Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
@@ -553,4 +568,279 @@ public class EventServiceImpl implements EventService {
         response.put("totalPages", eventPage.getTotalPages());
         return response;
     }
+
+    @Override
+    public void updateEvent(Integer eventId, UpdateEventRequestDto eventRequestDto, MultipartFile logoFile, MultipartFile backgroundFile, HttpServletRequest request) {
+        Integer organizerId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(organizerId)
+                .orElseThrow(() -> new EntityNotFoundException("Organizer not found with id: " + organizerId));
+
+        if (!UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to update events.");
+        }
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+
+        if (!event.getOrganizer().getId().equals(organizerId)) {
+            throw new SecurityException("You do not have permission to update this event.");
+        }
+
+        if (eventRequestDto.getStartTime().isAfter(eventRequestDto.getEndTime())) {
+            throw new IllegalArgumentException("Start time must be before end time.");
+        }
+
+        // Kiểm tra định dạng ảnh
+        List<String> allowedTypes = List.of("image/jpeg", "image/png", "image/gif", "image/webp");
+        if (logoFile != null && !allowedTypes.contains(logoFile.getContentType())) {
+            throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, webp)");
+        }
+        if (backgroundFile != null && !allowedTypes.contains(backgroundFile.getContentType())) {
+            throw new IllegalArgumentException("Chỉ cho phép upload file ảnh (jpg, png, gif, webp)");
+        }
+
+        try {
+            if (logoFile != null) {
+                String logoUrl = uploadImageToImgbb(logoFile);
+                event.setLogoUrl(logoUrl);
+            }
+            if (backgroundFile != null) {
+                String backgroundUrl = uploadImageToImgbb(backgroundFile);
+                event.setBackgroundUrl(backgroundUrl);
+            }
+
+            // Cập nhật thông tin sự kiện
+            event.setEventName(eventRequestDto.getEventName());
+            event.setDescription(eventRequestDto.getDescription());
+            event.setAddressName(eventRequestDto.getAddressName());
+            event.setAddressDetail(eventRequestDto.getAddressDetail());
+            Ward ward = wardRepository.findById(eventRequestDto.getWardId())
+                    .orElseThrow(() -> new EntityNotFoundException("Ward not found with id: " + eventRequestDto.getWardId()));
+            event.setWard(ward);
+            event.setStartTime(eventRequestDto.getStartTime());
+            event.setEndTime(eventRequestDto.getEndTime());
+            event.setCategory(eventRequestDto.getCategory());
+            event.setUpdatedAt(LocalDateTime.now());
+
+            // Reset approval status
+            event.setApprovalStatus(ApprovalStatus.pending);
+
+            eventRepository.save(event);
+            // Xử lý tickets
+            List<UpdateEventRequestDto.TicketTypeDto> ticketDtos = eventRequestDto.getTicketTypes();
+            if (ticketDtos != null) {
+                // Tạo set các ticketType gửi lên
+                Set<String> incomingTicketTypes = ticketDtos.stream()
+                        .map(UpdateEventRequestDto.TicketTypeDto::getTicketType)
+                        .collect(Collectors.toSet());
+
+                // Lấy tất cả ticket hiện có
+                List<Ticket> existingTickets = ticketRepository.findByEvent(event);
+
+                // Xóa ticket không còn trong payload
+                for (Ticket existing : existingTickets) {
+                    if (!incomingTicketTypes.contains(existing.getTicketType())) {
+                        ticketRepository.delete(existing);
+                    }
+                }
+
+                // Cập nhật hoặc thêm mới
+                for (UpdateEventRequestDto.TicketTypeDto dto : ticketDtos) {
+                    // tìm xem ticket này đã tồn tại chưa
+                    Optional<Ticket> existingOpt = existingTickets.stream()
+                            .filter(t -> t.getTicketType().equals(dto.getTicketType()))
+                            .findFirst();
+
+                    if (existingOpt.isPresent()) {
+                        // Update
+                        Ticket ticket = existingOpt.get();
+                        ticket.setQuantityTotal(dto.getQuantityTotal());
+                        ticket.setPrice(dto.getPrice());
+                        ticketRepository.save(ticket);
+                    } else {
+                        // Thêm mới
+                        Ticket newTicket = new Ticket();
+                        newTicket.setTicketType(dto.getTicketType());
+                        newTicket.setQuantityTotal(dto.getQuantityTotal());
+                        newTicket.setPrice(dto.getPrice());
+                        newTicket.setQuantitySold(0); // Mặc định số lượng đã bán là 0
+                        newTicket.setEvent(event);
+                        ticketRepository.save(newTicket);
+                    }
+                }
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Cập nhật sự kiện thất bại: " + e.getMessage(), e);
+        }
+    }
+
+    public List<TicketExportDto> getTicketStatsByEvent(Integer eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+
+        List<Ticket> tickets = ticketRepository.findByEvent(event);
+
+        List<TicketExportDto> dtos = new ArrayList<>();
+        for (Ticket ticket : tickets) {
+            int total = ticket.getQuantityTotal();
+            int sold = orderTicketRepository.sumQuantityByTicket(ticket);
+            int remaining = total - sold;
+            double revenue = sold * ticket.getPrice();
+
+            dtos.add(new TicketExportDto(
+                    ticket.getTicketType(), total, sold, remaining, revenue
+            ));
+        }
+
+        return dtos;
+    }
+
+    @Override
+    public byte[] generateExcelReport(HttpServletRequest request, Integer eventId) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        if (!UserRole.admin.equals(currentUser.getRole()) && !UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to generate reports.");
+        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!event.getOrganizer().getId().equals(userId)) {
+            throw new SecurityException("You do not have permission to access this event.");
+        }
+        try {
+            List<TicketExportDto> dtos = getTicketStatsByEvent(eventId);
+            ByteArrayInputStream in = exportToExcel(dtos);
+            return in.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate Excel report", e);
+        }
+    }
+
+    private ByteArrayInputStream exportToExcel(List<TicketExportDto> dtos) throws IOException {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Ticket Stats");
+
+        // Header row
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"Ticket Type", "Total Quantity", "Sold Quantity", "Remaining Quantity", "Revenue"};
+
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+
+        // Data rows + calculate total revenue
+        int rowIndex = 1;
+        double totalRevenue = 0;
+        for (TicketExportDto dto : dtos) {
+            Row row = sheet.createRow(rowIndex++);
+            row.createCell(0).setCellValue(dto.getTicketType());
+            row.createCell(1).setCellValue(dto.getTotalQuantity());
+            row.createCell(2).setCellValue(dto.getSoldQuantity());
+            row.createCell(3).setCellValue(dto.getRemainingQuantity());
+            row.createCell(4).setCellValue(dto.getRevenue());
+            totalRevenue += dto.getRevenue();
+        }
+
+        // Add total revenue row
+        Row totalRow = sheet.createRow(rowIndex);
+        totalRow.createCell(3).setCellValue("Total Revenue");
+        totalRow.createCell(4).setCellValue(totalRevenue);
+
+        // Auto-size all columns
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        // Write to stream
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        workbook.close();
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    @Override
+    public byte[] generatePdfReport(HttpServletRequest request, Integer eventId) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        if (!UserRole.admin.equals(currentUser.getRole()) && !UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to generate reports.");
+        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!event.getOrganizer().getId().equals(userId)) {
+            throw new SecurityException("You do not have permission to access this event.");
+        }
+
+        try {
+            List<TicketExportDto> dtos = getTicketStatsByEvent(eventId);
+            return exportToPdf(dtos).readAllBytes();
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating PDF report", e);
+        }
+    }
+
+    private Font loadVietnameseFont(float size, boolean bold) throws IOException, DocumentException {
+        String fontPath = "src/main/resources/fonts/arial.ttf";
+        BaseFont baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
+        return new Font(baseFont, size, bold ? Font.BOLD : Font.NORMAL);
+    }
+
+    private ByteArrayInputStream exportToPdf(List<TicketExportDto> dtos) throws DocumentException, IOException {
+        Document document = new Document();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        PdfWriter.getInstance(document, out);
+        document.open();
+
+        // Load font hỗ trợ tiếng Việt
+        Font fontTitle = loadVietnameseFont(16f, true);
+        Font fontHeader = loadVietnameseFont(12f, true);
+        Font fontBody = loadVietnameseFont(12f, false);
+
+        // Tiêu đề
+        Paragraph title = new Paragraph("Thống kê vé sự kiện", fontTitle);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingAfter(20f);
+        document.add(title);
+
+        PdfPTable table = new PdfPTable(5);
+        table.setWidthPercentage(100);
+        table.setWidths(new float[]{2, 2, 2, 2, 2});
+
+        // Header row
+        Stream.of("Loại vé", "Tổng vé", "Đã bán", "Còn lại", "Doanh thu")
+                .forEach(h -> {
+                    PdfPCell header = new PdfPCell(new Phrase(h, fontHeader));
+                    header.setBackgroundColor(BaseColor.LIGHT_GRAY);
+                    table.addCell(header);
+                });
+
+        double totalRevenue = 0;
+        for (TicketExportDto dto : dtos) {
+            table.addCell(new PdfPCell(new Phrase(dto.getTicketType(), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getTotalQuantity()), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getSoldQuantity()), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getRemainingQuantity()), fontBody)));
+            table.addCell(new PdfPCell(new Phrase(String.valueOf(dto.getRevenue()), fontBody)));
+            totalRevenue += dto.getRevenue();
+        }
+
+        // Tổng doanh thu row
+        PdfPCell empty = new PdfPCell(new Phrase(""));
+        empty.setColspan(3);
+        empty.setBorder(Rectangle.NO_BORDER);
+        table.addCell(empty);
+
+        table.addCell(new PdfPCell(new Phrase("Tổng doanh thu", fontHeader)));
+        table.addCell(new PdfPCell(new Phrase(String.valueOf(totalRevenue), fontHeader)));
+
+        document.add(table);
+        document.close();
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
 }
