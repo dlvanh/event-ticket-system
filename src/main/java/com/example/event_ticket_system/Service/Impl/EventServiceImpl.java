@@ -713,7 +713,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        if (!event.getOrganizer().getId().equals(userId)) {
+        if (!event.getOrganizer().getId().equals(userId)&& !UserRole.admin.equals(currentUser.getRole())) {
             throw new SecurityException("You do not have permission to access this event.");
         }
         try {
@@ -778,7 +778,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        if (!event.getOrganizer().getId().equals(userId)) {
+        if (!event.getOrganizer().getId().equals(userId)&& !UserRole.admin.equals(currentUser.getRole())) {
             throw new SecurityException("You do not have permission to access this event.");
         }
 
