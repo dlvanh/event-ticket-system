@@ -267,6 +267,13 @@ public class EventServiceImpl implements EventService {
         responseDto.setOrganizerAvatarUrl(event.getOrganizer().getProfilePicture());
 
         List<Ticket> tickets = ticketRepository.findByEvent(event);
+
+        Map<Integer, String> ticketTypes = new HashMap<>();
+        for (Ticket ticket : tickets) {
+            ticketTypes.put(ticket.getTicketId(), ticket.getTicketType());
+        }
+        responseDto.setTicketTypes(ticketTypes);
+
         Map<String, Double> ticketPrices = new HashMap<>();
         for (Ticket ticket : tickets) {
             ticketPrices.put(ticket.getTicketType(), ticket.getPrice());

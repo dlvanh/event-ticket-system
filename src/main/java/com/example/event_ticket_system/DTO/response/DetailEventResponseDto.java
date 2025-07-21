@@ -25,6 +25,7 @@ public class DetailEventResponseDto {
     private String organizerAvatarUrl;
     private String organizerEmail;
     private String organizerPhoneNumber;
+    private Map<Integer, String> ticketTypes;
     private Map<String, Double> ticketPrices;
     private Map<String, Integer> ticketsTotal;
     private Map<String, Integer> ticketsSold;
