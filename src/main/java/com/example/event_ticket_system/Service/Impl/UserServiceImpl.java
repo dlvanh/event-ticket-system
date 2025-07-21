@@ -391,8 +391,7 @@ public class UserServiceImpl implements UserService {
         user.setBio(request.getBio());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setStatus(UserStatus.pending);
-        //TODO: set role to organizer
-        user.setRole(UserRole.customer);
+        user.setRole(UserRole.organizer);
         user.setCreatedAt(LocalDateTime.now().toInstant(java.time.ZoneOffset.UTC));
         userRepository.save(user);
 
@@ -408,7 +407,6 @@ public class UserServiceImpl implements UserService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
-        //TODO: refine this
         if (event.getStatus().equals(EventStatus.completed)) {
             throw new IllegalStateException("Event is already ended.");
         }

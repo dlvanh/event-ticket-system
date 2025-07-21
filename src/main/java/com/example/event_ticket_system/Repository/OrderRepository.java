@@ -12,4 +12,6 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order,Integer> {
     Order findByPayosOrderCode(Long payosOrderCode);
     List<Order> findByStatusAndOrderDateBefore(OrderStatus orderStatus, LocalDateTime cutoff);
+
+    List<Order> findByUserId(Integer userId);
 }
