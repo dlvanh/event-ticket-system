@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thmeleaf.org">
+<head>
+    <link rel="stylesheet" href="" th:href="@{static/style.css}">
+    <title>Ticket Purchase</title>
+</head>
+<body>
+<div class="main-box">
+    <h2 th:text="'Tickets for ' + ${event.eventName}"></h2>
+    <form action="/create-payment-link" method="post">
+        <input type="hidden" name="eventId" th:value="${event.eventId}"/>
+        <div class="ticket-list">
+            <div th:each="ticket : ${tickets}" class="checkout">
+                <div class="product">
+                    <p>Ticket Type: <span th:text="${ticket.ticketType}"></span></p>
+                    <p>Price: <span th:text="${ticket.price} + ' VNĐ'"></span></p>
+                    <p>Available: <span th:text="${ticket.quantityTotal - ticket.quantitySold}"></span></p>
+                    <label>Quantity:
+                        <input type="number" th:name="'tickets[' + ${ticket.ticketId} + '].quantity'" min="0" th:max="${ticket.quantityTotal - ticket.quantitySold}" value="0"/>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <label>Discount Code: <input type="text" name="discountCode"/></label>
+        <input type="submit" id="create-payment-link-btn" value="Thanh Toán"/>
+    </form>
+</div>
+</body>
+</html>

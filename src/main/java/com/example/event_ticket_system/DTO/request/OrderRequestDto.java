@@ -1,5 +1,6 @@
 package com.example.event_ticket_system.DTO.request;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,10 @@ public class OrderRequestDto {
     private Integer eventId;
     private List<OrderTicketRequestDto> tickets;
     private String discountCode;
+    @NotBlank(message = "Return URL cannot be blank")
+    private String returnUrl;
+    @NotBlank(message = "Cancel URL cannot be blank")
+    private String cancelUrl;
 
     @Data
     public static class OrderTicketRequestDto {

@@ -2,6 +2,7 @@ package com.example.event_ticket_system.Entity;
 
 import com.example.event_ticket_system.Enums.OrderStatus;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,4 +31,12 @@ public class Order {
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.pending;
+
+    @Column(name = "payos_order_code", unique = true)
+    private Long payosOrderCode; // Added for PayOS
+
+    @Size(max = 255)
+    @Column(name = "cancellation_reason")
+    private String cancellationReason;
+
 }
