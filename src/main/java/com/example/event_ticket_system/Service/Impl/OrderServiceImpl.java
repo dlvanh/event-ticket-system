@@ -1,6 +1,7 @@
 package com.example.event_ticket_system.Service.Impl;
 
 import com.example.event_ticket_system.DTO.request.OrderRequestDto;
+import com.example.event_ticket_system.DTO.response.GetOrdersResponseDto;
 import com.example.event_ticket_system.Entity.*;
 import com.example.event_ticket_system.Enums.DiscountType;
 import com.example.event_ticket_system.Enums.OrderStatus;
@@ -9,9 +10,15 @@ import com.example.event_ticket_system.Repository.*;
 import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.OrderService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import vn.payos.PayOS;
@@ -21,9 +28,8 @@ import vn.payos.type.PaymentData;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -207,6 +213,90 @@ public class OrderServiceImpl implements OrderService {
             ticketRepository.save(ticket);
         }
         orderRepository.save(order);
+    }
+
+    @Override
+    public Map<String, Object> getListOrders(HttpServletRequest request, String status, Double startAmount, Double endAmount, LocalDateTime startTime, LocalDateTime endTime, Integer page, Integer size) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        if (!UserRole.admin.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to view all orders.");
+        }
+        // TODO: implement sorting direction for user
+        if (page > 0) {
+            page -= 1;
+        }
+
+        Pageable pageable  = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "orderDate"));
+
+        Specification<Order> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (status != null && !status.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            }
+
+            if (startAmount != null && endAmount != null) {
+                predicates.add(criteriaBuilder.between(root.get("totalAmount"), startAmount, endAmount));
+            } else {
+                if (startAmount != null) {
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("totalAmount"), startAmount));
+                }
+                if (endAmount != null) {
+                    predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("totalAmount"), endAmount));
+                }
+            }
+
+            if (startTime != null && endTime != null) {
+                predicates.add(criteriaBuilder.between(root.get("orderDate"), startTime, endTime));
+            } else {
+                if (startTime != null) {
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("orderDate"), startTime));
+                }
+                if (endTime != null) {
+                    predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("orderDate"), endTime));
+                }
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<Order> orderPage = orderRepository.findAll(specification, pageable);
+
+        List<GetOrdersResponseDto> orderDTOs = orderPage.getContent().stream().map(order -> {
+            GetOrdersResponseDto dto = new GetOrdersResponseDto();
+
+            dto.setOrderId(order.getOrderId());
+            dto.setUserId(order.getUser().getId());
+            dto.setOrderDate(order.getOrderDate());
+            dto.setOrderPayOSCode(order.getPayosOrderCode());
+            dto.setStatus(order.getStatus());
+            dto.setTotalAmount(order.getTotalAmount());
+            dto.setCancellationReason(order.getCancellationReason());
+            if (order.getUser() != null) {
+                dto.setUserName(order.getUser().getFullName());
+                dto.setUserEmail(order.getUser().getEmail());
+            }
+            dto.setTotalTicketsCount(orderTicketRepository.findByOrderOrderId(order.getOrderId())
+                    .stream()
+                    .mapToInt(OrderTicket::getQuantity)
+                    .sum());
+
+            return dto;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("listOrders", orderDTOs); // Danh sách đơn hàng
+        response.put("pageSize", orderPage.getSize()); // Kích thước trang
+        response.put("pageNo", orderPage.getNumber() + 1); // Số trang hiện tại (chuyển về 1-based)
+        response.put("totalPages", orderPage.getTotalPages()); // Tổng số trang
+        response.put("totalElements", orderPage.getTotalElements()); // Tổng số đơn hàng
+        response.put("hasNext", orderPage.hasNext()); // Có trang tiếp theo không
+        response.put("hasPrevious", orderPage.hasPrevious()); // Có trang trước không
+
+        return response;
     }
 
     @Scheduled(fixedRate = 60000) // every 1 minute

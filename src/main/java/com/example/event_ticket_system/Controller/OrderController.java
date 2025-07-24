@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -28,6 +29,7 @@ import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
 import vn.payos.type.PaymentLinkData;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +97,57 @@ public class OrderController {
                     HttpStatus.BAD_REQUEST
             );
         } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<Object> getOrders(@RequestParam(value = "status", required = false) String status,
+                                            @RequestParam(value = "startAmount", required = false) Double startAmount,
+                                            @RequestParam(value = "endAmount", required = false) Double endAmount,
+                                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                @RequestParam(value = "startTime", required = false)
+                                                LocalDateTime startTime,
+                                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                @RequestParam(value = "endTime", required = false)
+                                                LocalDateTime endTime,
+                                            @RequestParam(value = "page", defaultValue = "0") Integer page,
+                                            @RequestParam(value = "size", defaultValue = "10") Integer size,
+                                            HttpServletRequest request) {
+        try {
+            if(page<=0&&size<=0) {
+                page = 1;
+                size = 1;
+            }
+            Map<String, Object> ordersData = orderService.getListOrders(request, status, startAmount, endAmount, startTime, endTime, page, size);
+            return APIResponse.responseBuilder(
+                    ordersData,
+                    "Orders retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (IllegalArgumentException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+    } catch (Exception e) {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred: " + e.getMessage(),
