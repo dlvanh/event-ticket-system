@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/events/by-organizer").authenticated()
                         .requestMatchers("/api/events").authenticated()
                         .requestMatchers("/api/events/*").permitAll()
+                        .requestMatchers("/api/chat").permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_admin")
                         .requestMatchers("/api/customer/**").hasAuthority("ROLE_customer")
                         .requestMatchers("/api/organizer/**").hasAuthority("ROLE_organizer")
