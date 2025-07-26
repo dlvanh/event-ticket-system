@@ -1,6 +1,6 @@
 package com.example.event_ticket_system.Controller;
 
-import com.example.event_ticket_system.DTO.request.TicketResponseDTO;
+import com.example.event_ticket_system.DTO.response.TicketResponseDTO;
 import com.example.event_ticket_system.Service.TicketService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

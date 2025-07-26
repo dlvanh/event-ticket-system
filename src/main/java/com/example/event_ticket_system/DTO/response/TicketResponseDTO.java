@@ -1,4 +1,4 @@
-package com.example.event_ticket_system.DTO.request;
+package com.example.event_ticket_system.DTO.response;
 
 import com.example.event_ticket_system.Enums.OrderStatus;
 import lombok.AllArgsConstructor;

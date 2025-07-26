@@ -1,6 +1,6 @@
 package com.example.event_ticket_system.Service.Impl;
 
-import com.example.event_ticket_system.DTO.request.TicketResponseDTO;
+import com.example.event_ticket_system.DTO.response.TicketResponseDTO;
 import com.example.event_ticket_system.Entity.Order;
 import com.example.event_ticket_system.Entity.OrderTicket;
 import com.example.event_ticket_system.Repository.OrderRepository;
