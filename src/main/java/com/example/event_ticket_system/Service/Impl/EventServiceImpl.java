@@ -292,6 +292,20 @@ public class EventServiceImpl implements EventService {
         }
         responseDto.setTicketsSold(ticketSoldMap);
 
+        responseDto.setTicketsSaleStartTime(tickets.stream()
+                .map(Ticket::getSaleStart)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .map(LocalDateTime::toString)
+                .orElse("N/A"));
+
+        responseDto.setTicketsSaleEndTime(tickets.stream()
+                .map(Ticket::getSaleEnd)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .map(LocalDateTime::toString)
+                .orElse("N/A"));
+
         responseDto.setRejectReason(event.getRejectionReason() != null ? event.getRejectionReason() : "N/A");
         return responseDto;
     }
