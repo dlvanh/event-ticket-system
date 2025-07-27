@@ -1,6 +1,7 @@
 package com.example.event_ticket_system.Service.Impl;
 
 import com.example.event_ticket_system.DTO.request.CustomerReviewBody;
+import com.example.event_ticket_system.DTO.response.GetReviewResponseDto;
 import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.Review;
 import com.example.event_ticket_system.Entity.User;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -57,7 +59,11 @@ public class ReviewServiceImpl implements ReviewService {
             throw new IllegalArgumentException("Comment cannot exceed 255 characters.");
         }
 
-        // TODO: Prevent duplicate reviews by the same user for the same event
+        if (reviewRepository.findByEvent(event).stream()
+                .anyMatch(review -> review.getUser().getId().equals(userId))) {
+            throw new IllegalArgumentException("You have already submitted a review for this event.");
+        }
+        // TODO: Allow user to upload images with the review
 
         Review review = new Review();
         review.setUser(user);
@@ -84,23 +90,19 @@ public class ReviewServiceImpl implements ReviewService {
             throw new SecurityException("You do not have permission to update this review.");
         }
 
-        if (customerReviewBody.getEventId() == null || customerReviewBody.getEventId() <= 0) {
-            throw new IllegalArgumentException("Event ID must be a positive integer.");
-        }
-
-        if (customerReviewBody.getRating() == review.getRating()) {
-            throw new IllegalArgumentException("No changes detected in the rating.");
-        }
-
         if (customerReviewBody.getRating() < 1 || customerReviewBody.getRating() > 5) {
             throw new IllegalArgumentException("Rating must be between 1 and 5.");
         }
 
-        if (customerReviewBody.getComment().equals(review.getComment())) {
-            throw new IllegalArgumentException("No changes detected in the comment.");
+        String newComment = customerReviewBody.getComment() != null ? customerReviewBody.getComment().trim() : null;
+        String existingComment = review.getComment() != null ? review.getComment().trim() : null;
+
+        if (customerReviewBody.getRating() == review.getRating() &&
+                (newComment == null && existingComment == null || newComment != null && newComment.equals(existingComment))) {
+            throw new IllegalArgumentException("No changes detected in rating or comment.");
         }
 
-        if (customerReviewBody.getComment().length() > 255) {
+        if (newComment != null && newComment.length() > 255) {
             throw new IllegalArgumentException("Comment cannot exceed 255 characters.");
         }
 
@@ -130,12 +132,66 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Map<String, Object> getReviewsByEventId(Integer eventId, Integer page, Integer size, HttpServletRequest request) {
-        return null;
+    public Map<String, Object> getReviewsByEventId(Integer eventId, HttpServletRequest request) {
+        // TODO: user must be logged in to view reviews
+//        String role = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+//        if (role == null) {
+//            throw new SecurityException("You must be logged in to view reviews.");
+//        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+
+        if (!event.getStatus().equals(EventStatus.completed)) {
+            throw new IllegalArgumentException("Reviews can only be retrieved for completed events.");
+        }
+        List<Review> reviews = reviewRepository.findByEvent(event);
+        if (reviews.isEmpty()) {
+            throw new EntityNotFoundException("No reviews found for this event.");
+        }
+
+        List<GetReviewResponseDto> data = reviews.stream()
+                .map(review -> {
+                    GetReviewResponseDto dto = new GetReviewResponseDto();
+                    dto.setUserFullName(review.getUser().getFullName());
+                    dto.setUserProfilePicture(review.getUser().getProfilePicture());
+                    dto.setRating(review.getRating());
+                    dto.setComment(review.getComment());
+                    dto.setReviewDate(review.getReviewDate().toString());
+                    return dto;
+                })
+                .toList();
+
+        return Map.of("reviewDetails", data);
     }
 
     @Override
-    public Map<String, Object> getReviewsByUserId(Integer userId, Integer page, Integer size, HttpServletRequest request) {
-        return null;
+    public Map<String, Object> getReviewsByUserId(Integer userId, HttpServletRequest request) {
+        String role = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+        Integer currentUserId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+
+        if (!"ROLE_admin".equals(role) && !currentUserId.equals(userId)) {
+            throw new SecurityException("You do not have permission to view reviews for this user.");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        List<Review> reviews = reviewRepository.findByUser(user);
+        if (reviews.isEmpty()) {
+            throw new EntityNotFoundException("No reviews found for this user.");
+        }
+
+        List<GetReviewResponseDto> data = reviews.stream()
+                .map(review -> {
+                    GetReviewResponseDto dto = new GetReviewResponseDto();
+                    dto.setUserFullName(review.getUser().getFullName());
+                    dto.setUserProfilePicture(review.getUser().getProfilePicture());
+                    dto.setRating(review.getRating());
+                    dto.setComment(review.getComment());
+                    dto.setReviewDate(review.getReviewDate().toString());
+                    return dto;
+                })
+                .toList();
+
+        return Map.of("usersReviews", data) ;
     }
 }

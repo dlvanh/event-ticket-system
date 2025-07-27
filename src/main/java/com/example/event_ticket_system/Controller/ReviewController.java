@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api")
 public class ReviewController {
@@ -101,6 +103,46 @@ public class ReviewController {
             return APIResponse.responseBuilder(
                     null,
                     "An error occurred while deleting the review: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/review/event/{eventId}")
+    public ResponseEntity<?> getReviewsByEventId(@PathVariable Integer eventId, HttpServletRequest request) {
+        try {
+            Map<String, Object> reviews = reviewService.getReviewsByEventId(eventId, request);
+            return ResponseEntity.ok(reviews);
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "Event not found: " + e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An error occurred while fetching reviews: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/review/user/{userId}")
+    public ResponseEntity<?> getReviewsByUserId(@PathVariable Integer userId, HttpServletRequest request) {
+        try {
+            Map<String, Object> reviews = reviewService.getReviewsByUserId(userId, request);
+            return ResponseEntity.ok(reviews);
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "User not found: " + e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An error occurred while fetching user reviews: " + e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
