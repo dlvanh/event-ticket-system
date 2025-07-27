@@ -3,11 +3,9 @@ package com.example.event_ticket_system.Service.Impl;
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
 import com.example.event_ticket_system.DTO.request.UpdateEventRequestDto;
 import com.example.event_ticket_system.DTO.response.*;
-import com.example.event_ticket_system.Entity.Event;
-import com.example.event_ticket_system.Entity.Ticket;
-import com.example.event_ticket_system.Entity.User;
-import com.example.event_ticket_system.Entity.Ward;
+import com.example.event_ticket_system.Entity.*;
 import com.example.event_ticket_system.Enums.ApprovalStatus;
+import com.example.event_ticket_system.Enums.DiscountType;
 import com.example.event_ticket_system.Enums.EventStatus;
 import com.example.event_ticket_system.Enums.UserRole;
 import com.example.event_ticket_system.Repository.*;
@@ -65,6 +63,8 @@ public class EventServiceImpl implements EventService {
     private final TicketRepository ticketRepository;
 
     private final OrderTicketRepository orderTicketRepository;
+
+    private final DiscountRepository discountRepository;
 
     @Autowired
     private final JwtUtil jwtUtil;
@@ -129,6 +129,22 @@ public class EventServiceImpl implements EventService {
                 ticket.setSaleStart(eventRequestDto.getSaleStart());
                 ticket.setSaleEnd(eventRequestDto.getSaleEnd());
                 ticketRepository.save(ticket);
+            }
+
+            // Tạo các mã giảm giá nếu có
+            if (eventRequestDto.getDiscounts() != null) {
+                for (EventRequestDto.DiscountRequest discount : eventRequestDto.getDiscounts()) {
+                    Discount newDiscount = new Discount();
+                    newDiscount.setEvent(event);
+                    newDiscount.setCode(discount.getDiscountCode());
+                    newDiscount.setDescription(discount.getDiscountDescription());
+                    newDiscount.setDiscountType(DiscountType.valueOf(discount.getDiscountType()));
+                    newDiscount.setValue(discount.getDiscountValue());
+                    newDiscount.setValidFrom(discount.getDiscountValidFrom());
+                    newDiscount.setValidTo(discount.getDiscountValidTo());
+                    newDiscount.setMaxUsage(discount.getDiscountMaxUses());
+                    discountRepository.save(newDiscount);
+                }
             }
 
             return event.getEventId();
@@ -687,6 +703,56 @@ public class EventServiceImpl implements EventService {
                         newTicket.setQuantitySold(0); // Mặc định số lượng đã bán là 0
                         newTicket.setEvent(event);
                         ticketRepository.save(newTicket);
+                    }
+                }
+            }
+
+            // Xử lý mã giảm giá
+            List<UpdateEventRequestDto.DiscountDto> discountDtos = eventRequestDto.getDiscounts();
+            if (discountDtos != null) {
+                // Tạo set các mã giảm giá gửi lên
+                Set<String> incomingDiscountCodes = discountDtos.stream()
+                        .map(UpdateEventRequestDto.DiscountDto::getCode)
+                        .collect(Collectors.toSet());
+
+                // Lấy tất cả mã giảm giá hiện có
+                List<Discount> existingDiscounts = discountRepository.findByEvent(event);
+
+                // Xóa mã giảm giá không còn trong payload
+                for (Discount existing : existingDiscounts) {
+                    if (!incomingDiscountCodes.contains(existing.getCode())) {
+                        discountRepository.delete(existing);
+                    }
+                }
+
+                // Cập nhật hoặc thêm mới mã giảm giá
+                for (UpdateEventRequestDto.DiscountDto dto : discountDtos) {
+                    Optional<Discount> existingOpt = existingDiscounts.stream()
+                            .filter(d -> d.getCode().equals(dto.getCode()))
+                            .findFirst();
+
+                    if (existingOpt.isPresent()) {
+                        // Update
+                        Discount discount = existingOpt.get();
+                        discount.setDescription(dto.getDescription());
+                        discount.setDiscountType(DiscountType.valueOf(dto.getType()));
+                        discount.setValue(dto.getValue());
+                        discount.setValidFrom(dto.getValidFrom());
+                        discount.setValidTo(dto.getValidTo());
+                        discount.setMaxUsage(dto.getMaxUses());
+                        discountRepository.save(discount);
+                    } else {
+                        // Thêm mới
+                        Discount newDiscount = new Discount();
+                        newDiscount.setEvent(event);
+                        newDiscount.setCode(dto.getCode());
+                        newDiscount.setDescription(dto.getDescription());
+                        newDiscount.setDiscountType(DiscountType.valueOf(dto.getType()));
+                        newDiscount.setValue(dto.getValue());
+                        newDiscount.setValidFrom(dto.getValidFrom());
+                        newDiscount.setValidTo(dto.getValidTo());
+                        newDiscount.setMaxUsage(dto.getMaxUses());
+                        discountRepository.save(newDiscount);
                     }
                 }
             }
