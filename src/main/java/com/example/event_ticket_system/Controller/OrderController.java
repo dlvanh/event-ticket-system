@@ -6,25 +6,30 @@ import com.example.event_ticket_system.DTO.response.APIResponse;
 import com.example.event_ticket_system.Entity.Order;
 import com.example.event_ticket_system.Entity.OrderTicket;
 import com.example.event_ticket_system.Entity.Ticket;
+import com.example.event_ticket_system.Entity.User;
 import com.example.event_ticket_system.Enums.OrderStatus;
+import com.example.event_ticket_system.Enums.UserRole;
 import com.example.event_ticket_system.Repository.OrderRepository;
 import com.example.event_ticket_system.Repository.OrderTicketRepository;
 import com.example.event_ticket_system.Repository.TicketRepository;
+import com.example.event_ticket_system.Repository.UserRepository;
+import com.example.event_ticket_system.Security.JwtUtil;
 import com.example.event_ticket_system.Service.OrderService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.yaml.snakeyaml.nodes.ScalarNode;
 import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
 import vn.payos.type.PaymentLinkData;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +43,8 @@ public class OrderController {
     private final OrderRepository orderRepository;
     private final OrderTicketRepository orderTicketRepository;
     private final TicketRepository ticketRepository;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
     @PostMapping
     public ResponseEntity<Object> createOrder(@RequestBody @Valid OrderRequestDto orderRequestDto,
@@ -98,9 +105,67 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/{orderId}")
-    public ResponseEntity<Object> getOrderById(@PathVariable("orderId") long orderId) {
+    @GetMapping("/list")
+    public ResponseEntity<Object> getOrders(@RequestParam(value = "status", required = false) String status,
+                                            @RequestParam(value = "startAmount", required = false) Double startAmount,
+                                            @RequestParam(value = "endAmount", required = false) Double endAmount,
+                                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                @RequestParam(value = "startTime", required = false)
+                                                LocalDateTime startTime,
+                                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                                                @RequestParam(value = "endTime", required = false)
+                                                LocalDateTime endTime,
+                                            @RequestParam(value = "page", defaultValue = "0") Integer page,
+                                            @RequestParam(value = "size", defaultValue = "10") Integer size,
+                                            HttpServletRequest request) {
         try {
+            if(page<=0&&size<=0) {
+                page = 1;
+                size = 1;
+            }
+            Map<String, Object> ordersData = orderService.getListOrders(request, status, startAmount, endAmount, startTime, endTime, page, size);
+            return APIResponse.responseBuilder(
+                    ordersData,
+                    "Orders retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (IllegalArgumentException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.BAD_REQUEST
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+    } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/{orderId}")
+    public ResponseEntity<Object> getOrderById(@PathVariable("orderId") long orderId, HttpServletRequest request) {
+        try {
+            Integer adminId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+            User currentUser = userRepository.findById(adminId)
+                    .orElseThrow(() -> new EntityNotFoundException("Organizer not found with id: " + adminId));
+
+            if (!UserRole.admin.equals(currentUser.getRole())) {
+                throw new SecurityException("You do not have permission to use this endpoint.");
+            }
             PaymentLinkData order = payOS.getPaymentLinkInformation(orderId);
             return APIResponse.responseBuilder(
                     order,
@@ -119,8 +184,16 @@ public class OrderController {
     @PutMapping("/{orderId}")
     @Transactional
     public ResponseEntity<Object> cancelOrder(@PathVariable("orderId") int orderId,
-                                              @RequestBody cancellationReasonBody cancellationReasonBody) {
+                                              @RequestBody cancellationReasonBody cancellationReasonBody,
+                                              HttpServletRequest request) {
         try {
+            Integer adminId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+            User currentUser = userRepository.findById(adminId)
+                    .orElseThrow(() -> new EntityNotFoundException("Organizer not found with id: " + adminId));
+
+            if (!UserRole.admin.equals(currentUser.getRole())) {
+                throw new SecurityException("You do not have permission to use this endpoint.");
+            }
             // Cancel PayOS payment link
             PaymentLinkData payosOrder = payOS.cancelPaymentLink(orderId, cancellationReasonBody.getCancellationReason());
 
@@ -162,8 +235,15 @@ public class OrderController {
     }
 
     @PostMapping("/confirm-webhook")
-    public ResponseEntity<Object> confirmWebhook(@RequestBody Map<String, String> requestBody) {
+    public ResponseEntity<Object> confirmWebhook(@RequestBody Map<String, String> requestBody, HttpServletRequest request) {
         try {
+            Integer adminId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+            User currentUser = userRepository.findById(adminId)
+                    .orElseThrow(() -> new EntityNotFoundException("Organizer not found with id: " + adminId));
+
+            if (!UserRole.admin.equals(currentUser.getRole())) {
+                throw new SecurityException("You do not have permission to use this endpoint.");
+            }
             String webhookUrl = payOS.confirmWebhook(requestBody.get("webhookUrl"));
             return APIResponse.responseBuilder(
                     webhookUrl,

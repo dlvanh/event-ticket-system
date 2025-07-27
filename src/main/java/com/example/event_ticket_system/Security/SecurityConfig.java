@@ -53,6 +53,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_admin")
                         .requestMatchers("/api/customer/**").hasAuthority("ROLE_customer")
                         .requestMatchers("/api/organizer/**").hasAuthority("ROLE_organizer")
+                        .requestMatchers("/api/review/upload/{reviewId}",
+                                "/api/review/update/{reviewId}",
+                                "/api/review/delete/{reviewId}").hasAuthority("ROLE_customer")
+                        .requestMatchers("/api/review/event/{eventId}",
+                                "/api/review/user/{userId}").permitAll()
 
                         .anyRequest().authenticated()
                 )

@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tickets")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class TicketController {
     private final TicketService ticketService;
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/users/ticket/{userId}")
     public ResponseEntity<List<TicketResponseDTO>> getTicketsByUserId(@PathVariable Integer userId,
                                                                       HttpServletRequest request) {
         try {
