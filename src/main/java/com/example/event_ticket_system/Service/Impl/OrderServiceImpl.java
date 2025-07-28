@@ -150,7 +150,6 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         PaymentData paymentData = PaymentData.builder()
                 .orderCode(payosOrderCode)
-                // TODO: change the description to a GUID
                 .description(generateRandomString())
                 .amount((int) totalAmount)
                 .item(itemData)

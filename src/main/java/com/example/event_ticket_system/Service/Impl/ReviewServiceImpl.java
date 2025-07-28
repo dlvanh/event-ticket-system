@@ -43,11 +43,11 @@ public class ReviewServiceImpl implements ReviewService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + customerReviewBody.getEventId()));
 
-        if (!event.getStatus().equals(EventStatus.completed)) {
-            throw new IllegalArgumentException("Reviews can only be submitted for completed events.");
+        if (event.getStatus().equals(EventStatus.upcoming)) {
+            throw new IllegalArgumentException("Reviews cannot be submitted for upcoming events.");
         }
 
-        if (customerReviewBody.getEventId() == null || customerReviewBody.getEventId() <= 0) {
+        if (eventId <= 0) {
             throw new IllegalArgumentException("Event ID must be a positive integer.");
         }
 
@@ -64,7 +64,7 @@ public class ReviewServiceImpl implements ReviewService {
             throw new IllegalArgumentException("You have already submitted a review for this event.");
         }
         // TODO: Allow user to upload images with the review
-
+        log.info("User with ID {} is uploading a review for event with ID {}", userId, eventId);
         Review review = new Review();
         review.setUser(user);
         review.setEvent(event);
