@@ -21,13 +21,14 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
-    @PostMapping("/review/upload")
-    public ResponseEntity<?> uploadReviewForEvent(@RequestBody @Valid CustomerReviewBody customerReviewBody,
+    @PostMapping("/review/upload/{eventId}")
+    public ResponseEntity<?> uploadReviewForEvent(@PathVariable Integer eventId,
+                                                  @RequestBody @Valid CustomerReviewBody customerReviewBody,
                                                   HttpServletRequest request) {
         try {
-            reviewService.uploadReviewForEvent(customerReviewBody, request);
+            reviewService.uploadReviewForEvent(eventId, customerReviewBody, request);
             return ResponseEntity.ok("Review uploaded successfully");
-        } catch (SecurityException e) {
+        }   catch (SecurityException e) {
             return APIResponse.responseBuilder(
                     null,
                     "You do not have permission to write a review for an event.",

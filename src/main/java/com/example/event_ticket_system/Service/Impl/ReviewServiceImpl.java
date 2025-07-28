@@ -31,7 +31,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserRepository userRepository;
 
     @Override
-    public void uploadReviewForEvent(CustomerReviewBody customerReviewBody, HttpServletRequest request) {
+    public void uploadReviewForEvent(Integer eventId, CustomerReviewBody customerReviewBody, HttpServletRequest request) {
         String role = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
         Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
         if (!"ROLE_customer".equals(role)) {
@@ -40,7 +40,7 @@ public class ReviewServiceImpl implements ReviewService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + customerReviewBody.getUserId()));
 
-        Event event = eventRepository.findById(customerReviewBody.getEventId())
+        Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + customerReviewBody.getEventId()));
 
         if (!event.getStatus().equals(EventStatus.completed)) {
@@ -133,11 +133,6 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Map<String, Object> getReviewsByEventId(Integer eventId, HttpServletRequest request) {
-        // TODO: user must be logged in to view reviews
-//        String role = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
-//        if (role == null) {
-//            throw new SecurityException("You must be logged in to view reviews.");
-//        }
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
