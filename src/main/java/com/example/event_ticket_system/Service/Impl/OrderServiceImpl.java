@@ -111,11 +111,22 @@ public class OrderServiceImpl implements OrderService {
             if (!discount.getEvent().getEventId().equals(dto.getEventId())) {
                 throw new IllegalArgumentException("Discount code does not apply to this event");
             }
+            // Check if discount usage available
+            if (discount.getMaxUsage() <= 0 ){
+                throw new IllegalArgumentException("Discount code has reached its maximum usage limit");
+            }
             if (discount.getDiscountType() == DiscountType.percentage) {
                 totalAmount = totalAmount * (1 - discount.getValue() / 100.0);
             } else if (discount.getDiscountType() == DiscountType.fixed_amount) {
                 totalAmount = Math.max(0, totalAmount - discount.getValue());
             }
+            // Ensure total amount is not negative
+            if (totalAmount < 0) {
+                totalAmount = 0;
+            }
+            // Decrease discount usage
+            discount.setMaxUsage(discount.getMaxUsage() - 1);
+            discountRepository.save(discount);
         }
 
         // Create order
