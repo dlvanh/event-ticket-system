@@ -403,8 +403,8 @@ public class EventServiceImpl implements EventService {
                             event.getWard().getDistrict().getName() + ", " +
                             event.getWard().getDistrict().getProvince().getName()
             );
-            dto.setStartTime(event.getStartTime().toString());
-            dto.setEndTime(event.getEndTime().toString());
+            dto.setStartTime(LocalDateTime.parse(event.getStartTime().toString()));
+            dto.setEndTime(LocalDateTime.parse(event.getEndTime().toString()));
             dto.setCategory(event.getCategory());
             dto.setLogoUrl(event.getLogoUrl());
             List<Ticket> tickets = ticketRepository.findByEvent(event);
