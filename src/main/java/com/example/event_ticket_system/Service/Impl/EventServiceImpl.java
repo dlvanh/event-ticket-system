@@ -235,6 +235,7 @@ public class EventServiceImpl implements EventService {
             GetEventsByOrganizerResponseDto dto = new GetEventsByOrganizerResponseDto();
             dto.setEventId(event.getEventId());
             dto.setEventName(event.getEventName());
+            dto.setStatus(event.getStatus().name());
             dto.setApprovalStatus(event.getApprovalStatus().name());
             dto.setStartTime(event.getStartTime().toString());
             dto.setEndTime(event.getEndTime().toString());

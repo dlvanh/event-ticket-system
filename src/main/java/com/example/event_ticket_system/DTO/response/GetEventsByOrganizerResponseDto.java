@@ -6,6 +6,7 @@ import lombok.Data;
 public class GetEventsByOrganizerResponseDto {
     private Integer eventId;
     private String eventName;
+    private String status;
     private String approvalStatus;
     private String startTime;
     private String endTime;
