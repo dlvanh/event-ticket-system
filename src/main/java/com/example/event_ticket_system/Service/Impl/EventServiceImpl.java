@@ -17,6 +17,7 @@ import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -357,7 +358,10 @@ public class EventServiceImpl implements EventService {
         Specification<Event> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(criteriaBuilder.equal(root.get("approvalStatus"), ApprovalStatus.approved));
-            predicates.add(criteriaBuilder.equal(root.get("status"), EventStatus.upcoming));
+            CriteriaBuilder.In<EventStatus> statusIn = criteriaBuilder.in(root.get("status"));
+            statusIn.value(EventStatus.completed);
+            statusIn.value(EventStatus.upcoming);
+            predicates.add(statusIn);
 
             if (category != null && !category.isEmpty()) {
                 predicates.add(criteriaBuilder.equal(root.get("category"), category));
