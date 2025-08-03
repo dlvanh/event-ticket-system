@@ -27,7 +27,11 @@ public class ReviewController {
                                                   HttpServletRequest request) {
         try {
             reviewService.uploadReviewForEvent(eventId, customerReviewBody, request);
-            return ResponseEntity.ok("Review uploaded successfully");
+            return APIResponse.responseBuilder(
+                    null,
+                    "Review created successfully",
+                    HttpStatus.OK
+            );
         }   catch (SecurityException e) {
             return APIResponse.responseBuilder(
                     null,
@@ -55,7 +59,11 @@ public class ReviewController {
                                                   HttpServletRequest request) {
         try {
             reviewService.updateReviewForEvent(reviewId, customerReviewBody, request);
-            return ResponseEntity.ok("Review updated successfully");
+            return APIResponse.responseBuilder(
+                    null,
+                    "Review updated successfully",
+                    HttpStatus.OK
+            );
         } catch (EntityNotFoundException e) {
             return APIResponse.responseBuilder(
                     null,
@@ -87,7 +95,11 @@ public class ReviewController {
     public ResponseEntity<?> deleteReviewForEvent(@PathVariable Integer reviewId, HttpServletRequest request) {
         try {
             reviewService.deleteReviewForEvent(reviewId, request);
-            return ResponseEntity.ok("Review deleted successfully");
+            return APIResponse.responseBuilder(
+                    null,
+                    "Review deleted successfully",
+                    HttpStatus.OK
+            );
         } catch (EntityNotFoundException e) {
             return APIResponse.responseBuilder(
                     null,
@@ -113,7 +125,11 @@ public class ReviewController {
     public ResponseEntity<?> getReviewsByEventId(@PathVariable Integer eventId, HttpServletRequest request) {
         try {
             Map<String, Object> reviews = reviewService.getReviewsByEventId(eventId, request);
-            return ResponseEntity.ok(reviews);
+            return APIResponse.responseBuilder(
+                    reviews,
+                    "Reviews fetched successfully",
+                    HttpStatus.OK
+            );
         } catch (EntityNotFoundException e) {
             return APIResponse.responseBuilder(
                     null,
@@ -133,7 +149,11 @@ public class ReviewController {
     public ResponseEntity<?> getReviewsByUserId(@PathVariable Integer userId, HttpServletRequest request) {
         try {
             Map<String, Object> reviews = reviewService.getReviewsByUserId(userId, request);
-            return ResponseEntity.ok(reviews);
+            return APIResponse.responseBuilder(
+                    reviews,
+                    "Reviews fetched successfully",
+                    HttpStatus.OK
+            );
         } catch (EntityNotFoundException e) {
             return APIResponse.responseBuilder(
                     null,

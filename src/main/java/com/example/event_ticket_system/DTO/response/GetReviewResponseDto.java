@@ -4,6 +4,8 @@ import lombok.Data;
 
 @Data
 public class GetReviewResponseDto {
+    private Integer reviewId;
+    private Integer userId;
     private String userFullName;
     private String userProfilePicture;
     private Integer rating;
