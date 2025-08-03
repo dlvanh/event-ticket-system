@@ -147,6 +147,8 @@ public class ReviewServiceImpl implements ReviewService {
         List<GetReviewResponseDto> data = reviews.stream()
                 .map(review -> {
                     GetReviewResponseDto dto = new GetReviewResponseDto();
+                    dto.setReviewId(review.getReviewId());
+                    dto.setUserId(review.getUser().getId());
                     dto.setUserFullName(review.getUser().getFullName());
                     dto.setUserProfilePicture(review.getUser().getProfilePicture());
                     dto.setRating(review.getRating());
@@ -178,8 +180,7 @@ public class ReviewServiceImpl implements ReviewService {
         List<GetReviewResponseDto> data = reviews.stream()
                 .map(review -> {
                     GetReviewResponseDto dto = new GetReviewResponseDto();
-                    dto.setUserFullName(review.getUser().getFullName());
-                    dto.setUserProfilePicture(review.getUser().getProfilePicture());
+                    dto.setReviewId(review.getReviewId());
                     dto.setRating(review.getRating());
                     dto.setComment(review.getComment());
                     dto.setReviewDate(review.getReviewDate().toString());
