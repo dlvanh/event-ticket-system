@@ -25,12 +25,17 @@ public class TicketServiceImpl implements TicketService{
     @Override
     public List<TicketResponseDTO> getTicketsByUserId(Integer userId, HttpServletRequest request) {
         String userRole = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
+        Integer tokenUserId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
         if (!"ROLE_customer".equals(userRole)) {
-            throw new SecurityException("User not found with id: " + userId);
+            throw new SecurityException("You do not have permission to view tickets for this user.");
         }
+        if (!userId.equals(tokenUserId)) {
+            throw new SecurityException("You do not have permission to view tickets for this user.");
+        }
+
         List<Order> orders = orderRepository.findByUserId(userId);
         if (orders.isEmpty()) {
-            return new ArrayList<>();
+            throw new IllegalArgumentException("No tickets found for this user.");
         }
         List<TicketResponseDTO> response = new ArrayList<>();
 
@@ -38,6 +43,7 @@ public class TicketServiceImpl implements TicketService{
             List<OrderTicket> orderTickets = orderTicketRepository.findByOrderOrderId(order.getOrderId());
 
             List<TicketResponseDTO.TicketDetail> ticketDetails = orderTickets.stream()
+                    .filter(ot -> ot.getTicket() != null && ot.getTicket().getEvent() != null)
                     .map(ot -> new TicketResponseDTO.TicketDetail(
                             ot.getTicket().getTicketId(),
                             ot.getTicket().getEvent().getEventName(),

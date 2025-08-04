@@ -1,5 +1,6 @@
 package com.example.event_ticket_system.Controller;
 
+import com.example.event_ticket_system.DTO.response.APIResponse;
 import com.example.event_ticket_system.DTO.response.TicketResponseDTO;
 import com.example.event_ticket_system.Service.TicketService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,15 +21,26 @@ public class TicketController {
     private final TicketService ticketService;
 
     @GetMapping("/users/ticket/{userId}")
-    public ResponseEntity<List<TicketResponseDTO>> getTicketsByUserId(@PathVariable Integer userId,
-                                                                      HttpServletRequest request) {
+    public ResponseEntity<?> getTicketsByUserId(@PathVariable Integer userId, HttpServletRequest request) {
         try {
             List<TicketResponseDTO> tickets = ticketService.getTicketsByUserId(userId, request);
-            return new ResponseEntity<>(tickets, HttpStatus.OK);
+            return APIResponse.responseBuilder(
+                    tickets,
+                    "Tickets retrieved successfully",
+                    HttpStatus.OK
+            );
         } catch (SecurityException e) {
-            return new ResponseEntity<>(null, HttpStatus.FORBIDDEN);
+            return APIResponse.responseBuilder(
+                    null,
+                    "You do not have permission to view tickets for this user.",
+                    HttpStatus.FORBIDDEN
+            );
         } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return APIResponse.responseBuilder(
+                    null,
+                    "An error occurred while retrieving tickets: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }
