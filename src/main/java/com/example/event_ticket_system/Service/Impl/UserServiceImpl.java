@@ -296,12 +296,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
 
-        if (user.getRole() == UserRole.organizer) {
-            throw new IllegalStateException("User is already an organizer.");
-        }
-
         user.setStatus(UserStatus.active);
-        user.setRole(UserRole.organizer);
         userRepository.save(user);
     }
 
