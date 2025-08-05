@@ -692,7 +692,10 @@ public class EventServiceImpl implements EventService {
                     Optional<Ticket> existingOpt = existingTickets.stream()
                             .filter(t -> t.getTicketType().equals(dto.getTicketType()))
                             .findFirst();
-
+                    // tìm xem ticket đã có order chưa, nếu có thì không cho phép xóa
+                    if (existingOpt.isPresent() && orderTicketRepository.existsByTicket(existingOpt.get())) {
+                        throw new IllegalArgumentException("Không thể xóa ticket đã có đơn hàng");
+                    }
                     if (existingOpt.isPresent()) {
                         // Update
                         Ticket ticket = existingOpt.get();
@@ -935,4 +938,179 @@ public class EventServiceImpl implements EventService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
+    @Override
+    public byte[] generateBuyerReportExcel(HttpServletRequest request, Integer eventId) {
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        if (!UserRole.admin.equals(currentUser.getRole()) && !UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to generate reports.");
+        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        List<Ticket> tickets = ticketRepository.findByEvent(event); // lấy loại vé
+        List<OrderTicket> allOrderTickets = orderTicketRepository.findAllByTicketEvent(event);
+        // Map<UserId, Map<TicketType, quantity>>
+        Map<User, Map<String, Integer>> userTicketMap = new LinkedHashMap<>();
+        Map<User, Double> userTotalMap = new LinkedHashMap<>();
+
+        for (OrderTicket ot : allOrderTickets) {
+            User buyer = ot.getOrder().getUser();
+            String ticketType = ot.getTicket().getTicketType();
+            int quantity = ot.getQuantity();
+            double totalPrice = ot.getQuantity() * ot.getTicket().getPrice();
+
+            userTicketMap.putIfAbsent(buyer, new HashMap<>());
+            userTicketMap.get(buyer).merge(ticketType, quantity, Integer::sum);
+
+            userTotalMap.merge(buyer, totalPrice, Double::sum);
+        }
+
+        // Build Excel
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Buyer List");
+            Row header = sheet.createRow(0);
+
+            // Cột cố định
+            header.createCell(0).setCellValue("STT");
+            header.createCell(1).setCellValue("Khách hàng");
+
+            // Tên các loại vé
+            List<String> ticketTypes = tickets.stream()
+                    .map(Ticket::getTicketType)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            int col = 2;
+            for (String ticketType : ticketTypes) {
+                header.createCell(col++).setCellValue(ticketType);
+            }
+
+            header.createCell(col).setCellValue("Tổng tiền");
+
+            // Ghi dữ liệu
+            int rowNum = 1;
+            int stt = 1;
+            for (User user : userTicketMap.keySet()) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(stt++);
+                row.createCell(1).setCellValue(user.getFullName()); // hoặc user.getEmail() nếu cần
+
+                Map<String, Integer> ticketMap = userTicketMap.get(user);
+                int i = 2;
+                for (String type : ticketTypes) {
+                    int count = ticketMap.getOrDefault(type, 0);
+                    row.createCell(i++).setCellValue(count);
+                }
+
+                row.createCell(i).setCellValue(userTotalMap.get(user));
+            }
+
+            // Autosize
+            for (int i = 0; i <= ticketTypes.size() + 2; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            // Export
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Export Excel failed", e);
+        }
+    }
+
+    @Override
+    public byte[] generateBuyerReportPdf(HttpServletRequest request, Integer eventId) {
+        // 1. Xác thực người dùng
+        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        User currentUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        if (!UserRole.admin.equals(currentUser.getRole()) && !UserRole.organizer.equals(currentUser.getRole())) {
+            throw new SecurityException("You do not have permission to generate reports.");
+        }
+
+        // 2. Lấy thông tin sự kiện & vé
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+        List<Ticket> tickets = ticketRepository.findByEvent(event);
+        List<String> ticketTypes = tickets.stream()
+                .map(Ticket::getTicketType)
+                .distinct()
+                .toList();
+
+        List<OrderTicket> allOrderTickets = orderTicketRepository.findAllByTicketEvent(event);
+
+        // 3. Gom dữ liệu: user → loại vé → số lượng + tổng tiền
+        Map<User, Map<String, Integer>> userTicketMap = new LinkedHashMap<>();
+        Map<User, Double> userTotalMap = new LinkedHashMap<>();
+
+        for (OrderTicket ot : allOrderTickets) {
+            User buyer = ot.getOrder().getUser();
+            String ticketType = ot.getTicket().getTicketType();
+            int quantity = ot.getQuantity();
+            double totalPrice = quantity * ot.getTicket().getPrice();
+
+            userTicketMap.putIfAbsent(buyer, new HashMap<>());
+            userTicketMap.get(buyer).merge(ticketType, quantity, Integer::sum);
+
+            userTotalMap.merge(buyer, totalPrice, Double::sum);
+        }
+
+        // 4. Tạo PDF
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Document document = new Document();
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            // 4.1 Font hỗ trợ tiếng Việt
+            Font fontTitle = loadVietnameseFont(16f, true);
+            Font fontHeader = loadVietnameseFont(12f, true);
+            Font fontBody = loadVietnameseFont(12f, false);
+
+            // 4.2 Tiêu đề
+            Paragraph title = new Paragraph("Danh sách khách hàng", fontTitle);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(20f);
+            document.add(title);
+
+            // 4.3 Tạo bảng
+            int columnCount = 2 + ticketTypes.size() + 1; // STT + KH + loại vé + Tổng tiền
+            PdfPTable table = new PdfPTable(columnCount);
+            table.setWidthPercentage(100);
+
+            // 4.4 Header bảng
+            table.addCell(new PdfPCell(new Phrase("STT", fontHeader)));
+            table.addCell(new PdfPCell(new Phrase("Khách hàng", fontHeader)));
+            for (String ticketType : ticketTypes) {
+                table.addCell(new PdfPCell(new Phrase(ticketType, fontHeader)));
+            }
+            table.addCell(new PdfPCell(new Phrase("Tổng tiền", fontHeader)));
+            table.setHeaderRows(1);
+
+            // 4.5 Dữ liệu từng người dùng
+            int stt = 1;
+            for (User user : userTicketMap.keySet()) {
+                Map<String, Integer> ticketMap = userTicketMap.get(user);
+                table.addCell(new PdfPCell(new Phrase(String.valueOf(stt++), fontBody)));
+                table.addCell(new PdfPCell(new Phrase(user.getFullName(), fontBody)));
+
+                for (String type : ticketTypes) {
+                    int count = ticketMap.getOrDefault(type, 0);
+                    table.addCell(new PdfPCell(new Phrase(String.valueOf(count), fontBody)));
+                }
+
+                table.addCell(new PdfPCell(new Phrase(String.format("%.0f", userTotalMap.get(user)), fontBody)));
+            }
+
+            // 4.6 Hoàn tất
+            document.add(table);
+            document.close();
+
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating PDF report", e);
+        }
+    }
 }

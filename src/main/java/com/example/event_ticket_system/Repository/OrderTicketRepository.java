@@ -19,6 +19,9 @@ public interface OrderTicketRepository extends JpaRepository<OrderTicket, Intege
     long sumQuantityByEvent(@Param("event") Event event);
     @Query("SELECT COALESCE(SUM(ot.quantity), 0) FROM OrderTicket ot WHERE ot.ticket = :ticket")
     int sumQuantityByTicket(@Param("ticket") Ticket ticket);
-
+    @Query("SELECT ot FROM OrderTicket ot WHERE ot.ticket.event = :event")
+    List<OrderTicket> findAllByTicketEvent(@Param("event") Event event);
     List<OrderTicket> findByOrderOrderId(Integer orderId);
+
+    boolean existsByTicket(Ticket ticket);
 }

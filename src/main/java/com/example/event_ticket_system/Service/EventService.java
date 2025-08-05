@@ -19,4 +19,6 @@ public interface EventService {
     Map<String, Object> getListEvents(HttpServletRequest request,String status, String approvalStatus, String address, LocalDateTime startTime, LocalDateTime endTime, String name, Integer page, Integer size);
     byte[] generateExcelReport(HttpServletRequest request, Integer eventId);
     byte[] generatePdfReport(HttpServletRequest request, Integer eventId);
+    byte[] generateBuyerReportExcel(HttpServletRequest request, Integer eventId);
+    byte[] generateBuyerReportPdf(HttpServletRequest request, Integer eventId);
 }

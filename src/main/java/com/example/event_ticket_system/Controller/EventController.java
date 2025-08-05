@@ -389,4 +389,66 @@ public class EventController {
             );
         }
     }
+
+    @GetMapping("/{eventId}/report/buyer-excel")
+    public ResponseEntity<?> generateBuyerReportExcel(
+            HttpServletRequest request,
+            @PathVariable Integer eventId) {
+        try {
+            byte[] excelData = eventService.generateBuyerReportExcel(request, eventId);
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=buyer_report.xlsx")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(excelData);
+        } catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while generating the buyer report",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/{eventId}/report/buyer-pdf")
+    public ResponseEntity<?> generateBuyerReportPdf(
+            HttpServletRequest request,
+            @PathVariable Integer eventId) {
+        try {
+            byte[] pdfData = eventService.generateBuyerReportPdf(request, eventId);
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=buyer_report.pdf")
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(pdfData);
+        } catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    "An unexpected error occurred while generating the buyer report",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }
