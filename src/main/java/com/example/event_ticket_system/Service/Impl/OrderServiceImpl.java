@@ -161,7 +161,7 @@ public class OrderServiceImpl implements OrderService {
                 .build();
         PaymentData paymentData = PaymentData.builder()
                 .orderCode(payosOrderCode)
-                .description(generateRandomString())
+                .description("Thanh toán Eventa")
                 .amount((int) totalAmount)
                 .item(itemData)
                 .returnUrl(dto.getReturnUrl())
@@ -330,32 +330,5 @@ public class OrderServiceImpl implements OrderService {
             }
             orderRepository.save(order);
         }
-    }
-
-    private static String generateRandomString() {
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
-        StringBuilder sb = new StringBuilder(12);
-
-        // Ensure at least one letter and one number
-        sb.append(characters.charAt(random.nextInt(52))); // Letter (0-51: A-Z, a-z)
-        sb.append(characters.charAt(52 + random.nextInt(10))); // Number (52-61: 0-9)
-
-        // Fill the rest of the string
-        for (int i = 2; i < 12; i++) {
-            int index = random.nextInt(characters.length());
-            sb.append(characters.charAt(index));
-        }
-
-        // Shuffle the string to randomize the ensured characters' positions
-        char[] chars = sb.toString().toCharArray();
-        for (int i = chars.length - 1; i > 0; i--) {
-            int j = random.nextInt(i + 1);
-            char temp = chars[i];
-            chars[i] = chars[j];
-            chars[j] = temp;
-        }
-
-        return new String(chars);
     }
 }

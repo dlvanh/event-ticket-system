@@ -2,6 +2,7 @@ package com.example.event_ticket_system.Service.Impl;
 
 import com.example.event_ticket_system.DTO.request.CustomerReviewBody;
 import com.example.event_ticket_system.DTO.response.GetReviewResponseDto;
+import com.example.event_ticket_system.DTO.response.GetUsersReviewResponseDto;
 import com.example.event_ticket_system.Entity.Event;
 import com.example.event_ticket_system.Entity.Review;
 import com.example.event_ticket_system.Entity.User;
@@ -147,6 +148,8 @@ public class ReviewServiceImpl implements ReviewService {
         List<GetReviewResponseDto> data = reviews.stream()
                 .map(review -> {
                     GetReviewResponseDto dto = new GetReviewResponseDto();
+                    dto.setReviewId(review.getReviewId());
+                    dto.setUserId(review.getUser().getId());
                     dto.setUserFullName(review.getUser().getFullName());
                     dto.setUserProfilePicture(review.getUser().getProfilePicture());
                     dto.setRating(review.getRating());
@@ -175,18 +178,35 @@ public class ReviewServiceImpl implements ReviewService {
             throw new EntityNotFoundException("No reviews found for this user.");
         }
 
-        List<GetReviewResponseDto> data = reviews.stream()
-                .map(review -> {
-                    GetReviewResponseDto dto = new GetReviewResponseDto();
-                    dto.setUserFullName(review.getUser().getFullName());
-                    dto.setUserProfilePicture(review.getUser().getProfilePicture());
-                    dto.setRating(review.getRating());
-                    dto.setComment(review.getComment());
-                    dto.setReviewDate(review.getReviewDate().toString());
-                    return dto;
-                })
-                .toList();
+        GetUsersReviewResponseDto response = new GetUsersReviewResponseDto();
+        response.setUserId(user.getId());
+        response.setUserFullName(user.getFullName());
+        response.setUserProfilePicture(user.getProfilePicture());
 
-        return Map.of("usersReviews", data) ;
+        List<GetUsersReviewResponseDto.UsersReviewDTO> reviewDtos = reviews.stream().map(review -> {
+            GetUsersReviewResponseDto.UsersReviewDTO dto = new GetUsersReviewResponseDto.UsersReviewDTO();
+            dto.setReviewId(review.getReviewId());
+            dto.setRating(review.getRating());
+            dto.setComment(review.getComment());
+            dto.setReviewDate(review.getReviewDate().toString());
+
+            // Map event summary
+            Event event = review.getEvent();
+            GetUsersReviewResponseDto.EventSummaryDTO eventSummary = new GetUsersReviewResponseDto.EventSummaryDTO();
+            eventSummary.setEventId(event.getEventId());
+            eventSummary.setEventName(event.getEventName());
+            eventSummary.setCategory(event.getCategory());
+            eventSummary.setStatus(event.getStatus().toString());
+            eventSummary.setStartTime(event.getStartTime());
+            eventSummary.setEndTime(event.getEndTime());
+            eventSummary.setEventLogoUrl(event.getLogoUrl());
+            dto.setEventSummary(eventSummary);
+
+            return dto;
+        }).toList();
+
+        response.setUsersReview(reviewDtos);
+
+        return Map.of("userReviews", response);
     }
 }
