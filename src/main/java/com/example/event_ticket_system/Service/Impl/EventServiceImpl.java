@@ -241,6 +241,7 @@ public class EventServiceImpl implements EventService {
             dto.setStartTime(event.getStartTime().toString());
             dto.setEndTime(event.getEndTime().toString());
             dto.setUpdateAt(event.getUpdatedAt().toString());
+            dto.setLogoUrl(event.getLogoUrl());
             return dto;
         }).collect(Collectors.toList());
 

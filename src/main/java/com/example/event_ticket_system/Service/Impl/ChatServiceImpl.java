@@ -105,7 +105,7 @@ public class ChatServiceImpl implements ChatService {
         → Eventa hiện đã có app trên CH Play dành cho Android. Phiên bản iOS sẽ được ra mắt trong thời gian tới.
 
     12. **Làm sao để liên hệ với hỗ trợ khách hàng?**
-        → Bạn có thể liên hệ với tư vấn viên qua hộp chat hoặc email hỗ trợ trên website Eventa.
+        → Bạn có thể liên hệ với tư vấn viên qua SĐT: 1900234 hoặc email hỗ trợ: eventasupport@gmail.com.
 
     13. **Cách tìm kiếm sự kiện theo địa điểm hoặc thể loại?**
         → Trên trang chủ hoặc phần tìm kiếm, bạn có thể lọc sự kiện theo địa điểm, thể loại, thời gian,…

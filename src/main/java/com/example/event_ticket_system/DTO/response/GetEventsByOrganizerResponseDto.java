@@ -8,6 +8,7 @@ public class GetEventsByOrganizerResponseDto {
     private String eventName;
     private String status;
     private String approvalStatus;
+    private String logoUrl;
     private String startTime;
     private String endTime;
     private String updateAt;
