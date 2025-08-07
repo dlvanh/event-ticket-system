@@ -22,6 +22,7 @@ public class TicketResponseDTO {
     @AllArgsConstructor
     public static class TicketDetail {
         private Integer ticketId;
+        private Integer orderTicketId;
         private String eventName;
         private LocalDateTime eventStartTime;
         private LocalDateTime eventEndTime;
@@ -30,5 +31,6 @@ public class TicketResponseDTO {
         private String ticketType;
         private Double unitPrice;
         private Integer quantity;
+        private byte[] qrCode;
     }
 }
