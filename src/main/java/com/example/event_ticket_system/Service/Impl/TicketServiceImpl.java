@@ -46,6 +46,7 @@ public class TicketServiceImpl implements TicketService{
                     .filter(ot -> ot.getTicket() != null && ot.getTicket().getEvent() != null)
                     .map(ot -> new TicketResponseDTO.TicketDetail(
                             ot.getTicket().getTicketId(),
+                            ot.getOrderTicketId(),
                             ot.getTicket().getEvent().getEventName(),
                             ot.getTicket().getEvent().getStartTime(),
                             ot.getTicket().getEvent().getEndTime(),
@@ -53,7 +54,8 @@ public class TicketServiceImpl implements TicketService{
                             ot.getTicket().getEvent().getAddressDetail(),
                             ot.getTicket().getTicketType(),
                             ot.getUnitPrice(),
-                            ot.getQuantity()
+                            ot.getQuantity(),
+                            ot.getQrCode()
                     ))
                     .collect(Collectors.toList());
 

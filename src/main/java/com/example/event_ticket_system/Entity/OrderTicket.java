@@ -27,4 +27,9 @@ public class OrderTicket {
 
     @Column(name = "unit_price", nullable = false)
     private double unitPrice;
+
+    @Lob
+    @Column(name = "qr_code", columnDefinition = "MEDIUMBLOB")
+    @Basic(fetch = FetchType.LAZY)
+    private byte[] qrCode;
 }
