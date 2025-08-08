@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/organizer/**").hasAuthority("ROLE_organizer")
                         .requestMatchers("/api/review/upload/{reviewId}",
                                 "/api/review/update/{reviewId}",
-                                "/api/review/delete/{reviewId}").hasAuthority("ROLE_customer")
+                                "/api/review/delete/{reviewId}").authenticated()
                         .requestMatchers("/api/review/event/{eventId}",
                                 "/api/review/user/{userId}").permitAll()
 
@@ -73,12 +73,13 @@ public class SecurityConfig {
                             response.getWriter().write("OAuth2 login failed: " + exception.getMessage());
                         })
                 )
-//                .exceptionHandling(exh -> exh
-//                        .authenticationEntryPoint((request, response, authException) -> {
-//                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//                            response.getWriter().write("Unauthorized: " + authException.getMessage());
-//                        })
-//                )
+                .exceptionHandling(exh -> exh
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

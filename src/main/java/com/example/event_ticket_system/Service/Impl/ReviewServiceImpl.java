@@ -116,21 +116,20 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public void deleteReviewForEvent(Integer reviewId, HttpServletRequest request) {
-        String role = jwtUtil.extractRole(request.getHeader("Authorization").substring(7));
-        Integer userId = jwtUtil.extractUserId(request.getHeader("Authorization").substring(7));
+        String token = request.getHeader("Authorization").substring(7);
+        String role = jwtUtil.extractRole(token);
+        Integer userId = jwtUtil.extractUserId(token);
 
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("Review not found with id: " + reviewId));
 
-        boolean isOwner = review.getUser().getId().equals(userId);
-        boolean isAdmin = "ROLE_admin".equals(role);
-
-        if (!isOwner && !isAdmin) {
+        if (!review.getUser().getId().equals(userId) && !"ROLE_admin".equals(role)) {
             throw new SecurityException("You do not have permission to delete this review.");
         }
 
-        reviewRepository.deleteById(reviewId);
+        reviewRepository.delete(review);
     }
+
 
     @Override
     public Map<String, Object> getReviewsByEventId(Integer eventId, HttpServletRequest request) {
