@@ -10,7 +10,5 @@ import java.util.List;
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket,Integer> {
     List<Ticket> findByEvent(Event event);
-
     List<Ticket> findByEventEventId(Integer eventId);
-//    Optional<Ticket> findByTicketType(String ticketType);
 }
