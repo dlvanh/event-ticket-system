@@ -3,8 +3,11 @@ package com.example.event_ticket_system.Controller;
 import com.example.event_ticket_system.DTO.request.EventRequestDto;
 import com.example.event_ticket_system.DTO.request.UpdateEventRequestDto;
 import com.example.event_ticket_system.DTO.response.APIResponse;
+import com.example.event_ticket_system.DTO.response.DailyTicketSalesDTO;
+import com.example.event_ticket_system.DTO.response.DailyTicketTypeSalesDTO;
 import com.example.event_ticket_system.DTO.response.DetailEventResponseDto;
 import com.example.event_ticket_system.Service.EventService;
+import com.example.event_ticket_system.Service.TicketService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -20,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -28,13 +32,15 @@ import java.util.Map;
 public class EventController {
     @Autowired
     private final EventService eventService;
+    @Autowired
+    private TicketService ticketService;
 
-    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity<Object> createEvent (@RequestPart("data") @Valid EventRequestDto eventRequestDto,
-                                               @RequestPart("logo") MultipartFile logoFile,
-                                               @RequestPart("background") MultipartFile backgroundFile,
-                                               BindingResult bindingResult,
-                                               HttpServletRequest request) {
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Object> createEvent(@RequestPart("data") @Valid EventRequestDto eventRequestDto,
+                                              @RequestPart("logo") MultipartFile logoFile,
+                                              @RequestPart("background") MultipartFile backgroundFile,
+                                              BindingResult bindingResult,
+                                              HttpServletRequest request) {
         try {
             Map<String, String> errors = new HashMap<>();
             if (bindingResult.hasErrors()) {
@@ -49,7 +55,7 @@ public class EventController {
                         HttpStatus.BAD_REQUEST
                 );
             }
-            Integer eventId = eventService.createEvent(eventRequestDto, logoFile,backgroundFile, request);
+            Integer eventId = eventService.createEvent(eventRequestDto, logoFile, backgroundFile, request);
             return APIResponse.responseBuilder(
                     eventId,
                     "Event created successfully",
@@ -91,9 +97,9 @@ public class EventController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
         try {
-            if(page<=0&&size<=0) {
-            page = 1;
-            size = 1;
+            if (page <= 0 && size <= 0) {
+                page = 1;
+                size = 1;
             }
             Map<String, Object> response = eventService.getEventsByOrganizer(request, status, approveStatus, startTime, endTime, name, page, size);
             return APIResponse.responseBuilder(
@@ -101,7 +107,7 @@ public class EventController {
                     "Events retrieved successfully",
                     HttpStatus.OK
             );
-        }  catch (SecurityException e) {
+        } catch (SecurityException e) {
             return APIResponse.responseBuilder(
                     null,
                     e.getMessage(),
@@ -113,7 +119,7 @@ public class EventController {
                     e.getMessage(),
                     HttpStatus.NOT_FOUND
             );
-        }catch (Exception e) {
+        } catch (Exception e) {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while retrieving events",
@@ -161,7 +167,7 @@ public class EventController {
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String sortBy) {
         try {
-            if(page<=0&&size<=0) {
+            if (page <= 0 && size <= 0) {
                 page = 1;
                 size = 1;
             }
@@ -194,11 +200,11 @@ public class EventController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
         try {
-            if(page<=0&&size<=0) {
+            if (page <= 0 && size <= 0) {
                 page = 1;
                 size = 1;
             }
-            Map<String, Object> response = eventService.getPendingEvents(request,address,startTime,endTime,name, page, size);
+            Map<String, Object> response = eventService.getPendingEvents(request, address, startTime, endTime, name, page, size);
             return APIResponse.responseBuilder(
                     response,
                     "Pending events retrieved successfully",
@@ -216,8 +222,7 @@ public class EventController {
                     e.getMessage(),
                     HttpStatus.NOT_FOUND
             );
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while retrieving pending events",
@@ -227,22 +232,22 @@ public class EventController {
     }
 
     @GetMapping()
-        public ResponseEntity<Object> getListEvents(
-                HttpServletRequest request,
-                @RequestParam(required = false) String status,
-                @RequestParam(required = false) String approvalStatus,
-                @RequestParam(required = false) String address,
-                @RequestParam(required = false)
-                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                LocalDateTime startTime,
-                @RequestParam(required = false)
-                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-                LocalDateTime endTime,
-                @RequestParam(required = false) String name,
-                @RequestParam(defaultValue = "1") Integer page,
-                @RequestParam(defaultValue = "10") Integer size) {
+    public ResponseEntity<Object> getListEvents(
+            HttpServletRequest request,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String approvalStatus,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startTime,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endTime,
+            @RequestParam(required = false) String name,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
         try {
-            if(page<=0&&size<=0) {
+            if (page <= 0 && size <= 0) {
                 page = 1;
                 size = 1;
             }
@@ -273,7 +278,7 @@ public class EventController {
         }
     }
 
-    @PutMapping(value = "/{eventId}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PutMapping(value = "/{eventId}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Object> updateEvent(
             @PathVariable Integer eventId,
             @RequestPart("data") @Valid UpdateEventRequestDto eventRequestDto,
@@ -301,7 +306,7 @@ public class EventController {
                     "Event updated successfully",
                     HttpStatus.OK
             );
-        }catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             return APIResponse.responseBuilder(
                     null,
                     e.getMessage(),
@@ -344,7 +349,7 @@ public class EventController {
                     e.getMessage(),
                     HttpStatus.FORBIDDEN
             );
-        }catch (EntityNotFoundException e) {
+        } catch (EntityNotFoundException e) {
             return APIResponse.responseBuilder(
                     null,
                     e.getMessage(),
@@ -447,6 +452,82 @@ public class EventController {
             return APIResponse.responseBuilder(
                     null,
                     "An unexpected error occurred while generating the buyer report",
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/report/ticket-per-day/{eventId}")
+    public ResponseEntity<?> getTicketsSoldPerDay(@PathVariable Integer eventId, HttpServletRequest request) {
+        try {
+            List<DailyTicketSalesDTO> response = ticketService.getTicketsSoldPerDay(eventId, request);
+            if (response.isEmpty()) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "No data found for this event",
+                        HttpStatus.NOT_FOUND
+                );
+            }
+            return APIResponse.responseBuilder(
+                    response,
+                    "Ticket sales report retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/report/ticket-type-per-day/{eventId}")
+    public ResponseEntity<?> getTicketsSoldPerTicketType(@PathVariable Integer eventId,
+                                                         @RequestParam(required = false) String ticketType,
+                                                         HttpServletRequest request) {
+        try {
+            List<DailyTicketTypeSalesDTO> response = ticketService.getTicketsSoldPerTicketType(eventId, ticketType, request);
+            if (response.isEmpty()) {
+                return APIResponse.responseBuilder(
+                        null,
+                        "No data found for this event",
+                        HttpStatus.NOT_FOUND
+                );
+            }
+            return APIResponse.responseBuilder(
+                    response,
+                    "Ticket type sales report retrieved successfully",
+                    HttpStatus.OK
+            );
+        } catch (SecurityException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.FORBIDDEN
+            );
+        } catch (EntityNotFoundException e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
+                    HttpStatus.NOT_FOUND
+            );
+        } catch (Exception e) {
+            return APIResponse.responseBuilder(
+                    null,
+                    e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
