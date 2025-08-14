@@ -367,7 +367,14 @@ public class EventServiceImpl implements EventService {
             if (category != null && !category.isEmpty()) {
                 predicates.add(criteriaBuilder.equal(root.get("category"), category));
             }
-            if (address != null && !address.isEmpty()) {
+            if ("Vị trí khác".equalsIgnoreCase(address)) {
+                // Exclude events with addresses in HCM, Hanoi, or Dalat
+                predicates.add(criteriaBuilder.not(criteriaBuilder.or(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("addressName")), "%Hồ Chí Minh%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("addressName")), "%Hà Nội%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("addressName")), "%Đà Lạt%")
+                )));
+            } else if (address != null && !address.isEmpty()) {
                 String pattern = "%" + address.toLowerCase() + "%";
                 Predicate addressNameLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("addressName")), pattern);
                 Predicate addressDetailLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("addressDetail")), pattern);
@@ -377,6 +384,7 @@ public class EventServiceImpl implements EventService {
 
                 predicates.add(criteriaBuilder.or(addressNameLike, addressDetailLike, wardLike, districtLike, provinceLike));
             }
+
             if (startTime != null && endTime != null) {
                 predicates.add(criteriaBuilder.and(
                         criteriaBuilder.lessThanOrEqualTo(root.get("startTime"), endTime),
