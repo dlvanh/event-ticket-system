@@ -370,9 +370,9 @@ public class EventServiceImpl implements EventService {
             if ("Vị trí khác".equalsIgnoreCase(address)) {
                 // Exclude events with addresses in HCM, Hanoi, or Dalat
                 predicates.add(criteriaBuilder.not(criteriaBuilder.or(
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("addressName")), "%Hồ Chí Minh%"),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("addressName")), "%Hà Nội%"),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("addressName")), "%Đà Lạt%")
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), "%Hồ Chí Minh%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), "%Hà Nội%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("ward").get("district").get("province").get("name")), "%Đà Lạt%")
                 )));
             } else if (address != null && !address.isEmpty()) {
                 String pattern = "%" + address.toLowerCase() + "%";
