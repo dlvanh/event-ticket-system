@@ -49,4 +49,15 @@ public interface OrderTicketRepository extends JpaRepository<OrderTicket, Intege
             "GROUP BY DATE(ot.order.orderDate), ot.ticket.ticketType " +
             "ORDER BY DATE(ot.order.orderDate), ot.ticket.ticketType")
     List<DailyTicketTypeSalesProjection> findTicketSoldPerTicketTypeByEventId(@Param("eventId") Integer eventId);
+
+    @Query("SELECT e.category " +
+            "FROM OrderTicket ot " +
+            "JOIN ot.order o " +
+            "JOIN o.user u " +
+            "JOIN ot.ticket t " +
+            "JOIN t.event e " +
+            "WHERE u.id = :userId " +
+            "GROUP BY e.category " +
+            "ORDER BY COUNT(e.category) DESC")
+    List<String> findFavouriteGenresByUserId(@Param("userId") Integer userId);
 }
