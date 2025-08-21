@@ -56,7 +56,6 @@ class TicketServiceImplTest {
     private Order order;
     private OrderTicket orderTicket;
     private Event event;
-    private Ticket ticket;
 
     @BeforeEach
     void setUp() {
@@ -67,7 +66,7 @@ class TicketServiceImplTest {
         event.setCategory("Music");
         event.setAddressDetail("Hanoi Opera House");
 
-        ticket = new Ticket();
+        Ticket ticket = new Ticket();
         ticket.setTicketId(101);
         ticket.setTicketType("VIP");
         ticket.setEvent(event);
