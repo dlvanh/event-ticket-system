@@ -154,7 +154,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private String uploadImageToImgbb(MultipartFile file) throws IOException, InterruptedException {
+    public String uploadImageToImgbb(MultipartFile file) throws IOException, InterruptedException {
         byte[] imageBytes = file.getBytes();
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
 
@@ -224,7 +224,8 @@ public class EventServiceImpl implements EventService {
             }
             if (name != null && !name.isEmpty()) {
                 predicates.add(criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("eventName")), "%" + name.toLowerCase() + "%"));
+                        criteriaBuilder.lower(root.get("" +
+                                "")), "%" + name.toLowerCase() + "%"));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -822,7 +823,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private ByteArrayInputStream exportToExcel(List<TicketExportDto> dtos) throws IOException {
+    public ByteArrayInputStream exportToExcel(List<TicketExportDto> dtos) throws IOException {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Ticket Stats");
 
@@ -887,13 +888,13 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private Font loadVietnameseFont(float size, boolean bold) throws IOException, DocumentException {
+    public Font loadVietnameseFont(float size, boolean bold) throws IOException, DocumentException {
         String fontPath = "src/main/resources/fonts/arial.ttf";
         BaseFont baseFont = BaseFont.createFont(fontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
         return new Font(baseFont, size, bold ? Font.BOLD : Font.NORMAL);
     }
 
-    private ByteArrayInputStream exportToPdf(List<TicketExportDto> dtos) throws DocumentException, IOException {
+    public ByteArrayInputStream exportToPdf(List<TicketExportDto> dtos) throws DocumentException, IOException {
         Document document = new Document();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         PdfWriter.getInstance(document, out);
