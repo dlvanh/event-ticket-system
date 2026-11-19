@@ -1,0 +1,282 @@
+body {
+  background-color: #fff7f3;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter',sans-serif;
+  box-sizing: border-box;
+}
+
+.header-border {
+  border-bottom: 1px solid black;
+  background-color: #c9c9c9;
+  color: white;
+}
+
+.overlay {
+  background-color: rgba(0, 0, 0, 0.6); /* lớp phủ mờ */
+  height: 100%;
+  padding: 20px;
+  backdrop-filter: blur(2px); /* làm mờ thêm nếu muốn */
+}
+
+.event-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12rem;
+  padding: 1.5rem;
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .event-header {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+  }
+}
+
+.event-details {
+  max-width: 600px;
+  flex: 1;
+}
+
+.event-title {
+  font-size: 20px;
+  margin-bottom: 1rem;
+  font-weight: normal;
+}
+
+.event-divider {
+  border-top: 1px solid black;
+  margin-bottom: 0.5rem;
+}
+
+.event-address,
+.event-time {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.countdown-box {
+  width: 150px;
+  height: 128px;
+  background-color: rgba(255, 255, 255, 0.376);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0.5rem;
+  line-height: 1.2;
+}
+
+.countdown-title {
+  font-size: 1rem;
+  margin: 0 0 1rem 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.timer-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.time-unit {
+  background: #FF7E42;
+  border-radius: 10px;
+  width: 50px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-value {
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.separator {
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 2px;
+}
+
+.payment-section {
+  padding: 1rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: normal;
+}
+
+.payment-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .payment-container {
+    flex-direction: row;
+  }
+  
+  .payment-section {
+    padding: 1rem 4rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .payment-section {
+    padding: 1rem 6rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .payment-section {
+    padding: 1rem 8rem;
+  }
+}
+
+/* Cho màn hình rất lớn */
+@media (min-width: 1400px) {
+  .payment-section {
+    padding: 1rem 10rem;
+  }
+}
+
+.left-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 300px;
+  width: 100%;
+}
+
+.box {
+  background-color: #d3d3d3;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 0;
+  overflow: hidden;
+}
+
+.box-title {
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+}
+
+.box-order {
+  font-size: 1.5rem;
+  margin: 0 0 1.75rem 0;
+}
+
+.promo-box-v1 {
+  background: linear-gradient(135deg, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+        
+.promo-input-group-v1 {
+  display: flex;
+  border: 2px solid #e9ecef;
+  border-radius: 25px;
+  overflow: hidden;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.promo-input-group-v1:focus-within {
+  border-color: #fb8442;
+  box-shadow: 0 0 0 3px rgba(251, 132, 66, 0.1);
+}
+
+.promo-input{
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  background: transparent;
+}
+
+.promo-button-v1 {
+  background: linear-gradient(135deg, #fb8442, #ff6b35);
+  border: none;
+  padding: 12px 20px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.promo-button-v1:hover {
+  background: linear-gradient(135deg, #ff6b35, #fb8442);
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.info-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 9.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-weight: normal;
+}
+
+.pay-button {
+  width: 100%;
+  background-color: #fb8442;
+  font-size: 1rem;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.pay-button:hover {
+  background-color: #ff6b35;
+}
+
+.price-row {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+hr.event-divider {
+  border: none;
+  border-top: 1px dashed #aaa;
+  margin: 4px 0 8px 0;
+}

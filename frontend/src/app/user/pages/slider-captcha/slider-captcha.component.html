@@ -1,0 +1,74 @@
+<div class="captcha-container">
+  <div class="captcha-modal">
+    <div class="captcha-header">
+      <h3>Xác thực bạn là người thật</h3>
+      <p>Vui lòng hoàn thành thử thách bên dưới để tiếp tục mua vé</p>
+    </div>
+
+    <div class="captcha-content">
+      <!-- Math Challenge -->
+      <div *ngIf="currentChallenge.type === 'math'" class="math-challenge">
+        <p class="challenge-question">{{ currentChallenge.question }}</p>
+        <input
+          type="number"
+          [(ngModel)]="mathAnswer"
+          placeholder="Nhập đáp án"
+          class="math-input"
+        >
+      </div>
+
+      <!-- Slider Challenge -->
+      <div *ngIf="currentChallenge.type === 'slider'" class="slider-challenge">
+        <p class="challenge-question">{{ currentChallenge.question }}</p>
+        <div class="slider-container">
+          <div class="slider-track">
+            <div
+              class="slider-piece"
+              [style.left.px]="sliderPosition"
+              (mousedown)="startDrag($event)"
+              (touchstart)="startDrag($event)"
+            >
+              <i class="slider-icon">⚬</i>
+            </div>
+          </div>
+          <div class="slider-target" [style.left.px]="targetPosition"></div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isVerifying" class="loading-state">
+        <div class="spinner"></div>
+        <p>Đang xác thực...</p>
+      </div>
+
+      <!-- Result Messages -->
+      <div *ngIf="verificationResult" class="result-message">
+        <div *ngIf="verificationResult === 'success'" class="success-message">
+          <i class="success-icon">✓</i>
+          <span>Xác thực thành công!</span>
+        </div>
+        <div *ngIf="verificationResult === 'failed'" class="error-message">
+          <i class="error-icon">✗</i>
+          <span>Xác thực thất bại. Vui lòng thử lại.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="captcha-footer">
+      <button
+        class="refresh-btn"
+        (click)="refreshChallenge()"
+        [disabled]="isVerifying"
+      >
+        Làm mới
+      </button>
+      <button
+        class="verify-btn"
+        (click)="verifyAnswer()"
+        [disabled]="!canVerify() || isVerifying"
+      >
+        Xác thực
+      </button>
+    </div>
+  </div>
+</div>

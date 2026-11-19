@@ -1,0 +1,277 @@
+<div class="container">
+  <div class="card">
+    <div class="left-panel">
+      <div>
+        <h2 class="title">{{ eventData.eventName }}</h2>
+        <div class="info">
+          <i class="bi bi-calendar4 icon"></i>
+          <p class="text-green">{{ eventData.startTime | date:'HH:mm dd-MM-yyyy' }}</p>
+        </div>
+        <a 
+          [href]="getGoogleMapUrl(eventData.addressDetail, eventData.addressName)" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="address-link"
+        >
+          <div class="info">
+            <i class="bi bi-geo-alt icon"></i>
+            <p class="text-green">{{ eventData.addressDetail }}</p>
+          </div>
+          <p class="address">{{ eventData.addressName }}</p>
+        </a>
+      </div>
+      <div>
+        <hr class="divider" />
+        <div class="price-section">
+          <h3 class="price-label">Giá từ</h3>
+          <p class="price">{{ eventData.price | number:'1.0-0' }} VNĐ</p>
+          <i class="bi bi-chevron-compact-right price-icon"></i>
+        </div>
+        <button
+          class="buy-btn"
+          [disabled]="isAllTicketsSoldOut() || eventHasEnded() || !canBuyTicket()"
+          (click)="needLoginToBuyTicket()"
+        >
+          {{ 
+            eventHasEnded() ? 'Sự kiện đã kết thúc' :
+            isAllTicketsSoldOut() ? 'Đã hết vé' :
+            !canBuyTicket() ? 'Vé chưa được mở bán' : 'Mua vé ngay'
+          }}
+        </button>
+      </div>
+
+      <div class="circle top-right"></div>
+      <div class="circle bottom-right"></div>
+    </div>
+
+    <div class="right-panel">
+      <img
+        [src]="eventData.backgroundUrl"
+        alt="Festival poster"
+        class="poster"
+      />
+      <div class="circle top-left"></div>
+      <div class="circle bottom-left"></div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="showHeader" class="sticky-header">
+  <span>{{ eventData.eventName }}</span>
+  <span> <i class="bi bi-geo-alt"></i> {{ eventData.addressDetail }} </span>
+  <button [disabled]="isAllTicketsSoldOut() || eventHasEnded() || !canBuyTicket()"
+          (click)="needLoginToBuyTicket()"> 
+          <i class="bi bi-ticket-detailed"></i> 
+          {{ 
+            eventHasEnded() ? 'Sự kiện đã kết thúc' :
+            isAllTicketsSoldOut() ? 'Đã hết vé' :
+            !canBuyTicket() ? 'Vé chưa được mở bán' : 'Mua vé ngay' 
+          }}
+  </button>
+</div>
+
+<div class="main-content">
+  <div class="tp-content"> 
+    <div class="left-container">
+      <div class="tp-container">
+          <div class="header-info">
+            <h2 class="tp-title">Giới thiệu</h2>
+            <div class="rating-box" >
+              <!-- Nếu sự kiện đã kết thúc: hiển thị theo dữ liệu -->
+              <ng-container *ngIf="eventHasEnded(); else showEmptyStars">
+                <ng-container *ngFor="let star of stars">
+                  <span *ngIf="star === 'full'" class="star full">★</span>
+                  <span *ngIf="star === 'half'" class="star half">★</span>
+                  <span *ngIf="star === 'empty'" class="star empty">☆</span>
+                </ng-container>
+                <span>{{ averageRating }}/5 ({{ totalReviews }} đánh giá)</span>
+              </ng-container>
+
+              <!-- Nếu sự kiện chưa kết thúc: hiển thị 5 sao rỗng -->
+              <ng-template #showEmptyStars>
+                <span class="star empty">☆</span>
+                <span class="star empty">☆</span>
+                <span class="star empty">☆</span>
+                <span class="star empty">☆</span>
+                <span class="star empty">☆</span>
+                <span>Chưa có đánh giá</span>
+              </ng-template>
+              <button class="btn-rate" (click)="goToReview(eventId)">Xem đánh giá</button>
+            </div>
+          </div>
+        
+        <div class="tp-intro-text">
+          <p>{{ eventData.description }}</p>
+        </div>
+
+        <table class="tp-table">
+          <thead>
+            <tr>
+              <th>HẠNG VÉ</th>
+              <th>GIÁ MỞ BÁN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ticket of eventData.ticketPrices">
+              <td>{{ ticket.type }}</td>
+              <td>{{ ticket.price | number:'1.0-0' }} VNĐ</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="tp-fade-overlay" *ngIf="!expanded"></div>
+        <div class="tp-toggle-btn" (click)="toggleRows()" tabindex="0" (keydown.enter)="toggleRows()" (keydown.space)="toggleRows()">
+          <i class="fas" [ngClass]="expanded ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+        </div>
+      </div>
+
+      <div class="ticket-container">
+        <div class="ticket-header">
+          Thông tin vé
+        </div>
+
+        <div class="ticket-event">
+          <div class="ticket-event-info" (click)="!eventHasEnded() && toggleMainSection()">
+            <i [ngClass]="isMainExpanded ? 'bi bi-chevron-down' : 'bi bi-chevron-right'"></i>
+            <span>{{ eventData.startTime | date:'HH:mm dd-MM-yyyy' }}</span>
+          </div>
+            <button type="button" class="buy-now-button" 
+              [disabled]="isAllTicketsSoldOut() || eventHasEnded() || !canBuyTicket()"
+              (click)="needLoginToBuyTicket()"> 
+                {{ 
+                  eventHasEnded() ? 'Sự kiện đã kết thúc' :
+                  isAllTicketsSoldOut() ? 'Đã hết vé' :
+                  !canBuyTicket() ? 'Vé chưa được mở bán' : 'Mua vé ngay' 
+                }}
+            </button>
+        </div>
+
+        <div class="ticket-section" *ngIf="isMainExpanded && !eventHasEnded()">
+          <div class="ticket-item" *ngFor="let ticket of eventData.ticketPrices; let i = index">
+            <div class="ticket-item-header" (click)="toggleTicket(i)">
+              <div class="ticket-title">
+                <i [ngClass]="ticket.isExpanded ? 'bi bi-chevron-down' : 'bi bi-chevron-right'"></i>
+                <span>{{ ticket.type }}</span>
+              </div>
+              <span class="ticket-price">{{ ticket.price | number:'1.0-0' }} VNĐ</span>
+            </div>
+
+            <div class="ticket-details" *ngIf="ticket.isExpanded">
+              <p *ngIf="ticket.isSoldOut" class="text-red-600 font-semibold">Hết vé</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="organizer-wrapper">
+        <h2 class="organizer-title">Ban tổ chức</h2>
+        <div class="organizer-content">
+          <img
+            [src]="eventData.organizerAvatarUrl"
+            alt = "Ảnh đại diện của ban tổ chức"
+            class="organizer-image"
+          />
+          <div>
+            <p class="organizer-name">
+              {{ eventData.organizerName }}
+            </p>
+            <p class="organizer-description">
+              {{ eventData.organizerBio }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="side-banner">
+      <img src="assets/imgside.webp" alt="Banner quảng cáo" />
+    </div>
+  </div>
+</div>
+<div class="another-container">
+  <div class="event-listing-container">
+    <h2 class="section-title">Có thể bạn cũng thích</h2>
+    
+    <div class="events-grid">
+      <div 
+        class="event-card" 
+        *ngFor="let event of events.slice(0, 4)"
+        (click)="onEventClick(event.id)"
+      >
+        <img 
+          [src]="event.backgroundUrl" 
+          [alt]="event.eventName"
+          class="event-image"
+        />
+        <h3 class="event-title" [class.font-wb]="event.id === 1">
+          {{ event.eventName }}
+        </h3>
+        <p class="event-price">{{ event.price | number:'1.0-0' }} VNĐ</p>
+        <p class="event-date">
+          <i class="calendar-icon"></i>
+          {{ event.startTime | date:'dd/MM/yyyy' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="events-grid">
+      <div 
+        class="event-card" 
+        *ngFor="let event of events.slice(4, 8)"
+        (click)="onEventClick(event.id)"
+      >
+        <img 
+          [src]="event.backgroundUrl"  
+          [alt]="event.imageAlt"
+          class="event-image"
+        />
+        <h3 class="event-title">{{ event.eventName }}</h3>
+        <p class="event-price">{{ event.price | number:'1.0-0' }} VNĐ</p>
+        <p class="event-date">
+          <i class="calendar-icon"></i>
+          {{ event.startTime | date:'dd/MM/yyyy' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="promotional-banner">
+      <img 
+        [src]="promotionalBannerUrl" 
+        alt="Babymonster Hello Monsters promotion banner"
+        class="banner-image"
+      />
+    </div>
+
+    <div class="events-grid">
+      <div 
+        class="event-card" 
+        *ngFor="let event of events.slice(8, 12)"
+        (click)="onEventClick(event.id)"
+      >
+        <img 
+          [src]="event.backgroundUrl" 
+          [alt]="event.imageAlt"
+          class="event-image"
+        />
+        <h3 class="event-title">{{ event.eventName }}</h3>
+        <p class="event-price">{{ event.price | number:'1.0-0' }} VNĐ</p>
+        <p class="event-date">
+          <i class="calendar-icon"></i>
+          {{ event.startTime | date:'dd/MM/yyyy' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="load-more-container">
+      <button 
+        class="load-more-btn"
+        (click)="onLoadMoreEvents()"
+      >
+        Xem thêm sự kiện
+      </button>
+    </div>
+  </div>
+</div>
+<app-toast-notification 
+  #notification
+  (onClose)="onNotificationClose()">
+</app-toast-notification>

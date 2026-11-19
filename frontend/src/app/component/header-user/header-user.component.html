@@ -1,0 +1,39 @@
+<header class="header">
+  <div class="header-container">
+    <a routerLink="/" class="logo" (click)="goToHome()">
+      <img src="assets/logoeventa.png" alt="Eventa Logo" class="logo-badge" />
+    </a>
+
+    <div class="search-container">
+      <input type="text" 
+      class="search-box" 
+      placeholder="Bạn tìm gì hôm nay?" 
+      [(ngModel)]="searchKeyword"
+      (keydown.enter)="searchByEventName()"
+      />
+      <i class="fas fa-search search-icon"
+      (click)="searchByEventName()"></i>
+    </div>
+
+    <nav class="nav-actions" *ngIf="!isLoggedIn()">
+      <div class="auth-links">
+        <a (click)="goToLogin()" class="auth-link login">Đăng nhập</a>
+        <div class="divider"></div>
+        <a (click)="goToRegister()" class="auth-link register">Đăng ký</a>
+      </div>
+    </nav>
+
+    <div class="user-profile" *ngIf="isLoggedIn()" (click)="toggleDropdown()" [class.active]="isDropdownOpen">
+      <div class="profile-container">
+        <img [src]="avatarUrl" *ngIf="avatarUrl" alt="User Avatar" class="user-avatar" />
+        <span class="account-label">Tài khoản</span>
+        <i class="bi bi-caret-down-fill"></i>
+      </div>
+      <div class="dropdown-menu" [class.show]="isDropdownOpen">
+        <a class="dropdown-item" (click)="goToMyTickets()">Vé đã mua</a>
+        <a href="/user-profile" class="dropdown-item">Tài khoản của tôi</a>
+        <a class="dropdown-item logout" (click)="logout()">Đăng xuất</a>
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,90 @@
+
+/* Đảm bảo bảng responsive và có thanh trượt ngang */
+.table-responsive {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* Định dạng bảng trong Review Modal */
+.table {
+  width: 100%;
+  min-width: 1200px; /* Đảm bảo bảng đủ rộng để hiển thị tất cả cột */
+  border-collapse: collapse;
+}
+
+.table th, .table td {
+  vertical-align: middle;
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap; /* Ngăn ngắt dòng trong các cột ngắn */
+}
+
+/* Đặt độ rộng tối thiểu cho từng cột */
+.table th:nth-child(1), .table td:nth-child(1) { /* Review ID */
+  min-width: 80px;
+}
+
+.table th:nth-child(2), .table td:nth-child(2) { /* User ID */
+  min-width: 80px;
+}
+
+.table th:nth-child(3), .table td:nth-child(3) { /* Event ID */
+  min-width: 80px;
+}
+
+.table th:nth-child(4), .table td:nth-child(4) { /* Tên sự kiện */
+  min-width: 200px; /* Rộng hơn vì có logo và tên dài */
+}
+
+.table th:nth-child(5), .table td:nth-child(5) { /* Danh mục */
+  min-width: 120px;
+}
+
+.table th:nth-child(6), .table td:nth-child(6) { /* Trạng thái sự kiện */
+  min-width: 100px;
+}
+
+.table th:nth-child(7), .table td:nth-child(7) { /* Thời gian bắt đầu */
+  min-width: 140px;
+}
+
+.table th:nth-child(8), .table td:nth-child(8) { /* Thời gian kết thúc */
+  min-width: 140px;
+}
+
+.table th:nth-child(9), .table td:nth-child(9) { /* Rating */
+  min-width: 80px;
+}
+
+.table th:nth-child(10), .table td:nth-child(10) { /* Bình luận */
+  min-width: 200px; /* Rộng hơn để chứa bình luận dài */
+  white-space: normal; /* Cho phép ngắt dòng trong cột Bình luận */
+}
+
+.table th:nth-child(11), .table td:nth-child(11) { /* Ngày đánh giá */
+  min-width: 140px;
+}
+
+/* Định dạng badge */
+.badge {
+  font-size: 14px;
+  padding: 5px 10px;
+}
+
+/* Định dạng hình ảnh trong bảng */
+.table img {
+  max-width: 30px;
+  height: auto;
+  vertical-align: middle;
+}
+
+/* Đảm bảo modal không vượt quá kích thước màn hình */
+.modal-lg {
+  max-width: 90vw; /* Giới hạn chiều rộng modal */
+}
+
+/* Căn chỉnh nội dung trong cột Tên sự kiện */
+.table .d-flex {
+  align-items: center;
+}
+

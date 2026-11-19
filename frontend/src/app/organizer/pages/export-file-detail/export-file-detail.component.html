@@ -1,0 +1,121 @@
+<div class="export-detail-container">
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Đang tải chi tiết sự kiện...</p>
+  </div>
+
+  <!-- Main content -->
+  <div *ngIf="!isLoading && eventData" class="main-content">
+    <div class="header-section">
+      <div class="back-button" (click)="goBack()">
+        <i class="bi bi-arrow-left"></i>
+        <span>Quay lại</span>
+      </div>
+      <h1 class="event-title">{{ eventData.eventName }}</h1>
+    </div>
+
+    <div class="event-info-section">
+      <h3>Thông tin sự kiện</h3>
+      <div class="info-card">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Thời gian:</span>
+            <span class="value">{{ eventData.startTime | date:'dd/MM/yyyy HH:mm' }} - {{ eventData.endTime | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Địa điểm:</span>
+            <span class="value">{{ eventData.address }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Thể loại:</span>
+            <span class="value">{{ eventData.category }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Mô tả:</span>
+            <span class="value">{{ eventData.description }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ticket Types Detail -->
+    <div class="ticket-types-section" *ngIf="!isLoadingStats">
+      <h3>Chi tiết vé</h3>
+      <table class="ticket-table" *ngIf="(ticketStats.ticketTypes?.length || 0) > 0; else noTickets">
+        <thead>
+          <tr>
+            <th>Loại vé</th>
+            <th>Tổng số</th>
+            <th>Đã bán</th>
+            <th>Còn lại</th>
+            <th>Giá vé</th>
+            <th>Doanh thu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ticket of ticketStats.ticketTypes">
+            <td>{{ ticket.ticketType }}</td>
+            <td>{{ ticket.totalQuantity }}</td>
+            <td>{{ ticket.soldQuantity }}</td>
+            <td>{{ ticket.remainingQuantity }}</td>
+            <td>{{ formatCurrency(ticket.price) }}</td>
+            <td>{{ formatCurrency(ticket.revenue) }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #noTickets>
+        <p>Không có dữ liệu vé.</p>
+      </ng-template>
+    </div>
+
+    <!-- Download report buttons -->
+    <div class="report-download-section">
+    <button class="download-btn" (click)="downloadPdfReport()" [disabled]="isDownloadingPdf">
+      <span *ngIf="!isDownloadingPdf">Tải báo cáo PDF</span>
+      <span *ngIf="isDownloadingPdf">Đang tải PDF...</span>
+    </button>
+
+    <button class="download-btn" (click)="downloadExcelReport()" [disabled]="isDownloadingExcel">
+      <span *ngIf="!isDownloadingExcel">Tải báo cáo Excel</span>
+      <span *ngIf="isDownloadingExcel">Đang tải Excel...</span>
+    </button>
+
+    <button class="download-btn" (click)="downloadBuyerReport('pdf')" [disabled]="isDownloadingBuyerPdf">
+      <span *ngIf="!isDownloadingBuyerPdf">Tải danh sách người mua (PDF)</span>
+      <span *ngIf="isDownloadingBuyerPdf">Đang tải PDF...</span>
+    </button>
+
+    <button class="download-btn" (click)="downloadBuyerReport('excel')" [disabled]="isDownloadingBuyerExcel">
+      <span *ngIf="!isDownloadingBuyerExcel">Tải danh sách người mua (Excel)</span>
+      <span *ngIf="isDownloadingBuyerExcel">Đang tải Excel...</span>
+    </button>
+  </div>
+
+
+    <div class="charts-section" *ngIf="!isLoadingStats">
+      <h3 >Tỉ lệ vé bán ra</h3>
+      <div class="charts-wrapper">
+        <div class="chart-box">
+          <canvas #pieChartCanvas width="320" height="320"></canvas>
+        </div>
+        <div class="chart-content">
+        </div>
+      </div>
+    </div>
+    
+    <!-- Loading stats -->
+    <div *ngIf="isLoadingStats" class="loading-stats">
+      <div class="loading-spinner"></div>
+      <p>Đang tải thống kê vé...</p>
+    </div>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="!isLoading && !eventData" class="error-container">
+    <span style="font-size: 3rem;">⚠️</span>
+    <h3>Không tìm thấy sự kiện</h3>
+    <p>Sự kiện này có thể đã bị xóa hoặc không tồn tại.</p>
+    <button class="back-btn" (click)="goBack()">Quay lại</button>
+  </div>
+</div>

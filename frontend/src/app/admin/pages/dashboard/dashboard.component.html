@@ -1,0 +1,201 @@
+<!-- Content Header (Page header) -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Dashboard</h1>
+      </div><!-- /.col -->
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="#">Home</a></li>
+          <li class="breadcrumb-item active">Dashboard v1</li>
+        </ol>
+      </div><!-- /.col -->
+    </div><!-- /.row -->
+  </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    <!-- Small boxes (Stat box) -->
+    <div class="row">
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3 *ngIf="!isLoading">{{ eventCount }}</h3>
+            <h3 *ngIf="isLoading"><i class="fas fa-spinner fa-spin"></i></h3>
+            <p>Total Events</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-calendar-alt"></i>
+          </div>
+          <a [routerLink]="['/admin/approval-request']" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+      </div>
+      <!-- ./col -->
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h3 *ngIf="!isLoading">{{ ticketCount }}</h3>
+            <h3 *ngIf="isLoading"><i class="fas fa-spinner fa-spin"></i></h3>
+            <p>Total Tickets</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+          <a [routerLink]="['/admin/orders-request']" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+      </div>
+      <!-- ./col -->
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning">
+          <div class="inner">
+            <h3 *ngIf="!isLoading">{{ userCount }}</h3>
+            <h3 *ngIf="isLoading"><i class="fas fa-spinner fa-spin"></i></h3>
+            <p>User Registrations</p>
+          </div>
+          <div class="icon">
+            <i class="ion ion-person-add"></i>
+          </div>
+          <a [routerLink]="['/admin/user-management']" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+      </div>
+      <!-- ./col -->
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+          <div class="inner">
+            <h3>65</h3>
+            <p>Unique Visitors</p>
+          </div>
+          <div class="icon">
+            <i class="ion ion-pie-graph"></i>
+          </div>
+          <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+        </div>
+      </div>
+      <!-- ./col -->
+    </div>
+    <!-- /.row -->
+    <!-- Statistics Section -->
+    <div class="row">
+      <!-- Event Status Distribution (Progress Bars) -->
+      <div class="col-lg-4 col-md-6">
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">Event Status Distribution</h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div *ngIf="isLoading" class="text-center">
+              <i class="fas fa-spinner fa-spin fa-2x"></i>
+            </div>
+            <div *ngIf="!isLoading">
+              <div class="mb-3">
+                <p class="mb-1">Pending ({{ eventStats.pending }})</p>
+                <div class="progress">
+                  <div class="progress-bar bg-warning" role="progressbar" [style.width]="eventStats.pendingPercent + '%'" [attr.aria-valuenow]="eventStats.pendingPercent" aria-valuemin="0" aria-valuemax="100">
+                    {{ eventStats.pendingPercent | number:'1.0-1' }}%
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <p class="mb-1">Approved ({{ eventStats.approved }})</p>
+                <div class="progress">
+                  <div class="progress-bar bg-success" role="progressbar" [style.width]="eventStats.approvedPercent + '%'" [attr.aria-valuenow]="eventStats.approvedPercent" aria-valuemin="0" aria-valuemax="100">
+                    {{ eventStats.approvedPercent | number:'1.0-1' }}%
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <p class="mb-1">Rejected ({{ eventStats.rejected }})</p>
+                <div class="progress">
+                  <div class="progress-bar bg-danger" role="progressbar" [style.width]="eventStats.rejectedPercent + '%'" [attr.aria-valuenow]="eventStats.rejectedPercent" aria-valuemin="0" aria-valuemax="100">
+                    {{ eventStats.rejectedPercent | number:'1.0-1' }}%
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Order Status Distribution (Table) -->
+      <div class="col-lg-4 col-md-6">
+        <div class="card card-success">
+          <div class="card-header">
+            <h3 class="card-title">Order Status Distribution</h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div *ngIf="isLoading" class="text-center">
+              <i class="fas fa-spinner fa-spin fa-2x"></i>
+            </div>
+            <table *ngIf="!isLoading" class="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Count</th>
+                  <th>Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="badge bg-warning">Pending</span></td>
+                  <td>{{ orderStats.pending }}</td>
+                  <td>{{ orderStats.pendingPercent | number:'1.0-1' }}%</td>
+                </tr>
+                <tr>
+                  <td><span class="badge bg-success">Paid</span></td>
+                  <td>{{ orderStats.paid }}</td>
+                  <td>{{ orderStats.paidPercent | number:'1.0-1' }}%</td>
+                </tr>
+                <tr>
+                  <td><span class="badge bg-danger">Cancelled</span></td>
+                  <td>{{ orderStats.cancelled }}</td>
+                  <td>{{ orderStats.cancelledPercent | number:'1.0-1' }}%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Ticket Sales Trend (List Group) -->
+      <div class="col-lg-4 col-md-6">
+        <div class="card card-info">
+          <div class="card-header">
+            <h3 class="card-title">Ticket Sales Trend</h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div *ngIf="isLoading" class="text-center">
+              <i class="fas fa-spinner fa-spin fa-2x"></i>
+            </div>
+            <div *ngIf="!isLoading" class="list-group">
+              <div *ngFor="let item of ticketSalesTrend" class="list-group-item d-flex justify-content-between align-items-center">
+                {{ item.date | date:'dd/MM/yyyy' }}
+                <span class="badge bg-info">{{ item.tickets }} tickets</span>
+              </div>
+              <div *ngIf="ticketSalesTrend.length === 0" class="list-group-item text-muted">
+                No ticket sales data available
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /.row -->
+  </div><!-- /.container-fluid -->
+</section>

@@ -1,0 +1,26 @@
+<div class="purchased-wrapper">
+  <div class="sidebar">
+    <app-nav-user></app-nav-user>
+  </div>
+
+  <div class="content">
+    <div class="container">
+      <h1 class="heading">Vé đã mua</h1>
+
+      <div class="filter-buttons">
+        <a class="filter-btn" routerLink="all" routerLinkActive="active">Tất cả</a>
+        <a class="filter-btn" routerLink="success" routerLinkActive="active">Thành công</a>
+        <a class="filter-btn" routerLink="processing" routerLinkActive="active">Đang xử lý</a>
+        <a class="filter-btn" routerLink="cancel" routerLinkActive="active">Đã hủy</a>
+      </div>
+
+      <div class="no-ticket">
+        <div class="events-list">
+          <router-outlet></router-outlet>
+        </div>
+
+        <button class="buy-btn" (click)="goToHome()">Mua vé ngay</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,117 @@
+.account-sidebar-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: 135deg, #fff6f2;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  flex-direction: row; /* mặc định là row */
+}
+
+/* Ảnh đại diện */
+.profile-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+.account-label {
+  font-size: 16px;
+  color: black;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+}
+
+.account-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.account-links a {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.link {
+  color: black;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: #ff7e42;
+}
+
+.white-link {
+  color: black;
+}
+
+.white-link:hover {
+  text-decoration: underline;
+}
+
+.icon {
+  margin-right: 0.5rem;
+}
+
+/* ==== Responsive Styles ==== */
+@media (max-width: 768px) {
+  .account-sidebar-container {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+
+  .profile-img {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 1rem;
+  }
+
+  .account-label {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .account-links {
+    font-size: 1.05rem;
+    align-items: center;
+  }
+
+  .account-links a {
+    justify-content: center;
+  }
+
+  .icon {
+    margin-right: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-sidebar-container {
+    padding: 0.75rem;
+  }
+
+  .profile-img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .account-label {
+    font-size: 16px;
+  }
+
+  .account-links {
+    gap: 0.5rem;
+    font-size: 0.95rem;
+  }
+}

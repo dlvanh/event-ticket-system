@@ -1,0 +1,164 @@
+.footer {
+  background-color: #DDDDE3;
+  padding: 40px 0 20px;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+  border-top: 1px solid #e0e0e0;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+/* Left Section */
+.footer-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contact-section h2 {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.contact-section p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.hotline-number {
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.email {
+  color: black !important;
+  cursor: pointer;
+}
+
+.logo-section {
+  margin-top: 5px;
+}
+
+.logo {
+  padding: 15px 20px;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  display: inline-block;
+}
+
+.company-description {
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Center Section */
+.footer-center {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.service-section h3 {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+}
+
+.service-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.service-section li {
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.service-section a {
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.4;
+  color:black;
+}
+
+.service-section a:hover {
+  color: #ff7e42;
+}
+
+.footer-right {
+  display: flex;
+  flex-direction: column;
+  gap:15px;
+}
+
+.policy-section h3 {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0 0 15px 0;
+}
+
+.policy-header h4 {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+}
+
+.policy-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  color:black;
+}
+
+.policy-list li {
+  margin-bottom: 8px;
+}
+
+.policy-list a {
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.4;
+  color:black;
+}
+
+.policy-list a:hover {
+  color: #ff7e42;
+}
+
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .email-input {
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 992px) {
+  .footer-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+  }
+  
+  .footer-right {
+    grid-column: 1 / -1;
+  }
+}

@@ -1,0 +1,415 @@
+
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1>Quản lý người dùng</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="#">Home</a></li>
+          <li class="breadcrumb-item active">Quản lý người dùng</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Main content -->
+<section class="content">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Quản lý người dùng</h3>
+      <!-- Bộ lọc -->
+      <div class="card-tools">
+        <div class="input-group input-group-sm mb-2" style="width: 300px;">
+          <select class="form-control" [(ngModel)]="filterRole" (change)="applyFilter()">
+            <option value="">Tất cả vai trò</option>
+            <option value="customer">Customer</option>
+            <option value="organizer">Organizer</option>
+            <option value="admin">Admin</option>
+          </select>
+          <select class="form-control ml-2" [(ngModel)]="filterStatus" (change)="applyFilter()">
+            <option value="">Tất cả trạng thái</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="pending">Pending</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+        <!-- Nút hành động -->
+        <button *ngIf="selectedUsers.length > 0 && canApproveSelectedUsers()" class="btn btn-success btn-sm mr-2"
+          (click)="confirmApproveMultipleUsers(selectedUsers)" [disabled]="isApproving"
+          title="Phê duyệt các người tổ chức đã chọn">
+          <i class="fas fa-check"></i> Phê duyệt {{ selectedUsers.length }} người dùng
+        </button>
+        <button *ngIf="selectedUsers.length > 0 && canDisableSelectedUsers()" class="btn btn-warning btn-sm mr-2"
+          (click)="confirmDisableMultipleUsers(selectedUsers)" [disabled]="isDeleting || isDisabling"
+          title="Vô hiệu hóa các người dùng đã chọn">
+          <i class="fas fa-ban"></i> Vô hiệu hóa {{ selectedUsers.length }} người dùng
+        </button>
+        <button *ngIf="selectedUsers.length > 0" class="btn btn-danger btn-sm mr-2"
+          (click)="confirmDeleteMultipleUsers(selectedUsers)" [disabled]="isDeleting || isDisabling"
+          title="Xóa các người dùng đã chọn">
+          <i class="fas fa-trash"></i> Xóa {{ selectedUsers.length }} người dùng
+        </button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="isLoading || isDeleting || isDisabling || isApproving" class="text-center p-3">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span *ngIf="isLoading">Đang tải...</span>
+        <span *ngIf="isDeleting">Đang xóa...</span>
+        <span *ngIf="isDisabling">Đang vô hiệu hóa...</span>
+        <span *ngIf="isApproving">Đang phê duyệt...</span>
+      </div>
+
+      <table class="table table-striped projects" *ngIf="!isLoading">
+        <thead>
+          <tr>
+            <th style="width: 1%">
+              <input type="checkbox" (change)="toggleSelectAll($event)"
+                [checked]="selectedUsers.length === filteredUsers.length && filteredUsers.length > 0">
+            </th>
+            <th style="width: 1%">#</th>
+            <th style="width: 20%">Tên người dùng</th>
+            <th style="width: 30%">Email</th>
+            <th>Vai trò</th>
+            <th style="width: 8%" class="text-center">Trạng thái</th>
+            <th style="width: 20%"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers; let i = index" (click)="logUser(user)">
+            <td>
+              <input type="checkbox" [checked]="isUserSelected(user.id)" (change)="toggleUserSelection(user.id)">
+            </td>
+            <td>{{ i + 1 }}</td>
+            <td>
+              <a>{{ user.fullName }}</a>
+              <br>
+              <small>Tạo ngày {{ user.createdAt | date: 'dd.MM.yyyy' }}</small>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td class="project-state">
+              <span class="badge" [ngClass]="{
+                'badge-success': user.status === 'active',
+                'badge-warning': user.status === 'disabled',
+                'badge-danger': user.status !== 'active' && user.status !== 'disabled'
+              }">
+                {{ user.status }}
+              </span>
+            </td>
+            <td class="project-actions text-right">
+              <a class="btn btn-primary btn-sm" (click)="showUserDetails(user)" title="Xem chi tiết">
+                <i class="fas fa-folder"></i> Xem
+              </a>
+              <button class="btn btn-info btn-sm" (click)="viewReviews(user.id, user.fullName)">
+                <i class="fas fa-eye"></i> View Reviews
+              </button>
+              <button
+                *ngIf="user.role === 'organizer' && user.status === 'pending'"
+                class="btn btn-success btn-sm"
+                (click)="confirmApproveUser(user.id, user.fullName)"
+                [disabled]="isApproving"
+                title="Phê duyệt người tổ chức"
+                (mouseover)="logIsApproving()"
+                style="background-color: green; color: white; border: 1px solid green; display: inline-block !important; visibility: visible !important;"
+              >
+                <i class="fas fa-check"></i> Phê duyệt
+              </button>
+              <button *ngIf="user.status === 'active'" class="btn btn-warning btn-sm"
+                (click)="confirmDisableUser(user.id, user.fullName)" [disabled]="isDeleting || isDisabling"
+                title="Vô hiệu hóa tài khoản">
+                <i class="fas fa-ban"></i> Vô hiệu hóa
+              </button>
+              <button *ngIf="user.status === 'disabled'" class="btn btn-success btn-sm" title="Kích hoạt lại tài khoản"
+                disabled>
+                <i class="fas fa-check"></i> Kích hoạt
+              </button>
+              <button class="btn btn-danger btn-sm" (click)="confirmDeleteUser(user.id, user.fullName)"
+                [disabled]="isDeleting || isDisabling" title="Xóa người dùng">
+                <i class="fas fa-trash"></i> Xóa
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredUsers.length === 0 && !isLoading && !isDeleting && !isDisabling && !isApproving">
+            <td colspan="7" class="text-center">Không có người dùng nào phù hợp với bộ lọc</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Review Modal -->
+<div class="modal fade" [ngClass]="{'show d-block': showReviewModal}" [attr.aria-hidden]="!showReviewModal"
+  role="dialog" aria-modal="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" tabindex="0" autofocus>Đánh giá của {{ selectedUserFullName }}</h4>
+        <button type="button" class="close" (click)="closeReviewModal()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="isLoadingReviews" class="text-center">
+          <i class="fas fa-spinner fa-spin fa-2x"></i>
+        </div>
+        <div *ngIf="!isLoadingReviews && selectedUserReviews.length === 0 && !modalMessage" class="alert alert-info">
+          Không tìm thấy đánh giá nào cho người dùng này.
+        </div>
+        <div *ngIf="!isLoadingReviews && modalMessage" class="alert alert-danger">
+          {{ modalMessage }}
+        </div>
+        <div class="table-responsive" style="overflow-x: auto;">
+          <table *ngIf="!isLoadingReviews && selectedUserReviews.length > 0" class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Review ID</th>
+                <th>User ID</th>
+                <th>Event ID</th>
+                <th>Tên sự kiện</th>
+                <th>Danh mục</th>
+                <th>Trạng thái sự kiện</th>
+                <th>Thời gian bắt đầu</th>
+                <th>Thời gian kết thúc</th>
+                <th>Rating</th>
+                <th>Bình luận</th>
+                <th>Ngày đánh giá</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let review of selectedUserReviews">
+                <td>{{ review.reviewId }}</td>
+                <td>{{ review.userId }}</td>
+                <td>{{ review.eventId }}</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <img *ngIf="review.eventLogoUrl" [src]="getSafeImageUrl(review.eventLogoUrl)"
+                      class="mr-2" style="width: 30px; height: 30px; object-fit: cover;" alt="Event Logo"
+                      (error)="handleImageError($event)">
+                    {{ review.eventName }}
+                  </div>
+                </td>
+                <td>{{ review.category }}</td>
+                <td>
+                  <span class="badge" [ngClass]="{
+                    'badge-success': review.eventStatus === 'upcoming',
+                    'badge-secondary': review.eventStatus === 'completed',
+                    'badge-warning': review.eventStatus === 'cancelled'
+                  }">
+                    {{ review.eventStatus }}
+                  </span>
+                </td>
+                <td>{{ review.startTime }}</td>
+                <td>{{ review.endTime }}</td>
+                <td>
+                  <span class="badge bg-warning">{{ review.rating }} <i class="fas fa-star"></i></span>
+                </td>
+                <td>{{ review.comment }}</td>
+                <td>{{ review.reviewDate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" (click)="closeReviewModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal xác nhận -->
+<div class="modal fade" [class.show]="showConfirmModal" [style.display]="showConfirmModal ? 'block' : 'none'"
+  tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" [attr.aria-hidden]="!showConfirmModal" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header" [ngClass]="{
+        'bg-warning text-dark': actionType === 'delete',
+        'bg-info text-white': actionType === 'disable',
+        'bg-success text-white': actionType === 'approve'
+      }">
+        <h5 class="modal-title" id="confirmModalLabel">
+          <i class="fas" [ngClass]="{
+            'fa-exclamation-triangle': actionType === 'delete',
+            'fa-ban': actionType === 'disable',
+            'fa-check': actionType === 'approve'
+          }" style="margin-right: 8px;"></i>
+          <span *ngIf="actionType === 'delete'">Xác nhận xóa</span>
+          <span *ngIf="actionType === 'disable'">Xác nhận vô hiệu hóa</span>
+          <span *ngIf="actionType === 'approve'">Xác nhận phê duyệt</span>
+        </h5>
+        <button type="button" class="close"
+          [class.text-dark]="actionType === 'delete'"
+          [class.text-white]="actionType === 'disable' || actionType === 'approve'"
+          (click)="cancelAction()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center">
+        <i class="fas" [ngClass]="{
+          'fa-question-circle text-warning': actionType === 'delete',
+          'fa-ban text-info': actionType === 'disable',
+          'fa-check-circle text-success': actionType === 'approve'
+        }" style="font-size: 48px; margin-bottom: 15px;"></i>
+        <h6 class="mb-3">Bạn có chắc chắn muốn thực hiện hành động này?</h6>
+        <div *ngIf="userToDelete && actionType === 'delete'">
+          <p class="mb-0">Xóa người dùng: <strong>"{{ userToDelete.name }}"</strong></p>
+        </div>
+        <div *ngIf="userToDisable && actionType === 'disable'">
+          <p class="mb-0">Vô hiệu hóa người dùng: <strong>"{{ userToDisable.name }}"</strong></p>
+        </div>
+        <div *ngIf="userToApprove && actionType === 'approve'">
+          <p class="mb-0">Phê duyệt người tổ chức: <strong>"{{ userToApprove.name }}"</strong></p>
+        </div>
+        <div *ngIf="usersToDelete.length > 0 && actionType === 'delete'">
+          <p class="mb-0">Xóa <strong>{{ usersToDelete.length }}</strong> người dùng đã chọn</p>
+        </div>
+        <div *ngIf="usersToDisable.length > 0 && actionType === 'disable'">
+          <p class="mb-0">Vô hiệu hóa <strong>{{ usersToDisable.length }}</strong> người dùng đã chọn</p>
+        </div>
+        <div *ngIf="usersToApprove.length > 0 && actionType === 'approve'">
+          <p class="mb-0">Phê duyệt <strong>{{ usersToApprove.length }}</strong> người tổ chức đã chọn</p>
+        </div>
+        <small class="text-muted d-block mt-2">
+          <i class="fas fa-info-circle mr-1"></i>
+          <span *ngIf="actionType === 'delete'">Dữ liệu sẽ không thể khôi phục sau khi xóa</span>
+          <span *ngIf="actionType === 'disable'">Người dùng sẽ không thể đăng nhập sau khi vô hiệu hóa</span>
+          <span *ngIf="actionType === 'approve'">Người dùng sẽ được phê duyệt làm người tổ chức</span>
+        </small>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary mr-2" (click)="cancelAction()">
+          <i class="fas fa-times mr-1"></i>Hủy
+        </button>
+        <button type="button" class="btn" [ngClass]="{
+          'btn-danger': actionType === 'delete',
+          'btn-warning': actionType === 'disable',
+          'btn-success': actionType === 'approve'
+        }" (click)="proceedWithAction()">
+          <i class="fas" [ngClass]="{
+            'fa-trash': actionType === 'delete',
+            'fa-ban': actionType === 'disable',
+            'fa-check': actionType === 'approve'
+          }" style="margin-right: 4px;"></i>
+          <span *ngIf="actionType === 'delete'">Xác nhận xóa</span>
+          <span *ngIf="actionType === 'disable'">Xác nhận vô hiệu hóa</span>
+          <span *ngIf="actionType === 'approve'">Xác nhận phê duyệt</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal thành công -->
+<div class="modal fade" [class.show]="showSuccessModal" [style.display]="showSuccessModal ? 'block' : 'none'"
+  tabindex="-1" role="dialog" aria-labelledby="successModalLabel" [attr.aria-hidden]="!showSuccessModal" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="successModalLabel">
+          <i class="fas fa-check-circle mr-2"></i>Thành công
+        </h5>
+        <button type="button" class="close text-white" (click)="closeSuccessModal()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center">
+        <i class="fas fa-check-circle text-success" style="font-size: 48px; margin-bottom: 15px;"></i>
+        <p class="mb-0">{{ modalMessage }}</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-success" (click)="closeSuccessModal()">
+          <i class="fas fa-check mr-1"></i>Đồng ý
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal lỗi -->
+<div class="modal fade" [class.show]="showErrorModal" [style.display]="showErrorModal ? 'block' : 'none'" tabindex="-1"
+  role="dialog" aria-labelledby="errorModalLabel" [attr.aria-hidden]="!showErrorModal" aria-modal="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="errorModalLabel">
+          <i class="fas fa-exclamation-triangle mr-2"></i>Lỗi
+        </h5>
+        <button type="button" class="close text-white" (click)="closeErrorModal()" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center">
+        <i class="fas fa-exclamation-triangle text-danger" style="font-size: 48px; margin-bottom: 15px;"></i>
+        <p class="mb-0">{{ modalMessage }}</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-danger" (click)="closeErrorModal()">
+          <i class="fas fa-times mr-1"></i>Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal chi tiết người dùng -->
+<div class="modal fade" [class.show]="showDetailModal" [style.display]="showDetailModal ? 'block' : 'none'"
+  tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" [attr.aria-hidden]="!showDetailModal" aria-modal="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="detailModalLabel">
+          <i class="fas fa-user mr-2"></i>Thông tin chi tiết người dùng
+        </h5>
+        <button type="button" class="close text-white" (click)="closeDetailModal()" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="selectedUser" class="row">
+          <div class="col-md-4 text-center">
+            <img [src]="getSafeImageUrl(selectedUser.avatarUrl) || 'assets/default-profile.png'"
+              class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;"
+              alt="Profile Picture" (error)="handleImageError($event)">
+          </div>
+          <div class="col-md-8">
+            <h5>{{ selectedUser.fullName }}</h5>
+            <hr>
+            <p><strong>Email:</strong> {{ selectedUser.email }}</p>
+            <p><strong>Số điện thoại:</strong> {{ selectedUser.phoneNumber || 'Chưa cung cấp' }}</p>
+            <p><strong>Giới tính:</strong> {{ selectedUser.gender || 'Chưa cung cấp' }}</p>
+            <p><strong>Địa chỉ:</strong> {{ selectedUser.address || 'Chưa cung cấp' }}</p>
+            <p><strong>Vai trò:</strong> {{ selectedUser.role }}</p>
+            <p><strong>Trạng thái:</strong>
+              <span class="badge" [ngClass]="{
+                  'badge-success': selectedUser.status === 'active',
+                  'badge-warning': selectedUser.status === 'disabled',
+                  'badge-danger': selectedUser.status !== 'active' && selectedUser.status !== 'disabled'
+                }">
+                {{ selectedUser.status }}
+              </span>
+            </p>
+            <p><strong>Tiểu sử:</strong> {{ selectedUser.bio || 'Chưa có tiểu sử' }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" (click)="closeDetailModal()">
+          <i class="fas fa-times mr-1"></i>Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop cho modal -->
+<div class="modal-backdrop fade" [class.show]="showSuccessModal || showErrorModal || showConfirmModal || showDetailModal || showReviewModal"
+  [style.display]="(showSuccessModal || showErrorModal || showConfirmModal || showDetailModal || showReviewModal) ? 'block' : 'none'"
+  (click)="closeSuccessModal(); closeErrorModal(); cancelAction(); closeDetailModal(); closeReviewModal()">
+</div>
+

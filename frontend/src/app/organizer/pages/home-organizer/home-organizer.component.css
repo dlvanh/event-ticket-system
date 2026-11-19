@@ -1,0 +1,174 @@
+.content {
+  min-height: 100vh;
+  padding: 40px;
+  background: linear-gradient(135deg, #a2694b6e 0%, #000000 100%);
+  color: white;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.search-filter-section {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+/* --- TÌM KIẾM --- */
+.search-section {
+  flex: 1;
+  max-width: 380px;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  position: relative;
+}
+
+.search-icon {
+  color: #888;
+  margin-right: 8px;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: #333;
+  background: transparent;
+}
+
+.clear-search-btn {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 8px;
+}
+
+.clear-search-btn:hover {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+.clear-search-btn i {
+  font-size: 16px;
+}
+
+/* --- TABS --- */
+.filter-tab {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: white;
+  color: #333;
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.filter-btn:hover {
+  border-color: #ff7e42;
+  color: #ff7e42;
+}
+
+.filter-btn.active {
+  background-color: #ff7e42;
+  color: white;
+  font-weight: bold;
+}
+
+/* --- CONTENT --- */
+.events-list {
+  margin-top: 40px;
+}
+
+/* --- NO RESULTS --- */
+.no-results {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  margin-top: 40px;
+}
+
+.no-results-content {
+  text-align: center;
+  max-width: 400px;
+  padding: 40px 20px;
+}
+
+.no-results-content i {
+  font-size: 48px;
+  color: #888;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.no-results-content h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #e5e5e5;
+  margin-bottom: 12px;
+}
+
+.no-results-content p {
+  font-size: 16px;
+  color: #b0b0b0;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.clear-search-link {
+  background: linear-gradient(135deg, #ff7e42 0%, #e66d34 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.clear-search-link:hover {
+  background: linear-gradient(135deg, #e66d34 0%, #d55a2b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 126, 66, 0.3);
+}
+
+/* Responsive nhỏ hơn 768px */
+@media (max-width: 768px) {
+  .search-filter-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-tab {
+    justify-content: space-between;
+  }
+}

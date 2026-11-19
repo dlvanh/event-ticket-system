@@ -1,0 +1,437 @@
+/* Tổng thể */
+.content {
+  max-width: 100%;
+  min-height: 100vh;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #a2694b6e 0%, #000000 100%);
+}
+
+/* Tiêu đề */
+.account-info-title {
+  color: white;
+  padding: 32px 40px;
+  font-size: 34px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: -0.6px;
+  margin: 0;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+  animation: fadeInDown 0.8s ease-out;
+}
+
+/* Layout chia đôi: Avatar - Form */
+.account-info-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px;
+  padding: 48px;
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+/* Avatar bên trái */
+.profile-section {
+  flex: 0 0 420px;
+  text-align: center;
+  padding: 40px;
+  backdrop-filter: blur(15px);
+  border-radius: 24px;
+}
+
+/* Form bên phải */
+.form-section {
+  flex: 1;
+  padding: 40px;
+  backdrop-filter: blur(15px);
+  border-radius: 24px;
+  min-height: fit-content;
+}
+
+/* Ảnh đại diện */
+.profile-img-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 24px;
+}
+
+.profile-img {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Icon máy ảnh */
+.camera-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: #ff7e42;
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid white;
+}
+
+.camera-icon i {
+  font-size: 16px;
+}
+
+/* Form groups */
+.form-group {
+  margin-bottom: 28px;
+  animation: fadeInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.form-group:nth-child(1) { animation-delay: 0.1s; }
+.form-group:nth-child(2) { animation-delay: 0.2s; }
+.form-group:nth-child(3) { animation-delay: 0.3s; }
+.form-group:nth-child(4) { animation-delay: 0.4s; }
+.form-group:nth-child(5) { animation-delay: 0.5s; }
+.form-group:nth-child(6) { animation-delay: 0.6s; }
+
+.form-group:last-child {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+/* Labels */
+.form-group label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #fff;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+  position: relative;
+}
+
+.form-group label::before {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #ff7e42, #000000);
+  transition: width 0.3s ease;
+}
+
+.form-group:focus-within label::before {
+  width: 100%;
+}
+
+/* Inputs */
+input[type="text"], 
+input[type="email"], 
+select {
+  width: 100%;
+  padding: 12px 17px;
+  border: 2px solid #e1e8ed;
+  border-radius: 16px;
+  font-size: 16px;
+  background: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+input[type="text"]:hover, 
+input[type="email"]:hover, 
+select:hover {
+  border-color: #ff7e42;
+  box-shadow: 0 4px 20px rgba(255, 126, 66, 0.15);
+  transform: translateY(-2px);
+}
+
+input:focus, 
+select:focus {
+  outline: none;
+  border-color: #ff7e42;
+  box-shadow: 0 0 0 4px rgba(255, 126, 66, 0.2);
+  transform: translateY(-2px);
+}
+
+input[readonly] {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  color: #6c757d;
+  cursor: not-allowed;
+  border-color: #dee2e6;
+}
+
+/* Readonly label styling */
+.readonly-label {
+  color: #28a745 !important;
+  position: relative;
+}
+
+.readonly-label::after {
+  content: "✓ Đã xác thực";
+  position: absolute;
+  right: 0;
+  top: 0;
+  color: #28a745;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(40, 167, 69, 0.1);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+/* Input with icon */
+.input-with-icon {
+  position: relative;
+}
+
+.icon-check {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #28a745;
+  font-size: 20px;
+  animation: pulse 2s infinite;
+}
+
+/* Submit button */
+.submit-btn {
+  width: 50%;
+  padding: 18px 32px;
+  background: #ff7e42;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.submit-btn:hover::before {
+  left: 100%;
+}
+
+.submit-btn:hover {
+  transform: translateY(-4px);
+}
+
+.submit-btn:active {
+  transform: translateY(-2px);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Completed state */
+.form-group.completed input {
+  border-color: #28a745;
+  background: linear-gradient(135deg, #d4edda, #c3e6cb);
+}
+
+.cropper-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%; /* full screen */
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5); /* darken background */
+  z-index: 1300;
+  animation: fadeIn 0.3s ease;
+}
+
+.cropper-container {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 90%;
+  width: 480px;
+  max-height: 928px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: scaleIn 0.3s ease;
+}
+
+.cropper-container h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 1.25rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.cropper-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cropper-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cropper-actions button:first-child {
+  background-color: #ff7e42;
+  color: #fff;
+}
+
+.cropper-actions button:first-child:hover {
+  background-color: #e66d34;
+}
+
+.cropper-actions button:last-child {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.cropper-actions button:last-child:hover {
+  background-color: #e0e0e0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .account-info-container {
+    gap: 32px;
+    padding: 32px;
+  }
+  
+  .profile-section {
+    flex: 0 0 360px;
+    padding: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .account-info-container {
+    flex-direction: column;
+    padding: 24px;
+    gap: 24px;
+  }
+  
+  .profile-section,
+  .form-section {
+    width: 100%;
+    padding: 24px;
+  }
+  
+  .account-info-title {
+    font-size: 28px;
+    padding: 24px 32px;
+  }
+  
+  .submit-btn {
+    width: 80%;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-info-title {
+    font-size: 24px;
+    padding: 20px 24px;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .profile-img {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    font-size: 15px;
+  }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.1);
+  }
+}
+
+/* Glassmorphism effects */
+@supports (backdrop-filter: blur(10px)) {
+  .profile-section,
+  .form-section {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+  outline: 2px solid #ff7e42;
+  outline-offset: 2px;
+}

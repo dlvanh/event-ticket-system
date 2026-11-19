@@ -1,0 +1,74 @@
+<div class="container">
+  <div class="filter-bar">
+    <p class="search-title">Kết quả tìm kiếm:</p>
+    
+    <div class="filter-dropdown-wrapper">
+      <button class="filter-btn" (click)="toggleFilter()">
+        <i class="fas fa-filter"></i>
+        <span>Bộ lọc</span>
+        <i class="fas fa-chevron-down small-icon" *ngIf="!showFilter"></i>
+        <i class="fas fa-times small-icon" *ngIf="showFilter"></i>
+      </button>
+
+      <div class="filter-popup" *ngIf="showFilter">
+        <div class="section">
+          <p class="section-title">Vị trí</p>
+          <label *ngFor="let location of locations">
+            <input type="radio" name="location" [value]="location" [(ngModel)]="selectedLocation" />
+              {{ location }}
+          </label>
+      </div>
+
+      <div class="section">
+        <p class="section-title">Thể loại</p>
+        <button *ngFor="let category of categories"
+          (click)="toggleCategory(category)"
+          [class.active]="selectedCategories.includes(category)">
+          {{ category }}
+        </button>
+      </div>
+
+      <div class="action-buttons">
+        <button class="reset-btn" (click)="resetFilter()">Thiết lập lại</button>
+        <button class="apply-btn"  (click)="applyFilter()">Áp dụng</button>
+      </div>
+    </div>
+
+    <div class="filter-chips" *ngIf="selectedLocation !== 'Toàn quốc' || selectedCategories.length > 0">
+      <!-- Location chip -->
+      <span *ngIf="selectedLocation !== 'Toàn quốc'" class="chip">
+        <i class="fas fa-times" (click)="removeLocationFilter()"></i>
+        {{ selectedLocation }}
+      </span>
+
+      <!-- Category chips -->
+      <span *ngFor="let cat of selectedCategories" class="chip">
+        <i class="fas fa-times" (click)="removeCategory(cat)"></i>
+        {{ cat }}
+      </span>
+    </div>
+  </div>
+</div>
+
+
+  <div class="grid">
+    <div class="event-card" *ngFor="let event of events" (click)="goToEventDetail(event.eventId)">
+      <img [src]="event.backgroundUrl" [alt]="event.alt" />
+      <h3>{{ event.eventName }}</h3>
+      <p class="price">Từ {{ event.minPrice | number:'1.0-0'}} VNĐ</p>
+      <p class="date">
+        <i class="far fa-calendar-alt"></i>
+        {{ event.startTime | date: 'dd/MM/yyyy'}}
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="text-center mt-4">
+    <p>Đang tải thêm sự kiện...</p>
+  </div>
+</div>
+<app-toast-notification 
+  #notification
+  (onClose)="onNotificationClose()">
+</app-toast-notification>

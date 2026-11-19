@@ -1,0 +1,38 @@
+<div  class="chatbot-container" [class.open]="isOpen">
+  <div class="chatbot-icon" (click)="toggleChat()" title="Chat với Eventa">
+    <i class="fa-regular fa-comment-dots"></i>
+  </div>
+
+  <div class="chatbox" *ngIf="isOpen" >
+    <div class="chat-header">
+      <img src="assets/logoeventa.png" alt="Eventa Logo" class="logo-badge" />
+      <button (click)="toggleChat()">✕</button>
+    </div>
+
+    <div class="chat-body" #chatContainer>
+      <div *ngFor="let msg of messages" class="message-wrapper" [ngClass]="msg.from">
+        <div class="message-bubble">{{ msg.text }}</div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-container">
+        <div class="dot-loader">
+            <span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <div class="chat-input">
+      <button class="suggestion-toggle" (click)="toggleSuggestions()">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div class="suggestions-box" *ngIf="showSuggestions">
+        <p class="suggestion" *ngFor="let question of suggestedQuestions" (click)="sendSuggestedQuestion(question)">
+          {{ question }}
+        </p>
+      </div>
+      <input [(ngModel)]="userMessage" placeholder="Nhập tin nhắn" (keydown.enter)="sendMessage()" aria-label="Nhập tin nhắn của bạn" />
+      <i class="fa-solid fa-paper-plane" (click)="sendMessage()" aria-label="Gửi tin nhắn"></i>
+    </div>
+  </div>
+</div>

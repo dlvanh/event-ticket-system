@@ -1,0 +1,55 @@
+.card {
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table th {
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.badge {
+  font-size: 0.85rem;
+  padding: 0.5em 0.75em;
+}
+
+.btn-sm {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.pagination-sm .page-link {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.modal-backdrop {
+  opacity: 0.5;
+}
+
+.modal-content {
+  border-radius: 0.5rem;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+}

@@ -1,0 +1,20 @@
+<div class="wrapper">
+
+  <!-- Preloader -->
+
+  <app-header></app-header>
+
+  <app-sidebar></app-sidebar> <!-- Sử dụng app-sidebar -->
+
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <router-outlet></router-outlet> <!-- Sử dụng router-outlet để hiển thị các thành phần con -->
+    <!-- /.content -->
+  </div>
+
+  <app-footer></app-footer> <!-- Sử dụng app-footer -->
+
+  <!-- /.control-sidebar -->
+</div>

@@ -1,0 +1,28 @@
+<div class="trending-section">
+  <div class="section-header">
+    <p>Sự kiện xu hướng</p>
+  </div>
+  
+  <div class="carousel-container">
+    <div class="carousel-wrapper" >
+      <div class="carousel-item" *ngFor="let item of visibleItems">
+        <div class="item-content">
+          <img [src]="item.backgroundUrl || '/assets/default.jpg'" [alt]="item.title" (click)="goToEventDetail(item.id)"/>
+        </div>
+      </div>
+    </div>
+    
+    <button 
+      class="nav-btn prev-btn" 
+      (click)="scrollLeft()"
+      >
+      ‹
+    </button>
+    <button 
+      class="nav-btn next-btn" 
+      (click)="scrollRight()" 
+      >
+      ›
+    </button>
+  </div>
+</div>
