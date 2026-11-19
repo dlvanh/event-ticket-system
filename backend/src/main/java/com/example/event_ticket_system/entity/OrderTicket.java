@@ -39,6 +39,9 @@ public class OrderTicket {
     @Column(name = "checkin_token", length = 255)
     private String checkinToken;
 
+    @Column(name = "checked_in_at")
+    private java.time.LocalDateTime checkedInAt;
+
     @Lob
     @Column(name = "qr_code", columnDefinition = "MEDIUMBLOB")
     @Basic(fetch = FetchType.LAZY)

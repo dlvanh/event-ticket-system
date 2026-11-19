@@ -9,6 +9,7 @@ import com.example.event_ticket_system.entity.User;
 import com.example.event_ticket_system.enums.EventStatus;
 import com.example.event_ticket_system.enums.UserRole;
 import com.example.event_ticket_system.repository.EventRepository;
+import com.example.event_ticket_system.repository.OrderTicketRepository;
 import com.example.event_ticket_system.repository.ReviewRepository;
 import com.example.event_ticket_system.repository.UserRepository;
 import com.example.event_ticket_system.security.SecurityUtils;
@@ -30,6 +31,7 @@ import java.util.Objects;
 public class ReviewServiceImpl implements ReviewService {
 
     private final EventRepository eventRepository;
+    private final OrderTicketRepository orderTicketRepository;
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
 
@@ -55,8 +57,12 @@ public class ReviewServiceImpl implements ReviewService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
-        if (event.getStatus() == EventStatus.upcoming) {
-            throw new IllegalArgumentException("Reviews cannot be submitted for upcoming events.");
+        if (event.getStatus() == EventStatus.cancelled
+                || (event.getEndTime() != null && event.getEndTime().isAfter(LocalDateTime.now()))) {
+            throw new IllegalArgumentException("Reviews can only be submitted after the event has ended.");
+        }
+        if (!orderTicketRepository.existsPaidTicketByUserAndEvent(userId, eventId)) {
+            throw new SecurityException("Only customers who purchased a paid ticket can review this event.");
         }
         if (reviewRepository.existsByEventEventIdAndUserId(eventId, userId)) {
             throw new IllegalArgumentException("You have already submitted a review for this event.");
@@ -126,8 +132,9 @@ public class ReviewServiceImpl implements ReviewService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
-        if (event.getStatus() != EventStatus.completed) {
-            throw new IllegalArgumentException("Reviews can only be retrieved for completed events.");
+        if (event.getStatus() == EventStatus.cancelled
+                || (event.getEndTime() != null && event.getEndTime().isAfter(LocalDateTime.now()))) {
+            throw new IllegalArgumentException("Reviews can only be retrieved after the event has ended.");
         }
 
         List<Review> reviews = reviewRepository.findByEventWithUser(event);

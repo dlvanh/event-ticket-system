@@ -219,7 +219,7 @@ class PaymentAndOrderLifecycleIntegrationTest {
 
         // Wait for AFTER_COMMIT async email listener and verify strictly 1 invocation
         verify(emailService, timeout(3000).times(1))
-                .sendOrderConfirmationEmail(eq(customer.getEmail()), anyString(), anyString(), anyList());
+                .sendOrderConfirmationEmail(eq(customer.getEmail()), anyString(), anyString(), any(), anyList());
 
         Order paidOrder = orderRepository.findByPayosOrderCode(payosCode).orElseThrow();
         assertThat(paidOrder.getStatus()).isEqualTo(OrderStatus.paid);

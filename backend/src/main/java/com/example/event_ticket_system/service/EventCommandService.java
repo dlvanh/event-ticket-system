@@ -133,6 +133,12 @@ public class EventCommandService {
             imageStorageService.validateImageFile(backgroundFile);
         }
 
+        Event existingEvent = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+        if (!existingEvent.getOrganizer().getId().equals(organizerId)) {
+            throw new SecurityException("You do not have permission to update this event.");
+        }
+
         String uploadedLogoUrl = (logoFile != null && !logoFile.isEmpty())
                 ? imageStorageService.uploadImage(logoFile) : null;
         String uploadedBackgroundUrl = (backgroundFile != null && !backgroundFile.isEmpty())

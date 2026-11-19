@@ -45,7 +45,6 @@ export class OrderTicketComponent implements OnInit, OnDestroy, CanComponentDeac
       sessionStorage.removeItem('orderData');
       sessionStorage.removeItem(this.STORAGE_KEY);
       clearInterval(this.interval);
-      this.resetTimer();
       return true;
     }
 
@@ -227,18 +226,18 @@ export class OrderTicketComponent implements OnInit, OnDestroy, CanComponentDeac
           return;
         }
 
-        const now = new Date();
-        const validFrom = new Date(discount.validFrom);
-        const validTo = new Date(discount.validTo);
+        const today = new Date().toLocaleDateString('en-CA');
+        const validFrom = String(discount.validFrom).slice(0, 10);
+        const validTo = String(discount.validTo).slice(0, 10);
 
-        if (now < validFrom) {
+        if (today < validFrom) {
           this.discountAmount = 0;
           this.isDiscountValid = false;
           this.notification.showNotification('Mã giảm giá chưa bắt đầu áp dụng.', 3000, 'warning');
           return;
         }
 
-        if (now > validTo) {
+        if (today > validTo) {
           this.discountAmount = 0;
           this.isDiscountValid = false;
           this.notification.showNotification('Mã giảm giá đã hết hạn. Vui lòng chọn mã khác!', 3000, 'warning');
@@ -281,7 +280,13 @@ export class OrderTicketComponent implements OnInit, OnDestroy, CanComponentDeac
     return Math.max(total - this.discountAmount, 0);
   }
 
+  isSubmitting = false;
+
   submitOrder() {
+    if (this.isSubmitting) {
+      return;
+    }
+    this.isSubmitting = true;
     const origin = window.location.origin;
     const paymentData = {
       ...this.orderData,
@@ -296,11 +301,16 @@ export class OrderTicketComponent implements OnInit, OnDestroy, CanComponentDeac
         if (checkoutUrl) {
           this.notification.showNotification('Đang chuyển hướng đến trang thanh toán...', 3000, 'info');
           window.location.href = checkoutUrl;
+        } else if (res?.data?.status === 'PAID') {
+          this.forceNavigate = true;
+          this.router.navigate(['/purchased-ticket/success']);
         } else {
+          this.isSubmitting = false;
           this.notification.showNotification('Không tìm thấy liên kết thanh toán!', 3000, 'error');
         }
       },
       error: (err) => {
+        this.isSubmitting = false;
         console.error('Lỗi đặt vé:', err);
         this.notification.showNotification('Không thể đặt vé. Vui lòng thử lại.', 3000, 'error');
       }

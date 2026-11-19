@@ -212,8 +212,9 @@ export class UserManagementComponent implements OnInit {
   }
 
   handleImageError(event: Event): void {
-    console.log('Lỗi tải ảnh:', (event.target as HTMLImageElement).src);
-    (event.target as HTMLImageElement).src = 'assets/default-profile.png';
+    const img = event.target as HTMLImageElement;
+    img.onerror = null;
+    img.src = 'assets/images/admin-avatar.jpg';
   }
 
   confirmDeleteUser(userId: number, userName: string): void {

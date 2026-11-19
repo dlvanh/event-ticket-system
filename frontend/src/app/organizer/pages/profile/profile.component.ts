@@ -75,9 +75,8 @@ export class ProfileComponent {
         avatarUrl: this.profileForm.value.avatarUrl
       };
 
-      // So sánh dữ liệu hiện tại với dữ liệu gốc
-      const isProfileChanged = Object.entries(profileData).some(
-        ([key, value]) => value !== this.originalProfileData[key as keyof typeof this.originalProfileData]
+      const isProfileChanged = (['fullName', 'phoneNumber', 'address', 'bio'] as const).some(
+        key => profileData[key] !== this.originalProfileData[key]
       );
 
       const isAvatarChanged = !!this.selectedFile;

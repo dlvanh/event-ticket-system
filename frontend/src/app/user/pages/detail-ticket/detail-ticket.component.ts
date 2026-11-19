@@ -93,7 +93,7 @@ export class DetailTicketComponent implements OnInit {
 
         const allSoldOut = ticketPrices.every(ticket => ticket.isSoldOut);
 
-        const price = Math.min(...ticketPrices.map(v => Number(v.price))) || 0;
+        const price = ticketPrices.length > 0 ? Math.min(...ticketPrices.map(v => Number(v.price))) : 0;
 
         const fullAddress = event.address || event.addressName || '';
         const parts = fullAddress.split(',').map((part: string) => part.trim());
@@ -214,15 +214,7 @@ export class DetailTicketComponent implements OnInit {
 
   eventHasEnded(): boolean {
     if (!this.eventData?.endTime) return false;
-
-    const now = new Date();
-
-    let end = new Date(this.eventData.endTime);
-
-    // Nếu bạn chắc chắn endTime là UTC, và muốn xét theo giờ VN (UTC+7):
-    end = new Date(end.getTime() + 7 * 60 * 60 * 1000);
-
-    return now > end;
+    return new Date() > new Date(this.eventData.endTime);
   }
 
 

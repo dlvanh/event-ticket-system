@@ -161,9 +161,7 @@ export class OrdersRequestComponent {
   }
 
   getPaginatedOrders(): Order[] {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    return this.filteredOrders.slice(startIndex, endIndex);
+    return this.filteredOrders;
   }
 
   getTotalPages(): number {
@@ -227,12 +225,13 @@ export class OrdersRequestComponent {
     this.adminService.cancelOrder(this.orderToCancel.orderPayOSCode, this.cancellationReason).subscribe({
       next: (response) => {
         if (response && response.data) {
+          const cancelledOrder = this.orderToCancel;
           this.showSuccess('Hủy đơn hàng thành công!');
           this.closeCancelModal();
           this.loadOrders();
           this.loadStatistics();
-          if (this.showDetailModal && this.selectedOrderDetail && this.selectedOrderDetail.orderCode === this.orderToCancel?.orderPayOSCode) {
-            this.viewOrderDetail(this.orderToCancel);
+          if (this.showDetailModal && this.selectedOrderDetail && this.selectedOrderDetail.orderCode === cancelledOrder?.orderPayOSCode) {
+            this.viewOrderDetail(cancelledOrder);
           }
         }
         this.loading = false;

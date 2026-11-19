@@ -15,12 +15,13 @@ export class SuccessPopupComponent {
     @Input() delay: number = 5;
     @Output() closed = new EventEmitter<void>();
 
-    countdown = this.delay;
+    countdown = 5;
     intervalId: any;
 
     constructor(private router: Router) { }
 
     ngOnInit() {
+        this.countdown = this.delay;
         this.intervalId = setInterval(() => {
             this.countdown--;
             if (this.countdown === 0) {

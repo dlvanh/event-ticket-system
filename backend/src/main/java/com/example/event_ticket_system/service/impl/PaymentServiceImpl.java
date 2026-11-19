@@ -5,10 +5,12 @@ import com.example.event_ticket_system.entity.OrderTicket;
 import com.example.event_ticket_system.entity.Payment;
 import com.example.event_ticket_system.enums.OrderStatus;
 import com.example.event_ticket_system.enums.PaymentStatus;
+import com.example.event_ticket_system.enums.UserRole;
 import com.example.event_ticket_system.event.OrderPaidEvent;
 import com.example.event_ticket_system.repository.OrderRepository;
 import com.example.event_ticket_system.repository.OrderTicketRepository;
 import com.example.event_ticket_system.repository.PaymentRepository;
+import com.example.event_ticket_system.security.SecurityUtils;
 import com.example.event_ticket_system.service.PaymentService;
 import com.example.event_ticket_system.util.QRCodeUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,6 +49,13 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             Webhook webhookBody = objectMapper.treeToValue(body, Webhook.class);
             WebhookData data = payOS.verifyPaymentWebhookData(webhookBody);
+            if (!Boolean.TRUE.equals(webhookBody.getSuccess())) {
+                log.warn("PayOS webhook reported unsuccessful payment for orderCode={}", data.getOrderCode());
+                response.put("error", 0);
+                response.put("message", "Payment not successful");
+                response.set("data", null);
+                return response;
+            }
 
             Long orderCode = data.getOrderCode();
             Order order = orderRepository.findByPayosOrderCodeForUpdate(orderCode)
@@ -61,10 +70,31 @@ public class PaymentServiceImpl implements PaymentService {
                 return response;
             }
 
+            int expectedAmount = order.getTotalAmount().setScale(0, java.math.RoundingMode.HALF_UP).intValueExact();
+            if (data.getAmount() == null || data.getAmount() != expectedAmount) {
+                log.error("PayOS webhook amount mismatch for order {} (payosCode={}): expected={}, actual={}",
+                        order.getOrderId(), orderCode, expectedAmount, data.getAmount());
+                response.put("error", -1);
+                response.put("message", "Amount mismatch");
+                response.set("data", null);
+                return response;
+            }
+
             if (order.getStatus() != OrderStatus.pending) {
-                log.warn("Received PayOS webhook for non-pending order {} (status={}); skipping.", order.getOrderId(), order.getStatus());
+                log.error("Received PayOS webhook for non-pending order {} (status={}, payosCode={}, ref={}); recording for reconciliation.",
+                        order.getOrderId(), order.getStatus(), orderCode, data.getReference());
+                if (!paymentRepository.existsByOrderIdAndPaymentStatus(order.getOrderId(), PaymentStatus.failed)) {
+                    Payment reconciliationPayment = new Payment();
+                    reconciliationPayment.setOrderId(order.getOrderId());
+                    reconciliationPayment.setPaymentMethod("PayOS-LateWebhook");
+                    reconciliationPayment.setPaymentDate(LocalDateTime.now());
+                    reconciliationPayment.setAmountPaid(order.getTotalAmount());
+                    reconciliationPayment.setPaymentStatus(PaymentStatus.failed);
+                    reconciliationPayment.setTransactionReference(data.getReference());
+                    paymentRepository.save(reconciliationPayment);
+                }
                 response.put("error", 0);
-                response.put("message", "Order is not pending");
+                response.put("message", "Order is not pending; recorded for reconciliation");
                 response.set("data", null);
                 return response;
             }
@@ -101,14 +131,21 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public boolean verifyCheckinToken(String token) {
         if (!qrCodeUtil.verifySignedToken(token)) {
             return false;
         }
-        return orderTicketRepository.findByCheckinToken(token)
-                .map(ot -> ot.getOrder().getStatus() == OrderStatus.paid)
-                .orElse(false);
+        OrderTicket ot = orderTicketRepository.findByCheckinTokenWithDetails(token).orElse(null);
+        if (ot == null || ot.getOrder().getStatus() != OrderStatus.paid) {
+            return false;
+        }
+        UserRole role = SecurityUtils.getCurrentUserRole();
+        Integer currentUserId = SecurityUtils.getCurrentUserId();
+        if (role != UserRole.admin && !ot.getTicket().getEvent().getOrganizer().getId().equals(currentUserId)) {
+            throw new SecurityException("You do not have permission to check in tickets for this event.");
+        }
+        return orderTicketRepository.markCheckedIn(token, LocalDateTime.now()) == 1;
     }
 
     private void finalizePaidOrder(Order order, String paymentMethod, String transactionRef) {
@@ -162,6 +199,7 @@ public class PaymentServiceImpl implements PaymentService {
             eventPublisher.publishEvent(new OrderPaidEvent(
                     order.getOrderId(),
                     order.getUser().getEmail(),
+                    order.getTotalAmount(),
                     emailItems
             ));
         }

@@ -6,6 +6,7 @@ import java.util.List;
 public record OrderPaidEvent(
         Integer orderId,
         String recipientEmail,
+        BigDecimal totalAmount,
         List<TicketEmailItem> items
 ) {
     public record TicketEmailItem(

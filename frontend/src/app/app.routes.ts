@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { RoleGuard } from './auth/services/role.guard';
+import { AuthGuardService } from './auth/services/auth-guard.service';
 import { PendingChangesGuard } from './auth/services/pending-changes.guard';
 
 export const routes: Routes = [
@@ -47,10 +48,6 @@ export const routes: Routes = [
         loadComponent: () => import('./organizer/pages/reviews-event/reviews-event.component').then(m => m.ReviewsEventComponent)
       },
       {
-        path: 'event-detail/:id',
-        loadComponent: () => import('./organizer/pages/home-organizer/home-organizer.component').then(m => m.HomeOrganizerComponent)
-      },
-      {
         path: 'export-file-detail/:id',
         loadComponent: () => import('./organizer/pages/export-file-detail/export-file-detail.component').then(m => m.ExportFileDetailComponent)
       }
@@ -66,15 +63,18 @@ export const routes: Routes = [
   },
   {
     path: 'select-ticket/:id',
-    loadComponent: () => import('./user/pages/select-ticket/select-ticket.component').then(m => m.SelectTicketComponent)
+    loadComponent: () => import('./user/pages/select-ticket/select-ticket.component').then(m => m.SelectTicketComponent),
+    canActivate: [AuthGuardService]
   },
   {
     path: 'user-profile',
-    loadComponent: () => import('./user/pages/user-profile/user-profile.component').then(m => m.UserProfileComponent)
+    loadComponent: () => import('./user/pages/user-profile/user-profile.component').then(m => m.UserProfileComponent),
+    canActivate: [AuthGuardService]
   },
   {
     path: 'purchased-ticket',
     loadComponent: () => import('./user/pages/purchased-ticket/purchased-ticket.component').then(m => m.PurchasedTicketComponent),
+    canActivate: [AuthGuardService],
     children: [
       {
         path: 'all',
@@ -98,6 +98,7 @@ export const routes: Routes = [
   {
     path: 'order-ticket',
     loadComponent: () => import('./user/pages/order-ticket/order-ticket.component').then(m => m.OrderTicketComponent),
+    canActivate: [AuthGuardService],
     canDeactivate: [PendingChangesGuard]
   },
   {
@@ -105,16 +106,13 @@ export const routes: Routes = [
     loadComponent: () => import('./user/pages/search-events/search-events.component').then(m => m.SearchEventsComponent)
   },
   {
-    path: 'payment-tickets',
-    loadComponent: () => import('./user/pages/payment-tickets/payment-tickets.component').then(m => m.PaymentTicketsComponent)
-  },
-  {
     path: 'slider-captcha',
     loadComponent: () => import('./user/pages/slider-captcha/slider-captcha.component').then(m => m.SliderCaptchaComponent)
   },
   {
     path: 'review-ticket/:id',
-    loadComponent: () => import('./user/pages/review-ticket/review-ticket.component').then(m => m.ReviewTicketComponent)
+    loadComponent: () => import('./user/pages/review-ticket/review-ticket.component').then(m => m.ReviewTicketComponent),
+    canActivate: [AuthGuardService]
   },
   {
     path: 'admin',

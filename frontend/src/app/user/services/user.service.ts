@@ -34,7 +34,7 @@ export class UserService {
   getAvatar(): Observable<string> {
     return this.http.get<ApiResponse<string>>(`${this.apiUrl}/profile-picture`).pipe(
       map(response => response.data),
-      catchError(() => of('assets/default-avatar.png'))
+      catchError(() => of('assets/images/admin-avatar.jpg'))
     );
   }
 

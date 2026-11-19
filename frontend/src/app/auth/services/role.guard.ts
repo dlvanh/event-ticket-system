@@ -9,6 +9,11 @@ export class RoleGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(route: ActivatedRouteSnapshot): boolean {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/login']);
+      return false;
+    }
+
     const expectedRole = route.data['expectedRole']; // Lấy role từ route
     const role = this.authService.getRole(); // Lấy role từ JWT
 

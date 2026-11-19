@@ -1,8 +1,8 @@
+name: eventa
+
 services:
   mysql:
     image: mysql:8.0
-    container_name: event-ticket-mysql
-    restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-onlinetickets}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
@@ -19,8 +19,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: event-ticket-redis
-    restart: unless-stopped
     ports:
       - "${REDIS_HOST_PORT:-6379}:6379"
     volumes:
@@ -32,24 +30,16 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: event-ticket-backend
-    restart: unless-stopped
+    build: ./backend
     env_file:
       - path: .env
         required: false
     environment:
       DB_HOST: mysql
-      DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE:-onlinetickets}
       DB_USERNAME: ${DB_USERNAME:-root}
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      SERVER_PORT: 8080
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:
@@ -59,11 +49,7 @@ services:
         condition: service_healthy
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: event-ticket-frontend
-    restart: unless-stopped
+    build: ./frontend
     ports:
       - "${FRONTEND_PORT:-4200}:80"
     depends_on:
