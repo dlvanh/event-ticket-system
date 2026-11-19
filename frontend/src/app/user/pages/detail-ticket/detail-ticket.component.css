@@ -94,7 +94,8 @@
 
 .poster {
   inline-size: 100%;
-  block-size: 100%;
+  block-size: auto;
+  min-block-size: 100%;
   aspect-ratio: 16 / 9;
   object-fit: cover;
 }

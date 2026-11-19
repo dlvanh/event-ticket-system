@@ -44,7 +44,7 @@
 
       <div class="right-panel">
         <img
-          [src]="eventData.backgroundUrl || '/assets/default.jpg'"
+          [attr.src]="eventData.backgroundUrl || null"
           [alt]="eventData.eventName || 'Poster sự kiện'"
           class="poster"
           fetchpriority="high"
