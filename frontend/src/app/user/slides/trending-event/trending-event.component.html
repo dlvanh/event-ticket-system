@@ -1,28 +1,41 @@
-<div class="trending-section">
-  <div class="section-header">
-    <p>Sự kiện xu hướng</p>
+<section class="ev-section">
+  <div class="ev-section-header">
+    <h2 class="ev-section-title">Sự kiện xu hướng</h2>
   </div>
-  
-  <div class="carousel-container">
-    <div class="carousel-wrapper" >
-      <div class="carousel-item" *ngFor="let item of visibleItems">
-        <div class="item-content">
-          <img [src]="item.backgroundUrl || '/assets/default.jpg'" [alt]="item.title" (click)="goToEventDetail(item.id)"/>
-        </div>
-      </div>
-    </div>
-    
-    <button 
-      class="nav-btn prev-btn" 
+
+  <div class="ev-card-rail-wrap">
+    <button
+      *ngIf="canScrollLeft"
+      type="button"
+      class="ev-carousel-btn left"
       (click)="scrollLeft()"
-      >
-      ‹
+      aria-label="Xem sự kiện xu hướng trước"
+    >
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
     </button>
-    <button 
-      class="nav-btn next-btn" 
-      (click)="scrollRight()" 
-      >
-      ›
+
+    <div class="trending-grid">
+      <article class="ev-event-card" *ngFor="let item of visibleItems; let i = index">
+        <button type="button" class="ev-event-trigger trending-trigger" (click)="goToEventDetail(item.id)">
+          <span class="rank-badge" aria-hidden="true">#{{ startIndex + i + 1 }}</span>
+          <img
+            [src]="item.backgroundUrl || '/assets/default.jpg'"
+            [alt]="item.title || 'Sự kiện xu hướng'"
+            class="ev-event-media"
+            loading="lazy"
+          />
+        </button>
+      </article>
+    </div>
+
+    <button
+      *ngIf="canScrollRight"
+      type="button"
+      class="ev-carousel-btn right"
+      (click)="scrollRight()"
+      aria-label="Xem thêm sự kiện xu hướng"
+    >
+      <i class="bi bi-chevron-right" aria-hidden="true"></i>
     </button>
   </div>
-</div>
+</section>

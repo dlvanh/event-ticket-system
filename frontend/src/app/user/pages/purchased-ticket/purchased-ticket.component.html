@@ -1,26 +1,23 @@
-<div class="purchased-wrapper">
-  <div class="sidebar">
+<div class="ev-section account-layout">
+  <aside class="sidebar">
     <app-nav-user></app-nav-user>
-  </div>
+  </aside>
 
-  <div class="content">
-    <div class="container">
+  <section class="ev-card content-panel">
+    <header class="panel-header">
       <h1 class="heading">Vé đã mua</h1>
+      <button type="button" class="ev-btn ev-btn-primary" (click)="goToHome()">Mua vé ngay</button>
+    </header>
 
-      <div class="filter-buttons">
-        <a class="filter-btn" routerLink="all" routerLinkActive="active">Tất cả</a>
-        <a class="filter-btn" routerLink="success" routerLinkActive="active">Thành công</a>
-        <a class="filter-btn" routerLink="processing" routerLinkActive="active">Đang xử lý</a>
-        <a class="filter-btn" routerLink="cancel" routerLinkActive="active">Đã hủy</a>
-      </div>
+    <nav class="filter-buttons" aria-label="Lọc trạng thái vé">
+      <a class="filter-btn" routerLink="all" routerLinkActive="active">Tất cả</a>
+      <a class="filter-btn" routerLink="success" routerLinkActive="active">Thành công</a>
+      <a class="filter-btn" routerLink="processing" routerLinkActive="active">Đang xử lý</a>
+      <a class="filter-btn" routerLink="cancel" routerLinkActive="active">Đã hủy</a>
+    </nav>
 
-      <div class="no-ticket">
-        <div class="events-list">
-          <router-outlet></router-outlet>
-        </div>
-
-        <button class="buy-btn" (click)="goToHome()">Mua vé ngay</button>
-      </div>
+    <div class="events-list">
+      <router-outlet></router-outlet>
     </div>
-  </div>
+  </section>
 </div>

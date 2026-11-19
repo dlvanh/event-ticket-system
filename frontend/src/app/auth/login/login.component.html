@@ -1,92 +1,86 @@
-<div class="background">
-  <a routerLink="/" class="logo" (click)="goToHome()">
-      <img src="assets/logoeventa.png" alt="Eventa Logo" class="logo-badge" />
-    </a>
-  <div class="login-container">
-    <div class="login-card">
-      <div class="login-form-section">
-        <div class="form-container">
-          <h2 class="login-title">Đăng nhập</h2>
-          <p class="login-subtitle">Vui lòng điền thông tin để đăng nhập</p>
-          
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-            <div class="input-group">
-              <input 
-                type="email" 
-                formControlName="email"
-                placeholder="Nhập địa chỉ email"
-                class="form-input"
-                autocomplete="email"
-                [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-              <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-text">
-                <small *ngIf="loginForm.get('email')?.errors?.['email']">Email không hợp lệ.</small>
-              </div>
-            </div>
+<div class="ev-auth-shell">
+  <a routerLink="/" class="ev-auth-logo" (click)="goToHome()" aria-label="Eventa - Trang chủ">
+    <img src="assets/logoeventa.png" alt="Eventa" width="136" height="38" />
+  </a>
 
-            <!-- Password Input -->
-            <div class="input-group">
-              <div class="password-input-container">
-                <input 
-                  [type]="hidePassword ? 'password' : 'text'"
-                  formControlName="password"
-                  placeholder="Nhập mật khẩu"
-                  autocomplete="current-password"
-                  class="form-input password-input"
-                  [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-                <button 
-                  type="button" 
-                  class="password-toggle" 
-                  aria-label="Hiện/ẩn mật khẩu" 
-                  (click)="togglePasswordVisibility()">
-                  <svg *ngIf="hidePassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                  <svg *ngIf="!hidePassword" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                    <line x1="1" y1="1" x2="23" y2="23"></line>
-                  </svg>
-                </button>
-              </div>
-              <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-text">
-                <small *ngIf="loginForm.get('password')?.errors?.['required']">Mật khẩu không được để trống.</small>
-              </div>
-            </div>
+  <div class="ev-auth-card">
+    <h1 class="auth-title">Đăng nhập</h1>
+    <p class="auth-subtitle">Chào mừng bạn quay trở lại với Eventa</p>
 
-            <!-- Remember Me & Forgot Password -->
-            <div class="form-options">
-              <label class="checkbox-container">
-                <input type="checkbox" formControlName="rememberMe">
-                <span class="checkmark"></span>
-                Nhớ mật khẩu
-              </label>
-              <a class="forgot-password" (click)="forgotPassword()">Quên mật khẩu?</a>
-            </div>
-
-            <!-- Login Button -->
-            <button type="submit" class="login-btn" [disabled]="loginForm.invalid">
-              Đăng nhập
-            </button>
-
-            <div *ngIf="loginErrorMessage" class="error-popup">
-              {{ loginErrorMessage }}
-            </div>
-
-            <!-- Create Account -->
-            <div class="create-account">
-              <span>Chưa có tài khoản?</span>
-              <a (click)="createAccount()">Tạo tài khoản</a>
-            </div>
-
-            <!-- Divider -->
-          </form>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="ev-field">
+        <label for="login-email" class="ev-label">Email</label>
+        <input
+          id="login-email"
+          type="email"
+          formControlName="email"
+          placeholder="you@example.com"
+          class="ev-input"
+          autocomplete="email"
+          autocapitalize="none"
+          spellcheck="false"
+          [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+          aria-describedby="login-email-err"
+        />
+        <div id="login-email-err" class="ev-error-text" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+          <span *ngIf="loginForm.get('email')?.errors?.['email']">Email không hợp lệ.</span>
         </div>
       </div>
-    </div>
+
+      <div class="ev-field">
+        <label for="login-password" class="ev-label">Mật khẩu</label>
+        <div class="ev-password-wrap">
+          <input
+            id="login-password"
+            [type]="hidePassword ? 'password' : 'text'"
+            formControlName="password"
+            placeholder="Nhập mật khẩu"
+            autocomplete="current-password"
+            class="ev-input"
+            [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+            aria-describedby="login-pass-err"
+          />
+          <button
+            type="button"
+            class="ev-password-toggle"
+            [attr.aria-pressed]="!hidePassword"
+            aria-label="Hiện hoặc ẩn mật khẩu"
+            (click)="togglePasswordVisibility()"
+          >
+            <i class="bi" [ngClass]="hidePassword ? 'bi-eye' : 'bi-eye-slash'" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="login-pass-err" class="ev-error-text" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          <span *ngIf="loginForm.get('password')?.errors?.['required']">Mật khẩu không được để trống.</span>
+        </div>
+      </div>
+
+      <div class="form-options">
+        <label class="checkbox-container">
+          <input type="checkbox" formControlName="rememberMe" />
+          <span>Nhớ mật khẩu</span>
+        </label>
+        <button type="button" class="text-link-btn" (click)="forgotPassword()">Quên mật khẩu?</button>
+      </div>
+
+      <button type="submit" class="ev-btn ev-btn-primary submit-full" [disabled]="loginForm.invalid">
+        Đăng nhập
+      </button>
+
+      <div *ngIf="loginErrorMessage" class="error-banner" role="alert">
+        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+        <span>{{ loginErrorMessage }}</span>
+      </div>
+
+      <p class="auth-footer-text">
+        Chưa có tài khoản?
+        <button type="button" class="text-link-btn" (click)="createAccount()">Tạo tài khoản</button>
+      </p>
+    </form>
   </div>
 </div>
-<app-toast-notification 
+
+<app-toast-notification
   #notification
   (onClose)="onNotificationClose()">
 </app-toast-notification>

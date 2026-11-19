@@ -1,5 +1,6 @@
-<div *ngIf="show" class="loading-overlay">
+<div *ngIf="show" class="loading-overlay" role="status" aria-live="polite">
   <div class="loading-box">
+    <div class="spinner" aria-hidden="true"></div>
     <p>Đang tải...</p>
   </div>
 </div>

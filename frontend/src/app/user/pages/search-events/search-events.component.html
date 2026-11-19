@@ -1,74 +1,98 @@
-<div class="container">
-  <div class="filter-bar">
-    <p class="search-title">Kết quả tìm kiếm:</p>
-    
+<div class="search-page ev-section">
+  <div class="search-header">
+    <h1 class="ev-section-title">Kết quả tìm kiếm</h1>
+
     <div class="filter-dropdown-wrapper">
-      <button class="filter-btn" (click)="toggleFilter()">
-        <i class="fas fa-filter"></i>
+      <button
+        type="button"
+        class="filter-btn"
+        (click)="toggleFilter()"
+        [attr.aria-expanded]="showFilter"
+        aria-controls="search-filter-panel"
+      >
+        <i class="fas fa-filter" aria-hidden="true"></i>
         <span>Bộ lọc</span>
-        <i class="fas fa-chevron-down small-icon" *ngIf="!showFilter"></i>
-        <i class="fas fa-times small-icon" *ngIf="showFilter"></i>
+        <i class="fas" [ngClass]="showFilter ? 'fa-times' : 'fa-chevron-down'" aria-hidden="true"></i>
       </button>
 
-      <div class="filter-popup" *ngIf="showFilter">
-        <div class="section">
-          <p class="section-title">Vị trí</p>
-          <label *ngFor="let location of locations">
-            <input type="radio" name="location" [value]="location" [(ngModel)]="selectedLocation" />
-              {{ location }}
-          </label>
+      <div id="search-filter-panel" class="filter-popup" *ngIf="showFilter">
+        <fieldset class="filter-section">
+          <legend class="filter-legend">Vị trí</legend>
+          <div class="radio-list">
+            <label class="radio-option" *ngFor="let location of locations">
+              <input type="radio" name="location" [value]="location" [(ngModel)]="selectedLocation" />
+              <span>{{ location }}</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="filter-section">
+          <legend class="filter-legend">Thể loại</legend>
+          <div class="category-pills">
+            <button
+              type="button"
+              class="cat-pill"
+              *ngFor="let category of categories"
+              (click)="toggleCategory(category)"
+              [class.active]="selectedCategories.includes(category)"
+              [attr.aria-pressed]="selectedCategories.includes(category)"
+            >
+              {{ category }}
+            </button>
+          </div>
+        </fieldset>
+
+        <div class="action-buttons">
+          <button type="button" class="ev-btn ev-btn-secondary" (click)="resetFilter()">Thiết lập lại</button>
+          <button type="button" class="ev-btn ev-btn-primary" (click)="applyFilter()">Áp dụng</button>
+        </div>
       </div>
-
-      <div class="section">
-        <p class="section-title">Thể loại</p>
-        <button *ngFor="let category of categories"
-          (click)="toggleCategory(category)"
-          [class.active]="selectedCategories.includes(category)">
-          {{ category }}
-        </button>
-      </div>
-
-      <div class="action-buttons">
-        <button class="reset-btn" (click)="resetFilter()">Thiết lập lại</button>
-        <button class="apply-btn"  (click)="applyFilter()">Áp dụng</button>
-      </div>
-    </div>
-
-    <div class="filter-chips" *ngIf="selectedLocation !== 'Toàn quốc' || selectedCategories.length > 0">
-      <!-- Location chip -->
-      <span *ngIf="selectedLocation !== 'Toàn quốc'" class="chip">
-        <i class="fas fa-times" (click)="removeLocationFilter()"></i>
-        {{ selectedLocation }}
-      </span>
-
-      <!-- Category chips -->
-      <span *ngFor="let cat of selectedCategories" class="chip">
-        <i class="fas fa-times" (click)="removeCategory(cat)"></i>
-        {{ cat }}
-      </span>
-    </div>
-  </div>
-</div>
-
-
-  <div class="grid">
-    <div class="event-card" *ngFor="let event of events" (click)="goToEventDetail(event.eventId)">
-      <img [src]="event.backgroundUrl" [alt]="event.alt" />
-      <h3>{{ event.eventName }}</h3>
-      <p class="price">Từ {{ event.minPrice | number:'1.0-0'}} VNĐ</p>
-      <p class="date">
-        <i class="far fa-calendar-alt"></i>
-        {{ event.startTime | date: 'dd/MM/yyyy'}}
-      </p>
     </div>
   </div>
 
-  <!-- Loading Indicator -->
-  <div *ngIf="isLoading" class="text-center mt-4">
+  <div class="filter-chips" *ngIf="selectedLocation !== 'Toàn quốc' || selectedCategories.length > 0">
+    <span *ngIf="selectedLocation !== 'Toàn quốc'" class="chip">
+      <span>{{ selectedLocation }}</span>
+      <button type="button" class="chip-remove" (click)="removeLocationFilter()" aria-label="Xóa bộ lọc vị trí">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+    </span>
+
+    <span *ngFor="let cat of selectedCategories" class="chip">
+      <span>{{ cat }}</span>
+      <button type="button" class="chip-remove" (click)="removeCategory(cat)" [attr.aria-label]="'Xóa thể loại ' + cat">
+        <i class="fas fa-times" aria-hidden="true"></i>
+      </button>
+    </span>
+  </div>
+
+  <div class="events-grid">
+    <article class="ev-event-card" *ngFor="let event of events">
+      <button type="button" class="ev-event-trigger" (click)="goToEventDetail(event.eventId)">
+        <img [src]="event.backgroundUrl || '/assets/default.jpg'" [alt]="event.alt || event.eventName" class="ev-event-media" loading="lazy" />
+        <div class="ev-event-body">
+          <h2 class="ev-event-title">{{ event.eventName }}</h2>
+          <p class="ev-event-price">Từ {{ event.minPrice | number:'1.0-0'}} VNĐ</p>
+          <p class="ev-event-meta">
+            <i class="far fa-calendar-alt" aria-hidden="true"></i>
+            <span>{{ event.startTime | date: 'dd/MM/yyyy'}}</span>
+          </p>
+        </div>
+      </button>
+    </article>
+  </div>
+
+  <div *ngIf="!isLoading && events.length === 0" class="empty-state">
+    <i class="bi bi-calendar-x" aria-hidden="true"></i>
+    <p>Không tìm thấy sự kiện phù hợp.</p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state" role="status" aria-live="polite">
     <p>Đang tải thêm sự kiện...</p>
   </div>
 </div>
-<app-toast-notification 
+
+<app-toast-notification
   #notification
   (onClose)="onNotificationClose()">
 </app-toast-notification>

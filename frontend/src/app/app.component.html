@@ -1,12 +1,11 @@
-<main class="main">
-  <ng-container *ngIf="!isAuthPage">
-    <app-header-user></app-header-user>
-  </ng-container>
-  
+<div class="app-shell">
+  <a href="#main-content" class="skip-link">Chuyển đến nội dung chính</a>
 
-  <div class="content">
+  <app-header-user *ngIf="!isAuthPage"></app-header-user>
+
+  <main id="main-content" tabindex="-1" class="app-main">
     <router-outlet></router-outlet>
-  </div>
+  </main>
 
   <app-footer-user *ngIf="!isAuthPage"></app-footer-user>
-</main>
+</div>

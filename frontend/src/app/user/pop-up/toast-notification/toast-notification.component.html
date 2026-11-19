@@ -1,46 +1,24 @@
-<div class="notification-container" [class.show]="show">
-  <div class="notification-box" >
+<div class="notification-container" [class.show]="show" role="status" aria-live="polite">
+  <div class="notification-box">
     <div class="notification-content">
-      <div class="notification-icon" [ngSwitch]="progressBarType">
-        <!-- Success -->
-        <svg *ngSwitchCase="'success'" width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="#4caf50" stroke-width="2"/>
-          <path d="M9 12l2 2 4-4" stroke="#4caf50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-
-        <!-- Error -->
-        <svg *ngSwitchCase="'error'" width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="#f44336" stroke-width="2"/>
-          <path d="M12 8v4" stroke="#f44336" stroke-width="2" stroke-linecap="round"/>
-          <path d="M12 16h.01" stroke="#f44336" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-
-        <!-- Warning -->
-        <svg *ngSwitchCase="'warning'" width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="#ff9800" stroke-width="2"/>
-          <path d="M12 8v4" stroke="#ff9800" stroke-width="2" stroke-linecap="round"/>
-          <path d="M12 16h.01" stroke="#ff9800" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-
-        <!-- Default -->
-        <svg *ngSwitchDefault width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="#2196f3" stroke-width="2"/>
-          <path d="M12 8v4" stroke="#2196f3" stroke-width="2" stroke-linecap="round"/>
-          <path d="M12 16h.01" stroke="#2196f3" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+      <div class="notification-icon" [ngSwitch]="progressBarType" aria-hidden="true">
+        <i *ngSwitchCase="'success'" class="bi bi-check-circle-fill icon-success"></i>
+        <i *ngSwitchCase="'error'" class="bi bi-exclamation-circle-fill icon-error"></i>
+        <i *ngSwitchCase="'warning'" class="bi bi-exclamation-triangle-fill icon-warning"></i>
+        <i *ngSwitchDefault class="bi bi-info-circle-fill icon-info"></i>
       </div>
-      <div class="notification-message">
-        {{ message }}
-      </div>
-      <button class="notification-close" (click)="closeNotification()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18 6L6 18" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-          <path d="M6 6l12 12" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+      <div class="notification-message">{{ message }}</div>
+      <button
+        type="button"
+        class="notification-close"
+        (click)="closeNotification()"
+        aria-label="Đóng thông báo"
+      >
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
       </button>
     </div>
-    <div 
-      class="notification-progress" 
+    <div
+      class="notification-progress"
       [ngClass]="progressBarType"
       [style.animation-duration.ms]="autoHideTime"
       *ngIf="showProgressBar && show && autoHideTime > 0">

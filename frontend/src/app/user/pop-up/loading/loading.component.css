@@ -1,21 +1,33 @@
 .loading-overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: rgba(255, 255, 255, 0.8);
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+}
+
+.loading-box {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  z-index: 9999;
+  gap: 0.75rem;
+  padding: 1.5rem 2rem;
+  border-radius: var(--ev-radius-xl);
+  background-color: var(--ev-surface);
+  color: var(--ev-ink);
+  font-weight: 600;
+  box-shadow: var(--ev-shadow-lg);
 }
 
 .spinner {
-  border: 8px solid #f3f3f3;
-  border-top: 8px solid orange;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border: 3px solid var(--ev-surface-subtle);
+  border-top-color: var(--ev-primary);
+  border-radius: var(--ev-radius-pill);
+  animation: spin 800ms linear infinite;
 }
 
 @keyframes spin {

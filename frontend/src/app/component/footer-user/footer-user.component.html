@@ -1,68 +1,71 @@
 <footer class="footer">
   <div class="footer-container">
-        <!-- Left Section -->
-        <div class="footer-left">
-            <div class="contact-section">
-                <h2>Hotline</h2>
-                <p><i class="bi bi-telephone"></i> Thứ 2 - Chủ nhật (8:30 - 23:00)</p>
-                <p class="hotline-number">1900.1234</p>
-            </div>
+    <div class="footer-brand">
+      <div class="logo-section">
+        <img
+          src="/assets/logoeventa-white.png"
+          alt="Eventa"
+          class="logo-image"
+          width="144"
+          height="40"
+          loading="lazy"
+        />
+        <p class="company-description">
+          Hệ thống quản lý sự kiện và bán vé trực tuyến hàng đầu Việt Nam.
+        </p>
+      </div>
 
-            <div class="contact-section">
-                <h2>Email</h2>
-                <p class="email"><i class="bi bi-envelope"></i> support&#64;eventa.vn</p>
-            </div>
-
-            <div class="contact-section">
-                <h3>Văn phòng</h3>
-                <p><i class="bi bi-geo-alt"></i> Vạn Phúc, Nguyễn Trãi, Hà Đông, Hà Nội</p>
-            </div>
-
-            <!-- Logo Section -->
-            <div class="logo-section">
-                <div class="logo">
-                    <img src="/assets/logoeventa.png" alt="Eventa Logo" class="logo-image" width="150">
-                </div>
-                <p class="company-description">
-                Hệ thống quản lý sự kiện và bán vé trực tuyến hàng đầu Việt Nam EVENTA Co. Ltd. ©2025
-                </p>
-            </div>
+      <div class="contact-grid">
+        <div class="contact-section">
+          <h2>Hotline hỗ trợ</h2>
+          <p class="contact-meta"><i class="bi bi-telephone" aria-hidden="true"></i> Thứ 2 – Chủ nhật (8:30 – 23:00)</p>
+          <p class="hotline-number">1900.1234</p>
         </div>
 
-        <!-- Center Section -->
-        <div class="footer-center">
-            <div class="service-section">
-                <h3>Dành cho Khách hàng</h3>
-                <ul>
-                <li><a href="#">Điều khoản sử dụng cho khách hàng</a></li>
-                </ul>
-            </div>
-
-            <div class="service-section">
-                <h3>Dành cho Ban Tổ chức</h3>
-                <ul>
-                <li><a (click)="RegisterBeOrganizer()">Đăng kí làm ban tổ chức</a></li>
-                <li><a href="#">Điều khoản sử dụng cho ban tổ chức</a></li>
-                </ul>
-            </div>
+        <div class="contact-section">
+          <h2>Email</h2>
+          <p><i class="bi bi-envelope" aria-hidden="true"></i> <a href="mailto:support@eventa.vn" class="footer-link">support&#64;eventa.vn</a></p>
         </div>
 
-        <!-- Right Section -->
-        <div class="footer-right">
-            <div class="policy-section">
-                <h3>Về công ty chúng tôi</h3>
-                <div class="policy-header">
-                <h4>Quy chế hoạt động</h4>
-                </div>
-                <ul class="policy-list">
-                <li><a href="#">Chính sách bảo mật thông tin</a></li>
-                <li><a href="#">Cơ chế giải quyết tranh chấp/khiếu nại</a></li>
-                <li><a href="#">Chính sách bảo mật thanh toán</a></li>
-                <li><a href="#">Chính sách đổi trả và kiểm hàng</a></li>
-                <li><a href="#">Điều kiện vận chuyển và giao nhận</a></li>
-                <li><a href="#">Phương thức thanh toán</a></li>
-                </ul>
-            </div>
+        <div class="contact-section">
+          <h2>Văn phòng</h2>
+          <p><i class="bi bi-geo-alt" aria-hidden="true"></i> Vạn Phúc, Nguyễn Trãi, Hà Đông, Hà Nội</p>
         </div>
+      </div>
     </div>
+
+    <div class="footer-col">
+      <h2>Dành cho Khách hàng</h2>
+      <ul class="footer-list">
+        <li><a href="#" class="footer-link">Điều khoản sử dụng cho khách hàng</a></li>
+      </ul>
+
+      <h2 class="section-spacer">Dành cho Ban Tổ chức</h2>
+      <ul class="footer-list">
+        <li>
+          <button type="button" class="footer-action-link" (click)="RegisterBeOrganizer()">
+            Đăng kí làm ban tổ chức
+          </button>
+        </li>
+        <li><a href="#" class="footer-link">Điều khoản sử dụng cho ban tổ chức</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h2>Về công ty chúng tôi</h2>
+      <h3>Quy chế hoạt động</h3>
+      <ul class="footer-list">
+        <li><a href="#" class="footer-link">Chính sách bảo mật thông tin</a></li>
+        <li><a href="#" class="footer-link">Cơ chế giải quyết tranh chấp/khiếu nại</a></li>
+        <li><a href="#" class="footer-link">Chính sách bảo mật thanh toán</a></li>
+        <li><a href="#" class="footer-link">Chính sách đổi trả và kiểm hàng</a></li>
+        <li><a href="#" class="footer-link">Điều kiện vận chuyển và giao nhận</a></li>
+        <li><a href="#" class="footer-link">Phương thức thanh toán</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>EVENTA Co. Ltd. © 2026. Bảo lưu mọi quyền.</p>
+  </div>
 </footer>

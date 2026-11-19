@@ -1,154 +1,184 @@
-<div class="background">
-  <a routerLink="/" class="logo" (click)="goToHome()">
-      <img src="assets/logoeventa.png" alt="Eventa Logo" class="logo-badge" />
+<div class="ev-auth-shell">
+  <a routerLink="/" class="ev-auth-logo" (click)="goToHome()" aria-label="Eventa - Trang chủ">
+    <img src="assets/logoeventa.png" alt="Eventa" width="136" height="38" />
   </a>
-  <div class="steps-indicator d-flex justify-content-between align-items-center mb-4">
-    <div class="step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
-      <span class="step-number">1</span>
-      <span class="step-label">Nhập Email</span>
-    </div>
-    <div class="step-connector"></div>
-    <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
-      <span class="step-number">2</span>
-      <span class="step-label">Nhập mã xác thực</span>
-    </div>
-    <div class="step-connector"></div>
-    <div class="step" [class.active]="currentStep === 3">
-      <span class="step-number">3</span>
-      <span class="step-label">Tạo mật khẩu</span>
-    </div>
-  </div>
 
-  <div class="container-login">
-    <div class="signup-box">
-      <h2 class="d-flex align-items-center justify-content-center">Đăng ký</h2>
-      <form [formGroup]="registerForm">
-        <!-- Bước 1: Nhập email -->
-        <div *ngIf="currentStep === 1">
-          <div class="mb-3">
-            <label for="email">Email</label>
-            <input type="email" id="email" class="form-control" 
-                   [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
-                   formControlName="email" placeholder="Nhập email" aria-describedby="email-error" />
-            <div id="email-error" class="error-text mt-1">
-              <small *ngIf="registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched">
-                Email không được để trống
-              </small>
-              <small *ngIf="registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched">
-                Email không hợp lệ
-              </small>
-            </div>
+  <nav class="ev-steps" aria-label="Tiến trình đăng ký">
+    <div class="ev-step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1" [attr.aria-current]="currentStep === 1 ? 'step' : null">
+      <span class="ev-step-num">1</span>
+      <span class="ev-step-label">Nhập Email</span>
+    </div>
+    <div class="ev-step-line" aria-hidden="true"></div>
+    <div class="ev-step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2" [attr.aria-current]="currentStep === 2 ? 'step' : null">
+      <span class="ev-step-num">2</span>
+      <span class="ev-step-label">Xác thực</span>
+    </div>
+    <div class="ev-step-line" aria-hidden="true"></div>
+    <div class="ev-step" [class.active]="currentStep === 3" [attr.aria-current]="currentStep === 3 ? 'step' : null">
+      <span class="ev-step-num">3</span>
+      <span class="ev-step-label">Tạo mật khẩu</span>
+    </div>
+  </nav>
+
+  <div class="ev-auth-card">
+    <h1 class="auth-title">Đăng ký tài khoản</h1>
+    <p class="auth-subtitle">Tạo tài khoản Eventa để đặt vé nhanh chóng</p>
+
+    <form [formGroup]="registerForm">
+      <!-- Bước 1: Nhập email -->
+      <div *ngIf="currentStep === 1">
+        <div class="ev-field">
+          <label for="reg-email" class="ev-label">Email</label>
+          <input
+            type="email"
+            id="reg-email"
+            class="ev-input"
+            [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+            formControlName="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            autocapitalize="none"
+            spellcheck="false"
+            aria-describedby="email-error"
+          />
+          <div id="email-error" class="ev-error-text">
+            <span *ngIf="registerForm.get('email')?.hasError('required') && registerForm.get('email')?.touched">
+              Email không được để trống
+            </span>
+            <span *ngIf="registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched">
+              Email không hợp lệ
+            </span>
           </div>
-          <p style="color: #ff7e42;">{{ message }}</p>
-          <button type="button" class="btn btn-primary" (click)="onSendVerification()" [disabled]="isLoading">
-            Gửi mã xác thực
-          </button>
-          <div *ngIf="isLoading" class="alert alert-info mt-2">Đang xử lý...</div>
+        </div>
+        <p class="status-note" *ngIf="message">{{ message }}</p>
+        <button type="button" class="ev-btn ev-btn-primary submit-full" (click)="onSendVerification()" [disabled]="isLoading">
+          {{ isLoading ? 'Đang gửi mã...' : 'Gửi mã xác thực' }}
+        </button>
+      </div>
+
+      <!-- Bước 2: Nhập mã xác thực -->
+      <div *ngIf="currentStep === 2">
+        <div class="ev-field">
+          <label for="reg-code" class="ev-label">Mã xác thực</label>
+          <input
+            type="text"
+            id="reg-code"
+            class="ev-input"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            [class.error]="registerForm.get('code')?.invalid && registerForm.get('code')?.touched"
+            formControlName="code"
+            placeholder="Nhập mã xác thực"
+            aria-describedby="code-error"
+          />
+          <div id="code-error" class="ev-error-text">
+            <span *ngIf="registerForm.get('code')?.hasError('required') && registerForm.get('code')?.touched">
+              Mã xác thực không được để trống
+            </span>
+            <span *ngIf="registerForm.get('code')?.hasError('pattern') && registerForm.get('code')?.touched">
+              Mã xác thực chỉ được chứa số
+            </span>
+          </div>
+        </div>
+        <button type="button" class="ev-btn ev-btn-primary submit-full" (click)="onVerifyCode()" [disabled]="isLoading">
+          {{ isLoading ? 'Đang kiểm tra...' : 'Kiểm tra mã' }}
+        </button>
+      </div>
+
+      <!-- Bước 3: Nhập mật khẩu -->
+      <div *ngIf="currentStep === 3">
+        <div class="ev-field">
+          <label for="fullName" class="ev-label">Họ và tên</label>
+          <input
+            type="text"
+            id="fullName"
+            class="ev-input"
+            autocomplete="name"
+            [class.error]="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched"
+            formControlName="fullName"
+            placeholder="Nguyễn Văn A"
+            aria-describedby="fullName-error"
+          />
+          <div id="fullName-error" class="ev-error-text">
+            <span *ngIf="registerForm.get('fullName')?.hasError('required') && registerForm.get('fullName')?.touched">
+              Họ và tên không được để trống
+            </span>
+            <span *ngIf="registerForm.get('fullName')?.hasError('pattern') && registerForm.get('fullName')?.touched">
+              Họ và tên không được chứa ký tự đặc biệt
+            </span>
+          </div>
         </div>
 
-        <!-- Bước 2: Nhập mã xác thực -->
-        <div *ngIf="currentStep === 2">
-          <div class="mb-3">
-            <label for="code">Mã xác thực</label>
-            <input type="text" id="code" class="form-control"
-                   [class.error]="registerForm.get('code')?.invalid && registerForm.get('code')?.touched"
-                   formControlName="code" placeholder="Nhập mã xác thực" aria-describedby="code-error" />
-            <div id="code-error" class="error-text mt-1">
-              <small *ngIf="registerForm.get('code')?.hasError('required') && registerForm.get('code')?.touched">
-                Mã xác thực không được để trống
-              </small>
-              <small *ngIf="registerForm.get('code')?.hasError('pattern') && registerForm.get('code')?.touched">
-                Mã xác thực chỉ được chứa số
-              </small>
-            </div>
-          </div>
-          <button type="button" class="btn btn-primary" (click)="onVerifyCode()" [disabled]="isLoading">
-            Kiểm tra mã
-          </button>
-        </div>
-
-        <!-- Bước 3: Nhập mật khẩu -->
-        <div *ngIf="currentStep === 3">
-          <div class="mb-3">
-            <label for="fullName">Họ và tên</label>
-            <input type="text" id="fullName" class="form-control"
-                   [class.error]="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched"
-                   formControlName="fullName" placeholder="Họ và tên" aria-describedby="fullName-error" />
-            <div id="fullName-error" class="error-text mt-1">
-              <small *ngIf="registerForm.get('fullName')?.hasError('required') && registerForm.get('fullName')?.touched">
-                Họ và tên không được để trống
-              </small>
-              <small *ngIf="registerForm.get('fullName')?.hasError('pattern') && registerForm.get('fullName')?.touched">
-                Họ và tên không được chứa ký tự đặc biệt
-              </small>
-            </div>
-          </div>
-
-          <div class="mb-3 position-relative">
-            <label for="password">Mật khẩu</label>
-            <input 
-              [type]="currentPassword ? 'password' : 'text'" id="password"
-              class="form-control" 
+        <div class="ev-field">
+          <label for="password" class="ev-label">Mật khẩu</label>
+          <div class="ev-password-wrap">
+            <input
+              [type]="currentPassword ? 'password' : 'text'"
+              id="password"
+              class="ev-input"
+              autocomplete="new-password"
               [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
-              formControlName="password" 
-              placeholder="Nhập mật khẩu" aria-describedby="password-error" />
-            <button type="button" class="password-toggle" (click)="toggleCurrentPasswordVisibility()" aria-label="Hiện hoặc ẩn mật khẩu">
-              <!-- Icon mắt -->
-              <svg *ngIf="currentPassword" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <svg *ngIf="!currentPassword" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-              </svg>
+              formControlName="password"
+              placeholder="Tối thiểu 10 ký tự"
+              aria-describedby="password-error"
+            />
+            <button
+              type="button"
+              class="ev-password-toggle"
+              [attr.aria-pressed]="!currentPassword"
+              (click)="toggleCurrentPasswordVisibility()"
+              aria-label="Hiện hoặc ẩn mật khẩu"
+            >
+              <i class="bi" [ngClass]="currentPassword ? 'bi-eye' : 'bi-eye-slash'" aria-hidden="true"></i>
             </button>
-            <div id="password-error" class="error-text mt-1">
-              <small *ngIf="registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched">
-                Mật khẩu không được để trống
-              </small>
-              <small *ngIf="registerForm.get('password')?.hasError('minlength') && registerForm.get('password')?.touched">
-                Mật khẩu tối thiểu 10 ký tự, gồm hoa, thường, số và ký tự đặc biệt.
-              </small>
-            </div>
           </div>
-
-          <div class="mb-3 position-relative">
-            <label for="confirmPassword">Nhập lại mật khẩu</label>
-            <input 
-              [type]="validatePassword ? 'password' : 'text'" id="confirmPassword"
-              class="form-control" 
-              [class.error]="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched"
-              formControlName="confirmPassword" 
-              placeholder="Nhập lại mật khẩu" aria-describedby="confirmPassword-error" />
-            <button type="button" class="password-toggle" (click)="toggleValidatePasswordVisibility()" aria-label="Hiện hoặc ẩn mật khẩu">
-              <!-- Icon mắt -->
-              <svg *ngIf="validatePassword" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <svg *ngIf="!validatePassword" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-              </svg>
-            </button>
-            <div id="confirmPassword-error" class="error-text mt-1">
-              <small *ngIf="registerForm.get('confirmPassword')?.hasError('required') && registerForm.get('confirmPassword')?.touched">
-                Vui lòng nhập lại mật khẩu
-              </small>
-              <small *ngIf="registerForm.errors?.['mismatch'] && registerForm.get('confirmPassword')?.touched">
-                Mật khẩu không khớp
-              </small>
-            </div>
+          <div id="password-error" class="ev-error-text">
+            <span *ngIf="registerForm.get('password')?.hasError('required') && registerForm.get('password')?.touched">
+              Mật khẩu không được để trống
+            </span>
+            <span *ngIf="registerForm.get('password')?.hasError('minlength') && registerForm.get('password')?.touched">
+              Mật khẩu tối thiểu 10 ký tự, gồm hoa, thường, số và ký tự đặc biệt.
+            </span>
           </div>
-
-          <button type="button" class="btn btn-success" (click)="onRegister()" [disabled]="isLoading || registerForm.invalid">
-            Đăng ký
-          </button>
         </div>
-      </form>
-    </div>
+
+        <div class="ev-field">
+          <label for="confirmPassword" class="ev-label">Nhập lại mật khẩu</label>
+          <div class="ev-password-wrap">
+            <input
+              [type]="validatePassword ? 'password' : 'text'"
+              id="confirmPassword"
+              class="ev-input"
+              autocomplete="new-password"
+              [class.error]="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched"
+              formControlName="confirmPassword"
+              placeholder="Nhập lại mật khẩu"
+              aria-describedby="confirmPassword-error"
+            />
+            <button
+              type="button"
+              class="ev-password-toggle"
+              [attr.aria-pressed]="!validatePassword"
+              (click)="toggleValidatePasswordVisibility()"
+              aria-label="Hiện hoặc ẩn mật khẩu xác nhận"
+            >
+              <i class="bi" [ngClass]="validatePassword ? 'bi-eye' : 'bi-eye-slash'" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div id="confirmPassword-error" class="ev-error-text">
+            <span *ngIf="registerForm.get('confirmPassword')?.hasError('required') && registerForm.get('confirmPassword')?.touched">
+              Vui lòng nhập lại mật khẩu
+            </span>
+            <span *ngIf="registerForm.errors?.['mismatch'] && registerForm.get('confirmPassword')?.touched">
+              Mật khẩu không khớp
+            </span>
+          </div>
+        </div>
+
+        <button type="button" class="ev-btn ev-btn-primary submit-full" (click)="onRegister()" [disabled]="isLoading || registerForm.invalid">
+          Đăng ký
+        </button>
+      </div>
+    </form>
   </div>
 </div>

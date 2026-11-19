@@ -1,29 +1,34 @@
-<div class="account-sidebar-container">
-  <img
-    [src]="avatarUrl" *ngIf="avatarUrl"
-    alt="User profile photo of a person in casual clothes"
-    width="50"
-    height="50"
-    class="profile-img"
-  />
-
-  <div class="account-info">
-    <p class="account-label">Tài khoản của <strong>{{ getFullName() }}</strong></p>
-    <p class="account-name"></p>
-
-    <ul class="account-links">
-      <li>
-        <a class="link" (click)="navigateToProfile()">
-          <i class="fas fa-user icon invisible"></i>
-          Thông tin tài khoản
-        </a>
-      </li>
-      <li>
-        <a class="link" (click)="navigateToPurchasedTickets()">
-          <i class="fas fa-ticket-alt icon"></i>
-          Vé đã mua
-        </a>
-      </li>
-    </ul>
+<nav class="account-sidebar-container" aria-label="Điều hướng tài khoản">
+  <div class="account-header">
+    <img
+      [src]="avatarUrl"
+      *ngIf="avatarUrl"
+      alt="Ảnh đại diện của {{ getFullName() }}"
+      width="48"
+      height="48"
+      class="profile-img"
+    />
+    <span class="avatar-placeholder" *ngIf="!avatarUrl" aria-hidden="true">
+      <i class="bi bi-person-fill"></i>
+    </span>
+    <div class="account-meta">
+      <p class="account-caption">Tài khoản của</p>
+      <p class="account-name">{{ getFullName() }}</p>
+    </div>
   </div>
-</div>
+
+  <ul class="account-links">
+    <li>
+      <button type="button" class="nav-link-btn" (click)="navigateToProfile()">
+        <i class="fas fa-user" aria-hidden="true"></i>
+        <span>Thông tin tài khoản</span>
+      </button>
+    </li>
+    <li>
+      <button type="button" class="nav-link-btn" (click)="navigateToPurchasedTickets()">
+        <i class="fas fa-ticket-alt" aria-hidden="true"></i>
+        <span>Vé đã mua</span>
+      </button>
+    </li>
+  </ul>
+</nav>

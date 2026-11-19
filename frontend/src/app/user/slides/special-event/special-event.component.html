@@ -1,21 +1,40 @@
-<div class="event-section">
-  <h2 class="section-title">Sự kiện đặc biệt</h2>
-  <div class="event-carousel">
-    <!-- Nút trái -->
-    <button *ngIf="canScrollLeft" class="scroll-btn left" (click)="scrollLeft()">
-      <span class="material-icons">chevron_left</span>
+<section class="ev-section">
+  <div class="ev-section-header">
+    <h2 class="ev-section-title">Sự kiện đặc biệt</h2>
+  </div>
+
+  <div class="ev-card-rail-wrap">
+    <button
+      *ngIf="canScrollLeft"
+      type="button"
+      class="ev-carousel-btn left"
+      (click)="scrollLeft()"
+      aria-label="Xem sự kiện đặc biệt trước"
+    >
+      <span class="material-icons" aria-hidden="true">chevron_left</span>
     </button>
 
-    <!-- Danh sách sự kiện -->
-    <div class="event-list">
-      <div class="event-card" *ngFor="let item of visibleItems" (click)="goToEventDetail(item.id)">
-        <img [src]="item.backgroundUrl || '/assets/default.jpg'" class="event-image"/>
-      </div>
-
-      <!-- Nút phải -->
-      <button *ngIf="canScrollRight" class="scroll-btn right" (click)="scrollRight()">
-        <span class="material-icons">chevron_right</span>
-      </button>
+    <div class="ev-card-rail">
+      <article class="ev-event-card" *ngFor="let item of visibleItems">
+        <button type="button" class="ev-event-trigger" (click)="goToEventDetail(item.id)">
+          <img
+            [src]="item.backgroundUrl || '/assets/default.jpg'"
+            alt="Sự kiện đặc biệt"
+            class="ev-event-media special-media"
+            loading="lazy"
+          />
+        </button>
+      </article>
     </div>
+
+    <button
+      *ngIf="canScrollRight"
+      type="button"
+      class="ev-carousel-btn right"
+      (click)="scrollRight()"
+      aria-label="Xem thêm sự kiện đặc biệt"
+    >
+      <span class="material-icons" aria-hidden="true">chevron_right</span>
+    </button>
   </div>
-</div>
+</section>

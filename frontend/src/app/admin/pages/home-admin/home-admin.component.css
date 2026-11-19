@@ -1,0 +1,22 @@
+/* Scoped AdminLTE refinements for modern visual polish */
+:host ::ng-deep .content-wrapper {
+  background-color: var(--ev-bg);
+}
+
+:host ::ng-deep .card {
+  border-radius: var(--ev-radius-lg);
+  border: 1px solid var(--ev-border);
+  box-shadow: var(--ev-shadow-xs);
+}
+
+:host ::ng-deep .small-box {
+  border-radius: var(--ev-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--ev-shadow-sm);
+}
+
+:host ::ng-deep .table th {
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}

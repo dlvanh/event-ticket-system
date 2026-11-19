@@ -1,33 +1,74 @@
 <div class="main-content">
-  <nav class="sub-navbar">
+  <nav class="sub-navbar" aria-label="Danh mục sự kiện">
     <ul class="sub-nav-list">
-      <li class="sub-nav-item" (click)="goToSearchEvents('Nhạc sống')">Nhạc sống</li>
-      <li class="sub-nav-item" (click)="goToSearchEvents('Sân khấu & Nghệ thuật')">Sân khấu & Nghệ thuật</li>
-      <li class="sub-nav-item" (click)="goToSearchEvents('Thể Thao')">Thể Thao</li>
-      <li class="sub-nav-item" (click)="goToSearchEvents('Workshop')">Workshop</li>
-      <li class="sub-nav-item" (click)="goToSearchEvents('Khác')">Khác</li>
+      <li><button type="button" class="sub-nav-btn" (click)="goToSearchEvents('Nhạc sống')">Nhạc sống</button></li>
+      <li><button type="button" class="sub-nav-btn" (click)="goToSearchEvents('Sân khấu & Nghệ thuật')">Sân khấu &amp; Nghệ thuật</button></li>
+      <li><button type="button" class="sub-nav-btn" (click)="goToSearchEvents('Thể Thao')">Thể Thao</button></li>
+      <li><button type="button" class="sub-nav-btn" (click)="goToSearchEvents('Workshop')">Workshop</button></li>
+      <li><button type="button" class="sub-nav-btn" (click)="goToSearchEvents('Khác')">Khác</button></li>
     </ul>
   </nav>
-  <div class="carousel-container">
-    <div class="carousel-wrapper" [style.transition]="transitionStyle">
-      <div class="carousel-item" *ngFor="let item of visibleImages">
-        <div class="image-wrapper">
-          <img [src]="item.backgroundUrl || '/assets/default.jpg'" alt="Sự kiện nổi bật" />
-          <button class="detail-button" (click)="goToEventDetail(item.id)">Xem chi tiết</button>
+
+  <section class="hero-section" aria-roledescription="carousel" aria-label="Sự kiện nổi bật">
+    <div class="carousel-container">
+      <div class="carousel-wrapper" [style.transition]="transitionStyle">
+        <div
+          class="carousel-item"
+          *ngFor="let item of visibleImages; let isFirst = first; let i = index"
+          role="group"
+          aria-roledescription="slide"
+          [attr.aria-label]="'Sự kiện nổi bật ' + (i + 1) + ' trên ' + visibleImages.length"
+        >
+          <div class="image-wrapper">
+            <img
+              [src]="item.backgroundUrl || '/assets/default.jpg'"
+              alt="Sự kiện nổi bật"
+              [attr.fetchpriority]="isFirst ? 'high' : null"
+            />
+            <div class="hero-scrim" aria-hidden="true"></div>
+            <button type="button" class="ev-btn ev-btn-primary detail-button" (click)="goToEventDetail(item.id)">
+              <span>Xem chi tiết</span>
+              <i class="bi bi-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <button class="arrow left" (click)="prevSlide()">&#10094;</button>
-    <button class="arrow right" (click)="nextSlide()">&#10095;</button>
+      <button
+        type="button"
+        class="hero-arrow left"
+        (click)="prevSlide()"
+        aria-label="Slide trước"
+        *ngIf="events.length > 1"
+      >
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="hero-arrow right"
+        (click)="nextSlide()"
+        aria-label="Slide tiếp theo"
+        *ngIf="events.length > 1"
+      >
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
 
-    <div class="dots">
-      <span
-        *ngFor="let dot of dotIndicators; let i = index"
-        [class.active]="i === currentIndex"
-      ></span>
+      <nav class="dots" aria-label="Chọn slide nổi bật" *ngIf="dotIndicators.length > 1">
+        <button
+          type="button"
+          class="dot-btn"
+          *ngFor="let dot of dotIndicators; let i = index"
+          [class.active]="i === currentIndex"
+          [attr.aria-current]="i === currentIndex ? 'true' : null"
+          [attr.aria-label]="'Slide ' + (i + 1) + ' trên ' + dotIndicators.length"
+          (click)="currentIndex = i"
+        >
+          <span class="dot-visual" aria-hidden="true"></span>
+        </button>
+      </nav>
     </div>
-  </div>
+  </section>
+
   <app-special-event></app-special-event>
   <app-trending-event></app-trending-event>
   <app-foryou-event></app-foryou-event>
