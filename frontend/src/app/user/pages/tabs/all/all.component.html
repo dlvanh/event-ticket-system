@@ -1,60 +1,64 @@
 <div class="page-container">
-  <div class="status-toggle">
-    <button class="toggle-btn" 
-      (click)="setTab('coming')" 
+  <div class="ev-status-toggle" role="tablist" aria-label="Thời gian sự kiện">
+    <button
+      type="button"
+      role="tab"
+      class="ev-toggle-btn"
+      (click)="setTab('coming')"
       [class.active]="selectedTab === 'coming'"
-      [attr.aria-selected]="selectedTab === 'coming'">Sắp diễn ra</button>
-    <button class="toggle-btn"
+      [attr.aria-selected]="selectedTab === 'coming'"
+    >
+      Sắp diễn ra
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="ev-toggle-btn"
       (click)="setTab('ended')"
       [class.active]="selectedTab === 'ended'"
-      [attr.aria-selected]="selectedTab === 'ended'">Đã kết thúc</button>
+      [attr.aria-selected]="selectedTab === 'ended'"
+    >
+      Đã kết thúc
+    </button>
   </div>
 
-  <div class="ticket-list">
+  <div class="ev-ticket-list">
     <ng-container *ngFor="let order of ticketOrders">
       <ng-container *ngFor="let ticket of order.tickets">
-        <div class="horizontal-ticket">
-          <div class="left">
-            <div class="stub-line1">{{ ticket.ticketType }}</div>
-            <div class="stub-line2" 
+        <article class="ev-ticket-card">
+          <div class="ev-ticket-stub">
+            <div class="ev-ticket-type">{{ ticket.ticketType }}</div>
+            <span
+              class="ev-ticket-status"
               [ngClass]="{
-                'paid':  order.status === 'paid',
-                'cancelled':  order.status === 'cancelled',
-                'pending':  order.status === 'pending'
-              }">
-                {{ order.status | statusTranslate }}
-            </div>
+                'paid': order.status === 'paid',
+                'cancelled': order.status === 'cancelled',
+                'pending': order.status === 'pending'
+              }"
+            >
+              {{ order.status | statusTranslate }}
+            </span>
           </div>
 
-          <div class="dashed-line"></div>
-          <div class="ticket-perforation top"></div>
-          <div class="ticket-perforation bottom"></div>
-
-          <div class="main">
-            <div class="ticket-left-content">
-              <div class="ticket-icon" 
-                [ngClass]="order.status === 'paid' && ticket.qrCode ? 'ticket-icon qr' : 'ticket-icon no-qr'"
-              >
-                <img
-                  [src]="'data:image/png;base64,' + ticket.qrCode"
-                  alt="QR Code"
-                  *ngIf="order.status === 'paid' "
-                />
-              </div>
-              <div class="ticket-column">
-                <div class="ticket-text-line1">{{ ticket.eventName }}</div>
-                <div class="ticket-text-line2">
-                  {{ ticket.eventStartTime | date: 'HH:mm dd/MM/yyyy' }}
-                  {{ ticket.unitPrice | number:'1.0-0' }}đ x {{ ticket.quantity }}
-                </div>
+          <div class="ev-ticket-main">
+            <div class="ev-ticket-info">
+              <img
+                class="ev-ticket-qr"
+                [src]="'data:image/png;base64,' + ticket.qrCode"
+                alt="Mã QR vé {{ ticket.eventName }}"
+                *ngIf="order.status === 'paid' && ticket.qrCode"
+              />
+              <div>
+                <h2 class="ev-ticket-name">{{ ticket.eventName }}</h2>
+                <p class="ev-ticket-meta">
+                  {{ ticket.eventStartTime | date: 'HH:mm · dd/MM/yyyy' }} ·
+                  {{ ticket.unitPrice | number:'1.0-0' }}đ × {{ ticket.quantity }}
+                </p>
               </div>
             </div>
-
-            <div class="ticket-column right-content">
-              <div class="right-line1">{{ ticket.eventLocation }}</div>
-            </div>
+            <p class="ev-ticket-loc">{{ ticket.eventLocation }}</p>
           </div>
-        </div>
+        </article>
       </ng-container>
     </ng-container>
   </div>

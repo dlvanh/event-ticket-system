@@ -1,30 +1,42 @@
-<div class="filter-tab">
-    <div class="tab-group">
-        <button class="filter-btn" (click)="setTab('thisweekend')" [class.active]="selectedTab === 'thisweekend'">
-            <span>Cuối tuần</span>
-        </button>  
-        <button class="filter-btn" (click)="setTab('thismonth')" [class.active]="selectedTab === 'thismonth'">
-            <span>Tháng này</span>
-        </button>
+<section class="ev-section">
+  <div class="ev-section-header">
+    <div class="timeline-tabs" role="tablist" aria-label="Lịch sự kiện">
+      <button
+        type="button"
+        role="tab"
+        class="timeline-tab"
+        [class.active]="selectedTab === 'thisweekend'"
+        [attr.aria-selected]="selectedTab === 'thisweekend'"
+        (click)="setTab('thisweekend')"
+      >
+        Cuối tuần
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="timeline-tab"
+        [class.active]="selectedTab === 'thismonth'"
+        [attr.aria-selected]="selectedTab === 'thismonth'"
+        (click)="setTab('thismonth')"
+      >
+        Tháng này
+      </button>
     </div>
-    <a class="see-more-btn" (click)="onSeeMore()">
-        Xem thêm 
-        <i class="bi bi-chevron-right"></i>
-    </a>
-</div>
-<div class="events-list">
-    <ng-container *ngIf="selectedTab === 'thisweekend'">
-        <app-thisweekend-event></app-thisweekend-event>
-    </ng-container>
-    
-    <ng-container *ngIf="selectedTab === 'thismonth'">
-        <app-thismonth-event></app-thismonth-event>
-    </ng-container>
-</div>
-<div class="banner-container">
-    <div class="images-section">
-        <div class="image-container" *ngFor="let image of images; let i = index">
-          <img [src]="images">
-        </div>
+
+    <button type="button" class="ev-see-more" (click)="onSeeMore()">
+      <span>Xem thêm</span>
+      <i class="bi bi-chevron-right" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div class="events-list" role="tabpanel">
+    <app-thisweekend-event *ngIf="selectedTab === 'thisweekend'"></app-thisweekend-event>
+    <app-thismonth-event *ngIf="selectedTab === 'thismonth'"></app-thismonth-event>
+  </div>
+
+  <div class="banner-container" *ngIf="images.length > 0">
+    <div class="image-container" *ngFor="let image of images">
+      <img [src]="image" alt="Khám phá sự kiện nổi bật trên Eventa" loading="lazy" />
     </div>
-</div>
+  </div>
+</section>

@@ -1,91 +1,110 @@
 <app-loading [show]="isLoading"></app-loading>
-<div *ngIf="!isLoading" class="account-wrapper">
 
-    <div class="sidebar">
-        <app-nav-user></app-nav-user>
+<div *ngIf="!isLoading" class="ev-section account-layout">
+  <aside class="sidebar">
+    <app-nav-user></app-nav-user>
+  </aside>
+
+  <section class="ev-card profile-panel">
+    <h1 class="profile-title">Thông tin tài khoản</h1>
+
+    <div class="profile-section">
+      <div class="profile-img-wrapper">
+        <img
+          [src]="profileForm.get('avatarUrl')?.value || '/assets/default.jpg'"
+          alt="Ảnh đại diện tài khoản"
+          width="96"
+          height="96"
+          class="profile-img"
+        />
+        <input
+          type="file"
+          id="avatarInput"
+          (change)="onFileSelected($event)"
+          accept=".jpg,.jpeg,.png"
+          hidden
+        />
+        <label for="avatarInput" class="camera-icon" aria-label="Thay đổi ảnh đại diện">
+          <i class="fas fa-camera" aria-hidden="true"></i>
+        </label>
+      </div>
+      <p class="info-text">
+        Cung cấp thông tin chính xác sẽ hỗ trợ bạn trong quá trình mua vé hoặc khi cần xác thực vé.
+      </p>
     </div>
-     
-    <div class="content">
-        <div class="account-info-container">
-            <h1 class="account-info-title">Thông tin tài khoản</h1>
 
-            <div class="profile-section">
-                <div class="profile-img-wrapper">
-                    <img
-                        [src]="profileForm.get('avatarUrl')?.value"
-                        alt="User profile photo"
-                        width="100"
-                        height="100"
-                        class="profile-img"
-                    />
+    <form class="form-section" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+      <div class="ev-field">
+        <label for="fullname" class="ev-label">Họ và tên</label>
+        <input type="text" id="fullname" class="ev-input" autocomplete="name" formControlName="fullName" />
+      </div>
 
-                    <input
-                        type="file"
-                        id="avatarInput"
-                        (change)="onFileSelected($event)"
-                        accept=".jpg,.jpeg,.png"
-                        hidden
-                    />
+      <div class="ev-field">
+        <label for="phone" class="ev-label">Số điện thoại</label>
+        <input
+          type="tel"
+          id="phone"
+          class="ev-input"
+          autocomplete="tel"
+          inputmode="tel"
+          placeholder="Nhập số điện thoại"
+          formControlName="phoneNumber"
+        />
+      </div>
 
-                    <label for="avatarInput" class="camera-icon" title="Change photo" style="cursor: pointer;">
-                        <i class="fas fa-camera"></i>
-                    </label>
-                </div>
-                <p class="info-text">
-                    Cung cấp thông tin chính xác sẽ hỗ trợ bạn trong quá trình mua vé,
-                    hoặc khi cần xác thực vé
-                </p>
-            </div>
-
-            <form class="form-section" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-                <div class="form-group">
-                    <label for="fullname">Họ và tên</label>
-                    <input type="text" id="fullname" formControlName="fullName" />
-                </div>
-
-                <div class="form-group">
-                    <label for="phone">Số điện thoại</label>
-                    <div class="phone-group">                        
-                        <input type="text" placeholder="Nhập ở đây" formControlName="phoneNumber" />
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="email" class="readonly-label">Email</label>
-                    <div class="input-with-icon">
-                        <input
-                        type="email"
-                        id="email"
-                        formControlName="email"
-                        readonly
-                        />
-                        <div class="icon-check">
-                        <i class="fas fa-check-circle"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="address">Địa chỉ</label>
-                    <input type="text" id="address" placeholder="Nhập ở đây" formControlName="address"/>
-                </div>
-
-                <div class="form-group">
-                    <label>Giới tính</label>
-                    <div class="gender-options">
-                        <label><input type="radio" name="gender" formControlName="gender" [value]="'Male'"/> Nam</label>
-                        <label><input type="radio" name="gender" formControlName="gender" [value]="'Female'"/> Nữ</label>
-                        <label><input type="radio" name="gender" formControlName="gender" [value]="'Other'" /> Khác</label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <button type="submit" class="submit-btn" >Hoàn thành</button>
-                </div>
-            </form>
+      <div class="ev-field">
+        <label for="email" class="ev-label">Email</label>
+        <div class="input-with-icon">
+          <input
+            type="email"
+            id="email"
+            class="ev-input readonly-input"
+            autocomplete="email"
+            formControlName="email"
+            readonly
+          />
+          <span class="icon-check" aria-label="Email đã xác thực">
+            <i class="fas fa-check-circle" aria-hidden="true"></i>
+          </span>
         </div>
-    </div>     
+      </div>
+
+      <div class="ev-field">
+        <label for="address" class="ev-label">Địa chỉ</label>
+        <input
+          type="text"
+          id="address"
+          class="ev-input"
+          autocomplete="street-address"
+          placeholder="Nhập địa chỉ"
+          formControlName="address"
+        />
+      </div>
+
+      <fieldset class="gender-fieldset">
+        <legend class="ev-label">Giới tính</legend>
+        <div class="gender-options">
+          <label class="radio-pill">
+            <input type="radio" name="gender" formControlName="gender" [value]="'Male'" />
+            <span>Nam</span>
+          </label>
+          <label class="radio-pill">
+            <input type="radio" name="gender" formControlName="gender" [value]="'Female'" />
+            <span>Nữ</span>
+          </label>
+          <label class="radio-pill">
+            <input type="radio" name="gender" formControlName="gender" [value]="'Other'" />
+            <span>Khác</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="ev-btn ev-btn-primary submit-btn">Lưu thay đổi</button>
+    </form>
+  </section>
 </div>
-<app-toast-notification 
+
+<app-toast-notification
   #notification
   (onClose)="onNotificationClose()">
 </app-toast-notification>

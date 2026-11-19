@@ -1,29 +1,48 @@
-<div class="event-section">
-  <h2 class="section-title">Dành cho bạn</h2>
-  <div class="event-carousel">
-    <!-- Nút trái -->
-    <button *ngIf="canScrollLeft" class="scroll-btn left" (click)="scrollLeft()">
-      <span class="material-icons">chevron_left</span>
+<section class="ev-section">
+  <div class="ev-section-header">
+    <h2 class="ev-section-title">Dành cho bạn</h2>
+  </div>
+
+  <div class="ev-card-rail-wrap">
+    <button
+      *ngIf="canScrollLeft"
+      type="button"
+      class="ev-carousel-btn left"
+      (click)="scrollLeft()"
+      aria-label="Xem gợi ý trước"
+    >
+      <span class="material-icons" aria-hidden="true">chevron_left</span>
     </button>
 
-    <!-- Danh sách sự kiện -->
-    <div class="event-list">
-      <div class="event-card" *ngFor="let item of visibleItems" (click)="goToEventDetail(item.id)">
-        <img [src]="item.backgroundUrl || '/assets/default.jpg'" class="event-image"  />
-        <div class="event-details">
-          <div class="event-title">{{ item.eventName }}</div>
-          <div class="event-price">Từ {{ item.price | number:'1.0-0'}} VNĐ</div>
-          <div class="event-date">
-            <span class="material-icons">calendar_today</span>
-            <span>{{ item.startTime | date: 'dd/MM/yyyy' }}</span>
+    <div class="ev-card-rail">
+      <article class="ev-event-card" *ngFor="let item of visibleItems">
+        <button type="button" class="ev-event-trigger" (click)="goToEventDetail(item.id)">
+          <img
+            [src]="item.backgroundUrl || '/assets/default.jpg'"
+            [alt]="item.eventName"
+            class="ev-event-media"
+            loading="lazy"
+          />
+          <div class="ev-event-body">
+            <h3 class="ev-event-title">{{ item.eventName }}</h3>
+            <p class="ev-event-price">Từ {{ item.price | number:'1.0-0' }} VNĐ</p>
+            <p class="ev-event-meta">
+              <span class="material-icons" aria-hidden="true">calendar_today</span>
+              <span>{{ item.startTime | date: 'dd/MM/yyyy' }}</span>
+            </p>
           </div>
-        </div>
-      </div>
-
-      <!-- Nút phải -->
-      <button *ngIf="canScrollRight" class="scroll-btn right" (click)="scrollRight()">
-        <span class="material-icons">chevron_right</span>
-      </button>
+        </button>
+      </article>
     </div>
+
+    <button
+      *ngIf="canScrollRight"
+      type="button"
+      class="ev-carousel-btn right"
+      (click)="scrollRight()"
+      aria-label="Xem thêm gợi ý"
+    >
+      <span class="material-icons" aria-hidden="true">chevron_right</span>
+    </button>
   </div>
-</div>
+</section>

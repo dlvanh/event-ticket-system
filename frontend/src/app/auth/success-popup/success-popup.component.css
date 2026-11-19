@@ -1,44 +1,62 @@
+.success-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.success-dialog {
+  inline-size: min(23rem, 100%);
+  padding: 2rem 1.5rem;
+  background: var(--ev-surface);
+  border-radius: var(--ev-radius-xl);
+  box-shadow: var(--ev-shadow-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .spinner-wrapper {
-    position: relative;
-    width: 3rem;
-    height: 3rem;
-  }
-  
-  .spinner-border {
-    width: 100%;
-    height: 100%;
-  }
+  position: relative;
+  inline-size: 4rem;
+  block-size: 4rem;
+  display: grid;
+  place-items: center;
+}
 
-  .spinner-border span{
-    text-align: center;
-    justify-content: center;
-  }
-  
-  .countdown-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-weight: bold;
-    font-size: 1rem;
-    color: #28a745;
-  }
-  
-  .btn {
-    width: 100%;
-    padding: 12px;
-    background: #ff7e42;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.2s ease;
-    margin-top: 20px;
-  }
+.spinner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--ev-radius-pill);
+  border: 3px solid var(--ev-surface-subtle);
+  border-top-color: var(--ev-success);
+  animation: spin 900ms linear infinite;
+}
 
-  .btn:hover{
-    background: #e55d22;
-    transform: translateY(-2px);
-  }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.countdown-text {
+  font-family: var(--ev-font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ev-success);
+}
+
+.success-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ev-ink);
+}
+
+.success-desc {
+  font-size: 0.9375rem;
+  color: var(--ev-ink-muted);
+}

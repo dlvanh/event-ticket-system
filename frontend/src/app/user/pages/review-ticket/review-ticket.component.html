@@ -1,80 +1,110 @@
 <div class="event-detail-container" *ngIf="eventData">
-  <!-- Hero Section -->
-  <div class="hero" [style.backgroundImage]="'url(' + eventData.backgroundUrl + ')'">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <h1>{{ eventData.eventName }}</h1>
-      <p class="event-meta">
-        📅 {{ eventData.startTime | date:'dd-MM-yyyy' }} | ⏰ {{ eventData.startTime | date:'HH:mm' }}
-      </p>
-      <p class="event-meta">📍 {{ eventData.address }}</p>
+  <section class="hero" [style.backgroundImage]="'url(' + eventData.backgroundUrl + ')'">
+    <div class="hero-overlay">
+      <div class="ev-section hero-content">
+        <h1>{{ eventData.eventName }}</h1>
+        <p class="event-meta">
+          <span><i class="bi bi-calendar4" aria-hidden="true"></i> {{ eventData.startTime | date:'dd-MM-yyyy · HH:mm' }}</span>
+          <span><i class="bi bi-geo-alt" aria-hidden="true"></i> {{ eventData.address }}</span>
+        </p>
+      </div>
     </div>
-  </div>
+  </section>
 
-    <!-- Review Section -->
-    <div class="review-section">
-        <div class="review-left">
-            <h2>Đánh giá từ người tham gia</h2>
-            <div class="review-list">
-              <div class="review-card" *ngFor="let r of reviews">
-                <img class="avatar" [src]="r.userProfilePicture || 'assets/default-avatar.png'" />
-                <div class="review-content">
-                  <div class="review-header">
-                    <strong>{{ r.userFullName }}</strong>
-                    <div class="review-actions">
-                      <span class="stars">
-                        <ng-container *ngFor="let s of [].constructor(5); let i = index">
-                          <span [class.filled]="i < r.rating">★</span>
-                        </ng-container>
-                      </span>
-                      <span class="menu-icon" (click)="toggleMenu(r.reviewId, $event)">⋮</span>
-                      <div class="menu" *ngIf="activeMenuId === r.reviewId">
-                        <button (click)="deleteReview(r)">Xóa</button>
-                      </div>
-                    </div>
-                  </div>
-                  <p class="review-date">{{ r.reviewDate | date:'dd-MM-yyyy' }}</p>
-                  <p class="review-text">{{ r.comment }}</p>
+  <div class="ev-section review-section">
+    <section class="ev-card review-left">
+      <h2 class="section-heading">Đánh giá từ người tham gia</h2>
+
+      <div class="review-list" *ngIf="reviews.length > 0; else noReviews">
+        <article class="review-card" *ngFor="let r of reviews">
+          <img
+            class="avatar"
+            [src]="r.userProfilePicture || 'assets/default-avatar.png'"
+            alt="Ảnh đại diện {{ r.userFullName }}"
+            loading="lazy"
+          />
+          <div class="review-content">
+            <div class="review-header">
+              <div>
+                <strong>{{ r.userFullName }}</strong>
+                <p class="review-date">{{ r.reviewDate | date:'dd-MM-yyyy' }}</p>
+              </div>
+              <div class="review-actions">
+                <span class="stars" [attr.aria-label]="r.rating + ' trên 5 sao'">
+                  <ng-container *ngFor="let s of [].constructor(5); let i = index">
+                    <span [class.filled]="i < r.rating" aria-hidden="true">★</span>
+                  </ng-container>
+                </span>
+                <button
+                  type="button"
+                  class="menu-btn"
+                  (click)="toggleMenu(r.reviewId, $event)"
+                  [attr.aria-expanded]="activeMenuId === r.reviewId"
+                  aria-label="Tùy chọn đánh giá"
+                >
+                  <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+                </button>
+                <div class="menu" *ngIf="activeMenuId === r.reviewId">
+                  <button type="button" class="menu-delete-btn" (click)="deleteReview(r)">Xóa</button>
                 </div>
               </div>
             </div>
-        </div>
-        <div class="review-right">
-          <h2>{{ isEditing ? 'Chỉnh sửa đánh giá' : 'Gửi đánh giá của bạn' }}</h2>
-          <div class="rating-stars">
-            <span
-              class="star"
-              *ngFor="let s of [].constructor(5); let i = index"
-              [class.active]="i < selectedRating"
-              (click)="selectRating(i + 1)"
-            >★</span>
+            <p class="review-text">{{ r.comment }}</p>
           </div>
-          <textarea
-            placeholder="Chia sẻ cảm nhận của bạn..."
-            [(ngModel)]="comment"
-          ></textarea>
-            <button (click)="submitReview()" class="btn-edit">
-              {{ isEditing ? 'Cập nhật đánh giá' : 'Gửi đánh giá' }}
-            </button>
-        </div>
-    </div>
+        </article>
+      </div>
+      <ng-template #noReviews>
+        <p class="empty-msg">Chưa có đánh giá nào cho sự kiện này.</p>
+      </ng-template>
+    </section>
 
-  <!-- Popup xác nhận -->
-  <div class="popup-overlay" *ngIf="showDeletePopup">
-    <div class="popup">
-      <h3>Xác nhận xóa</h3>
+    <section class="ev-card review-right">
+      <h2 class="section-heading">{{ isEditing ? 'Chỉnh sửa đánh giá' : 'Gửi đánh giá của bạn' }}</h2>
+
+      <div class="rating-stars" role="group" aria-label="Chọn số sao đánh giá">
+        <button
+          type="button"
+          class="star-btn"
+          *ngFor="let s of [].constructor(5); let i = index"
+          [class.active]="i < selectedRating"
+          [attr.aria-pressed]="i < selectedRating"
+          [attr.aria-label]="(i + 1) + ' sao'"
+          (click)="selectRating(i + 1)"
+        >
+          ★
+        </button>
+      </div>
+
+      <div class="ev-field">
+        <label for="review-comment" class="visually-hidden">Cảm nhận của bạn</label>
+        <textarea
+          id="review-comment"
+          rows="4"
+          class="ev-input review-textarea"
+          placeholder="Chia sẻ cảm nhận của bạn..."
+          [(ngModel)]="comment"
+        ></textarea>
+      </div>
+
+      <button type="button" (click)="submitReview()" class="ev-btn ev-btn-primary submit-full">
+        {{ isEditing ? 'Cập nhật đánh giá' : 'Gửi đánh giá' }}
+      </button>
+    </section>
+  </div>
+
+  <div class="popup-overlay" *ngIf="showDeletePopup" role="dialog" aria-modal="true" aria-labelledby="delete-review-title">
+    <div class="ev-card popup">
+      <h3 id="delete-review-title">Xác nhận xóa</h3>
       <p>Bạn có chắc muốn xóa đánh giá này?</p>
       <div class="popup-buttons">
-        <button class="btn-cancel" (click)="cancelDelete()">Hủy</button>
-        <button class="btn-confirm" (click)="confirmDelete()">Xóa</button>
+        <button type="button" class="ev-btn ev-btn-secondary" (click)="cancelDelete()">Hủy</button>
+        <button type="button" class="ev-btn ev-btn-primary" (click)="confirmDelete()">Xóa</button>
       </div>
     </div>
   </div>
 </div>
-<app-toast-notification 
+
+<app-toast-notification
   #notification
   (onClose)="onNotificationClose()">
 </app-toast-notification>
-
-
-

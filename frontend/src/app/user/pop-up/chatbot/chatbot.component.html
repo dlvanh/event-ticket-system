@@ -1,38 +1,78 @@
-<div  class="chatbot-container" [class.open]="isOpen">
-  <div class="chatbot-icon" (click)="toggleChat()" title="Chat với Eventa">
-    <i class="fa-regular fa-comment-dots"></i>
-  </div>
+<div class="chatbot-container" [class.open]="isOpen">
+  <button
+    type="button"
+    class="chatbot-icon"
+    (click)="toggleChat()"
+    [attr.aria-expanded]="isOpen"
+    aria-controls="eventa-chatbox"
+    aria-label="Mở trợ lý ảo Eventa"
+  >
+    <i class="fa-regular" [ngClass]="isOpen ? 'fa-circle-xmark' : 'fa-comment-dots'" aria-hidden="true"></i>
+  </button>
 
-  <div class="chatbox" *ngIf="isOpen" >
-    <div class="chat-header">
-      <img src="assets/logoeventa.png" alt="Eventa Logo" class="logo-badge" />
-      <button (click)="toggleChat()">✕</button>
-    </div>
+  <section id="eventa-chatbox" class="chatbox" *ngIf="isOpen" aria-label="Trợ lý ảo Eventa">
+    <header class="chat-header">
+      <div class="chat-brand">
+        <img src="assets/logoeventa-white.png" alt="Eventa" class="logo-badge" width="84" height="24" />
+        <span class="chat-status">Trợ lý 24/7</span>
+      </div>
+      <button type="button" class="close-btn" (click)="toggleChat()" aria-label="Đóng hộp thoại chat">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+      </button>
+    </header>
 
     <div class="chat-body" #chatContainer>
       <div *ngFor="let msg of messages" class="message-wrapper" [ngClass]="msg.from">
         <div class="message-bubble">{{ msg.text }}</div>
       </div>
-    </div>
 
-    <div *ngIf="isLoading" class="loading-container">
+      <div *ngIf="isLoading" class="loading-container" role="status" aria-label="Đang trả lời">
         <div class="dot-loader">
-            <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
         </div>
-    </div>
-
-    <div class="chat-input">
-      <button class="suggestion-toggle" (click)="toggleSuggestions()">
-        <i class="fas fa-bars"></i>
-      </button>
-
-      <div class="suggestions-box" *ngIf="showSuggestions">
-        <p class="suggestion" *ngFor="let question of suggestedQuestions" (click)="sendSuggestedQuestion(question)">
-          {{ question }}
-        </p>
       </div>
-      <input [(ngModel)]="userMessage" placeholder="Nhập tin nhắn" (keydown.enter)="sendMessage()" aria-label="Nhập tin nhắn của bạn" />
-      <i class="fa-solid fa-paper-plane" (click)="sendMessage()" aria-label="Gửi tin nhắn"></i>
     </div>
-  </div>
+
+    <div class="chat-footer">
+      <div class="suggestions-box" *ngIf="showSuggestions">
+        <button
+          type="button"
+          class="suggestion"
+          *ngFor="let question of suggestedQuestions"
+          (click)="sendSuggestedQuestion(question)"
+        >
+          {{ question }}
+        </button>
+      </div>
+
+      <div class="chat-input">
+        <button
+          type="button"
+          class="suggestion-toggle"
+          (click)="toggleSuggestions()"
+          [attr.aria-expanded]="showSuggestions"
+          aria-label="Câu hỏi gợi ý"
+        >
+          <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+
+        <label for="chatbot-message-input" class="visually-hidden">Nhập tin nhắn cho Eventa</label>
+        <input
+          id="chatbot-message-input"
+          [(ngModel)]="userMessage"
+          placeholder="Nhập câu hỏi của bạn..."
+          (keydown.enter)="!$any($event).isComposing && sendMessage()"
+        />
+
+        <button
+          type="button"
+          class="send-btn"
+          (click)="sendMessage()"
+          aria-label="Gửi tin nhắn"
+        >
+          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </section>
 </div>

@@ -1,39 +1,80 @@
-<header class="header">
+<header class="site-header">
   <div class="header-container">
-    <a routerLink="/" class="logo" (click)="goToHome()">
-      <img src="assets/logoeventa.png" alt="Eventa Logo" class="logo-badge" />
+    <a routerLink="/" class="logo" (click)="goToHome()" aria-label="Eventa - Trang chủ">
+      <img src="assets/logoeventa.png" alt="Eventa" class="logo-badge" width="144" height="40" />
     </a>
 
-    <div class="search-container">
-      <input type="text" 
-      class="search-box" 
-      placeholder="Bạn tìm gì hôm nay?" 
-      [(ngModel)]="searchKeyword"
-      (keydown.enter)="searchByEventName()"
-      />
-      <i class="fas fa-search search-icon"
-      (click)="searchByEventName()"></i>
-    </div>
+    <search class="search-region">
+      <form class="search-container" (ngSubmit)="searchByEventName()">
+        <label for="header-search-input" class="visually-hidden">Tìm kiếm sự kiện</label>
+        <i class="fas fa-search search-icon" aria-hidden="true"></i>
+        <input
+          id="header-search-input"
+          name="searchKeyword"
+          type="search"
+          class="search-box"
+          placeholder="Tìm sự kiện, nghệ sĩ, địa điểm..."
+          [(ngModel)]="searchKeyword"
+        />
+        <button type="submit" class="search-submit" aria-label="Tìm kiếm">
+          <i class="bi bi-arrow-right" aria-hidden="true"></i>
+        </button>
+      </form>
+    </search>
 
-    <nav class="nav-actions" *ngIf="!isLoggedIn()">
-      <div class="auth-links">
-        <a (click)="goToLogin()" class="auth-link login">Đăng nhập</a>
-        <div class="divider"></div>
-        <a (click)="goToRegister()" class="auth-link register">Đăng ký</a>
-      </div>
+    <nav class="nav-actions" aria-label="Tài khoản" *ngIf="!isLoggedIn()">
+      <button type="button" (click)="goToLogin()" class="ev-btn ev-btn-secondary nav-btn">
+        Đăng nhập
+      </button>
+      <button type="button" (click)="goToRegister()" class="ev-btn ev-btn-primary nav-btn">
+        Đăng ký
+      </button>
     </nav>
 
-    <div class="user-profile" *ngIf="isLoggedIn()" (click)="toggleDropdown()" [class.active]="isDropdownOpen">
-      <div class="profile-container">
-        <img [src]="avatarUrl" *ngIf="avatarUrl" alt="User Avatar" class="user-avatar" />
+    <div class="user-profile" *ngIf="isLoggedIn()">
+      <button
+        type="button"
+        class="profile-container"
+        (click)="toggleDropdown()"
+        [attr.aria-expanded]="isDropdownOpen"
+        aria-controls="user-account-menu"
+      >
+        <img
+          [src]="avatarUrl"
+          *ngIf="avatarUrl"
+          alt=""
+          class="user-avatar"
+          width="36"
+          height="36"
+        />
+        <span class="avatar-fallback" *ngIf="!avatarUrl" aria-hidden="true">
+          <i class="bi bi-person-fill"></i>
+        </span>
         <span class="account-label">Tài khoản</span>
-        <i class="bi bi-caret-down-fill"></i>
-      </div>
-      <div class="dropdown-menu" [class.show]="isDropdownOpen">
-        <a class="dropdown-item" (click)="goToMyTickets()">Vé đã mua</a>
-        <a href="/user-profile" class="dropdown-item">Tài khoản của tôi</a>
-        <a class="dropdown-item logout" (click)="logout()">Đăng xuất</a>
-      </div>
+        <i class="bi bi-chevron-down chevron-icon" [class.rotated]="isDropdownOpen" aria-hidden="true"></i>
+      </button>
+
+      <ul id="user-account-menu" class="dropdown-menu" [class.show]="isDropdownOpen" [hidden]="!isDropdownOpen">
+        <li>
+          <button type="button" class="dropdown-item" (click)="goToMyTickets(); isDropdownOpen = false">
+            <i class="bi bi-ticket-perforated" aria-hidden="true"></i>
+            <span>Vé đã mua</span>
+          </button>
+        </li>
+        <li>
+          <a href="/user-profile" class="dropdown-item">
+            <i class="bi bi-person-gear" aria-hidden="true"></i>
+            <span>Tài khoản của tôi</span>
+          </a>
+        </li>
+        <li class="dropdown-divider" role="separator"></li>
+        <li>
+          <button type="button" class="dropdown-item logout" (click)="logout()">
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+            <span>Đăng xuất</span>
+          </button>
+        </li>
+      </ul>
     </div>
   </div>
 </header>

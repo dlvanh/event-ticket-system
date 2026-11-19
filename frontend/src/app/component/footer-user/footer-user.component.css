@@ -1,164 +1,129 @@
 .footer {
-  background-color: #DDDDE3;
-  padding: 40px 0 20px;
-  font-family: 'Inter', sans-serif;
-  color: #333;
-  border-top: 1px solid #e0e0e0;
+  background-color: var(--ev-surface-dark);
+  color: #cbd5e1;
+  padding-block: 3rem 1.5rem;
+  border-block-start: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .footer-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+  inline-size: min(100% - 2rem, var(--ev-container-max));
+  margin-inline: auto;
   display: grid;
   grid-template-columns: 1.4fr 1fr 1fr;
-  gap: 40px;
-  align-items: flex-start;
+  gap: 2.5rem;
+  align-items: start;
 }
 
-/* Left Section */
-.footer-left {
+.footer-brand {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1.5rem;
 }
 
-.contact-section h2 {
-  font-size: 14px;
-  font-weight: bold;
-  margin: 0 0 8px 0;
-  color: #333;
-}
-
-.contact-section p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.hotline-number {
-  font-size: 14px;
-  font-weight: bold;
-  margin-top: 5px;
-}
-
-.email {
-  color: black !important;
-  cursor: pointer;
-}
-
-.logo-section {
-  margin-top: 5px;
-}
-
-.logo {
-  padding: 15px 20px;
-  border-radius: 5px;
-  margin-bottom: 5px;
-  display: inline-block;
+.logo-image {
+  inline-size: 9rem;
+  block-size: auto;
+  margin-block-end: 0.75rem;
 }
 
 .company-description {
-  font-size: 12px;
-  line-height: 1.4;
-  margin: 0;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  max-inline-size: 36ch;
 }
 
-/* Center Section */
-.footer-center {
+.contact-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-section h2,
+.footer-col h2 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  margin-block-end: 0.5rem;
+}
+
+.footer-col h3 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #94a3b8;
+  margin-block: 0 0.625rem;
+}
+
+.section-spacer {
+  margin-block-start: 1.75rem;
+}
+
+.contact-section p {
+  font-size: 0.875rem;
+  color: #cbd5e1;
   display: flex;
-  flex-direction: column;
-  gap: 25px;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.service-section h3 {
-  font-size: 16px;
-  font-weight: bold;
-  margin: 0 0 10px 0;
+.hotline-number {
+  font-size: 1.125rem !important;
+  font-weight: 700;
+  color: #fb923c !important;
+  margin-block-start: 0.25rem;
 }
 
-.service-section ul {
+.footer-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
 }
 
-.service-section li {
-  margin-bottom: 8px;
+.footer-link,
+.footer-action-link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 2rem;
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0.125rem 0;
+  text-align: start;
   cursor: pointer;
+  transition: color var(--ev-transition);
 }
 
-.service-section a {
-  text-decoration: none;
-  font-size: 14px;
-  line-height: 1.4;
-  color:black;
+.footer-link:hover,
+.footer-action-link:hover {
+  color: #fb923c;
+  text-decoration: underline;
+  text-underline-offset: 0.25rem;
 }
 
-.service-section a:hover {
-  color: #ff7e42;
+.footer-bottom {
+  inline-size: min(100% - 2rem, var(--ev-container-max));
+  margin-inline: auto;
+  margin-block-start: 2.5rem;
+  padding-block-start: 1.25rem;
+  border-block-start: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.8125rem;
+  color: #94a3b8;
 }
 
-.footer-right {
-  display: flex;
-  flex-direction: column;
-  gap:15px;
-}
-
-.policy-section h3 {
-  font-size: 16px;
-  font-weight: bold;
-  margin: 0 0 15px 0;
-}
-
-.policy-header h4 {
-  font-size: 14px;
-  font-weight: bold;
-  margin: 0 0 10px 0;
-}
-
-.policy-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  color:black;
-}
-
-.policy-list li {
-  margin-bottom: 8px;
-}
-
-.policy-list a {
-  text-decoration: none;
-  font-size: 14px;
-  line-height: 1.4;
-  color:black;
-}
-
-.policy-list a:hover {
-  color: #ff7e42;
-}
-
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .footer-container {
-    grid-template-columns: 1fr;
-    gap: 30px;
-  }
-  
-  .email-input {
-    margin-bottom: 10px;
-  }
-}
-
+/* Tablet first, then mobile so mobile rules take precedence */
 @media (max-width: 992px) {
   .footer-container {
     grid-template-columns: 1fr 1fr;
-    gap: 30px;
   }
-  
-  .footer-right {
-    grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
 }

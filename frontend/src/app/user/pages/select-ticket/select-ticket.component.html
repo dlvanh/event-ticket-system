@@ -1,62 +1,89 @@
-<div class="container">
-  <div class="left-panel">
-    <div class="header">
-      <button class="back-btn" (click)="backToDetails(eventData.id)"><i class="bi bi-arrow-left"></i> Trở về</button>
-      <h2>Chọn vé</h2>
-    </div>
+<div class="ev-section select-ticket-page">
+  <div class="select-grid">
+    <section class="ev-card ticket-selector-card">
+      <div class="card-top-bar">
+        <button type="button" class="ev-btn ev-btn-secondary back-btn" (click)="backToDetails(eventData.id)">
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
+          <span>Trở về</span>
+        </button>
+        <h1 class="page-heading">Chọn vé</h1>
+      </div>
 
-    <div class="labels">
-      <span>Loại vé</span>
-      <span>Số lượng</span>
-    </div>
+      <div class="table-labels" aria-hidden="true">
+        <span>Loại vé</span>
+        <span>Số lượng</span>
+      </div>
 
-    <div class="ticket-list">
-      <div class="ticket-item" *ngFor="let ticket of eventData.ticketPrices">
-        <div>
-          <div class="ticket-name">{{ ticket.type }}</div>
-          <div class="ticket-price">{{ ticket.price | number:'1.0-3' }} VNĐ</div>
+      <div class="ticket-list">
+        <div class="ticket-item" *ngFor="let ticket of eventData.ticketPrices">
+          <div class="ticket-meta">
+            <div class="ticket-name">{{ ticket.type }}</div>
+            <div class="ticket-price">{{ ticket.price | number:'1.0-3' }} VNĐ</div>
+          </div>
+
+          <div class="quantity-controls">
+            <button
+              type="button"
+              class="qty-btn"
+              (click)="decreaseQuantity(ticket)"
+              [disabled]="ticket.quantity <= 0"
+              [attr.aria-label]="'Giảm số lượng vé ' + ticket.type"
+            >
+              −
+            </button>
+            <input
+              type="text"
+              class="qty-input"
+              [value]="ticket.quantity"
+              readonly
+              [attr.aria-label]="'Số lượng vé ' + ticket.type"
+            />
+            <button
+              type="button"
+              class="qty-btn"
+              (click)="increaseQuantity(ticket)"
+              [disabled]="ticket.quantity >= 5"
+              [attr.aria-label]="'Tăng số lượng vé ' + ticket.type"
+            >
+              +
+            </button>
+          </div>
         </div>
-        <div class="quantity-controls">
-          <button (click)="decreaseQuantity(ticket)">-</button>
-          <input [value]="ticket.quantity" readonly />
-          <button (click)="increaseQuantity(ticket)" [disabled]="ticket.quantity >= 5" >+</button>
+      </div>
+    </section>
+
+    <aside class="ev-card summary-card">
+      <h2 class="summary-title">{{ eventData.eventName }}</h2>
+
+      <div class="match-info">
+        <p><i class="bi bi-calendar-fill" aria-hidden="true"></i> <span>{{ eventData.startTime | date:'HH:mm · dd-MM-yyyy' }}</span></p>
+        <p><i class="bi bi-geo-alt" aria-hidden="true"></i> <span>{{ eventData.address }}</span></p>
+      </div>
+
+      <div class="price-summary">
+        <h3>Giá vé</h3>
+        <div class="summary-item" *ngFor="let ticket of eventData.ticketPrices">
+          <span>{{ ticket.type }}</span>
+          <span class="num">{{ ticket.price | number:'1.0-3' }} VNĐ</span>
         </div>
       </div>
-    </div>
-  </div>
 
-  <div class="right-panel">
-    <div class="header-right">
-      <h3>{{ eventData.eventName }}</h3>  
-    </div>
-
-    <div class="match-info">
-      <p><strong><i class="bi bi-calendar-fill"></i></strong>{{ eventData.startTime | date:'HH:mm dd-MM-yyyy' }}</p>
-      <p><strong><i class="bi bi-geo-alt"></i></strong>{{ eventData.address }}</p>
-    </div>
-
-    <div class="price-summary">
-      <h4>Giá vé</h4>
-      <div class="summary-item" *ngFor="let ticket of eventData.ticketPrices">
-        <span>{{ ticket.type }}</span>
-        <span>{{ ticket.price | number:'1.0-3' }} VNĐ</span>
+      <div class="total-amount">
+        <div class="ticket-count-row">
+          <i class="bi bi-ticket-perforated" aria-hidden="true"></i>
+          <span>Đã chọn: <strong>x{{ totalTicketCount }}</strong> vé</span>
+        </div>
+        <button type="button" class="ev-btn ev-btn-primary checkout-btn" [disabled]="!hasSelection" (click)="proceedToOrder()">
+          <span *ngIf="!hasSelection">Vui lòng chọn vé</span>
+          <span *ngIf="hasSelection">Tiếp tục · {{ totalAmount | number }} đ</span>
+          <i class="bi bi-chevron-double-right" aria-hidden="true"></i>
+        </button>
       </div>
-    </div>
-
-    
-    <div class="total-amount">
-      <div class="ticket-icon-wrapper">
-          <i class="bi bi-ticket-perforated icon" ></i>
-          <span class="ticket-count">x{{ totalTicketCount }}</span>
-      </div>
-      <button class="checkout-btn" [disabled]="!hasSelection" (click)="proceedToOrder()">
-        <span *ngIf="!hasSelection">Vui lòng chọn vé <i class="bi bi-chevron-double-right"></i></span>
-        <span *ngIf="hasSelection">Tổng: {{ totalAmount | number }} đ <i class="bi bi-chevron-double-right"></i></span>
-      </button>
-    </div>
+    </aside>
   </div>
 </div>
-<app-toast-notification 
+
+<app-toast-notification
   #notification
   (onClose)="onNotificationClose()">
 </app-toast-notification>

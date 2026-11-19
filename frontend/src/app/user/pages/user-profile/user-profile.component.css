@@ -1,146 +1,127 @@
-.account-wrapper {
-  display: flex;
-  background: linear-gradient(135deg, #fff6f2, #ffffff);
-  color: white;
-  font-family: 'Inter',sans-serif;
+.account-layout {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  padding-block: 2rem 3rem;
 }
 
-.sidebar {
-  width: 270px;
+.profile-panel {
+  padding: 1.75rem;
 }
 
-.content {
-  flex: 1;
-}
-
-.account-info-container {
-  max-width: 28rem;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
-
-.account-info-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-bottom: 0.75rem;
-  text-align: center;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #4b5563;
-  color: black;
+.profile-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ev-ink);
+  margin-block-end: 1.5rem;
 }
 
 .profile-section {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-top: 1.5rem;
+  gap: 1.25rem;
+  padding-block-end: 1.5rem;
+  margin-block-end: 1.5rem;
+  border-block-end: 1px solid var(--ev-border);
 }
 
 .profile-img-wrapper {
   position: relative;
+  inline-size: 6rem;
+  block-size: 6rem;
+  flex-shrink: 0;
 }
 
 .profile-img {
-  width: 100px;
-  height: 100px;
-  border-radius: 9999px;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: var(--ev-radius-pill);
   object-fit: cover;
+  border: 2px solid var(--ev-border);
 }
 
 .camera-icon {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  background-color: #ff7e42;
-  padding: 0.375rem;
-  border-radius: 9999px;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--ev-radius-pill);
+  background-color: var(--ev-primary);
+  color: #ffffff;
+  border: 2px solid #ffffff;
   cursor: pointer;
-  color: black;
-  font-size: 0.75rem;
 }
 
 .info-text {
-  text-align: center;
-  font-size: 16px;
-  margin-top: 1rem;
-  max-width: 18rem;
-  line-height: 1.5;
-  color: black;
+  font-size: 0.9375rem;
+  color: var(--ev-ink-muted);
+  max-inline-size: 45ch;
 }
 
 .form-section {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-weight: 550;
-  color: black;
-  margin-bottom: 0.25rem;
-}
-
-input,
-select {
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  border: 1px solid #d1d5db;
-  outline: none;
-  color: #1f2937;
-}
-
-.phone-group {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.phone-group select,
-.phone-group input {
-  flex: 1;
-  background-color: white;
-}
-
-.readonly-label {
-  color: black;
+  max-inline-size: 34rem;
 }
 
 .input-with-icon {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.input-with-icon input {
-  width: 100%;
-  padding-right: 2rem;
-  background-color: #f7f9fc;
-  color: #9ca3af;
-  box-sizing: border-box;
-  cursor: not-allowed;
+.readonly-input {
+  background-color: var(--ev-surface-subtle);
+  color: var(--ev-ink-muted);
+  padding-inline-end: 2.5rem;
 }
 
 .icon-check {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0.75rem;
-  display: flex;
-  align-items: center;
-  color: #22c55e;
+  inset-inline-end: 0.875rem;
+  color: var(--ev-success);
 }
 
-.submit-btn {
-  background-color: #ff7e42;
-  color: white;
-  padding: 0.6rem 1rem;
+.gender-fieldset {
   border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.gender-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-block-start: 0.5rem;
+}
+
+.radio-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-block-size: 2.5rem;
+  padding: 0.375rem 1rem;
+  border: 1px solid var(--ev-border-strong);
+  border-radius: var(--ev-radius-pill);
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  width: 100%;
-  margin-top: 1rem;
+}
+
+.radio-pill input {
+  accent-color: var(--ev-primary);
+}
+
+@media (max-width: 820px) {
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-section {
+    flex-direction: column;
+    text-align: center;
+  }
 }

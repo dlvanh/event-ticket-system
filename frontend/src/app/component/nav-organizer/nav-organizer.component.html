@@ -1,68 +1,105 @@
 <div class="organizer-layout">
-  <nav class="sidebar">
+  <aside class="sidebar" aria-label="Menu Ban tổ chức">
     <div class="logo">
-    <img src="assets/logoeventa-white.png" alt="Eventa Logo"/>
-  </div>
-    <ul class="nav-links">
-      <li>
-        <a (click)="goToEvents()" class="nav-item" [class.active]="currentRoute.startsWith('/organizer/events')">
-        <i class="bi bi-calendar-fill"></i>          
-        <span>Sự kiện của tôi</span>
-        </a>
-      </li>
-      <li>
-        <a (click)="goToExportFile()" class="nav-item" [class.active]="currentRoute.startsWith('/organizer/export-file')">
-        <i class="bi bi-folder-fill"></i>
-        <span>Quản lý báo cáo</span>
-        </a>
-      </li>
-      <li>
-        <a (click)="goToReviewEvent()" class="nav-item" [class.active]="currentRoute.startsWith('/organizer/review-event')">
-        <i class="bi bi-star-fill"></i>
-        <span>Đánh giá sự kiện</span>
-        </a>
-      </li>
-      <li>
-        <a (click)="goToLegalDocument()" class="nav-item" [class.active]="currentRoute.startsWith('/organizer/legal-document')">
-        <i class="bi bi-file-text-fill"></i>
-        <span>Điều khoản cho Ban tổ chức</span>
-        </a>
-      </li>
-    </ul>
-  </nav>
+      <img src="assets/logoeventa-white.png" alt="Eventa" width="160" height="44" />
+    </div>
+
+    <nav aria-label="Điều hướng Ban tổ chức">
+      <ul class="nav-links">
+        <li>
+          <button
+            type="button"
+            (click)="goToEvents()"
+            class="nav-item"
+            [class.active]="currentRoute.startsWith('/organizer/events')"
+            [attr.aria-current]="currentRoute.startsWith('/organizer/events') ? 'page' : null"
+          >
+            <i class="bi bi-calendar-event" aria-hidden="true"></i>
+            <span>Sự kiện của tôi</span>
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            (click)="goToExportFile()"
+            class="nav-item"
+            [class.active]="currentRoute.startsWith('/organizer/export-file')"
+            [attr.aria-current]="currentRoute.startsWith('/organizer/export-file') ? 'page' : null"
+          >
+            <i class="bi bi-folder2-open" aria-hidden="true"></i>
+            <span>Quản lý báo cáo</span>
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            (click)="goToReviewEvent()"
+            class="nav-item"
+            [class.active]="currentRoute.startsWith('/organizer/review-event')"
+            [attr.aria-current]="currentRoute.startsWith('/organizer/review-event') ? 'page' : null"
+          >
+            <i class="bi bi-star" aria-hidden="true"></i>
+            <span>Đánh giá sự kiện</span>
+          </button>
+        </li>
+        <li>
+          <button
+            type="button"
+            (click)="goToLegalDocument()"
+            class="nav-item"
+            [class.active]="currentRoute.startsWith('/organizer/legal-document')"
+            [attr.aria-current]="currentRoute.startsWith('/organizer/legal-document') ? 'page' : null"
+          >
+            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+            <span>Điều khoản cho Ban tổ chức</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </aside>
 
   <div class="main-content">
-    <nav class="nav-header">
+    <header class="nav-header">
       <div class="header-actions">
-        <button class="create-event-btn" 
-        (click)="goToCreateEvent()" [class.active]="currentRoute === '/organizer/create-event'">
-          <i class="bi bi-plus-circle"></i>
+        <button
+          type="button"
+          class="ev-btn ev-btn-primary create-event-btn"
+          (click)="goToCreateEvent()"
+          [class.active]="currentRoute === '/organizer/create-event'"
+        >
+          <i class="bi bi-plus-circle" aria-hidden="true"></i>
           <span>Tạo sự kiện</span>
         </button>
 
         <div class="user-dropdown">
-          <div class="user-info">
+          <button type="button" class="user-info" aria-haspopup="true">
+            <i class="bi bi-person-circle" aria-hidden="true"></i>
             <span class="user-name">Tài khoản</span>
-            <i class="bi bi-caret-down-fill"></i>
-          </div>
+            <i class="bi bi-chevron-down" aria-hidden="true"></i>
+          </button>
 
           <ul class="dropdown-menu">
             <li>
-              <a (click)="goToProfile()" class="nav-item important-action" [class.active]="currentRoute.startsWith('/organizer/organizer-profile')">
-                <i class="bi bi-person"></i>         
+              <button
+                type="button"
+                (click)="goToProfile()"
+                class="dropdown-item"
+                [class.active]="currentRoute.startsWith('/organizer/organizer-profile')"
+              >
+                <i class="bi bi-person" aria-hidden="true"></i>
                 <span>Hồ sơ</span>
-              </a>
+              </button>
             </li>
             <li>
-              <a (click)="logout()" class="nav-item important-action">
-                <i class="bi bi-box-arrow-right"></i>
+              <button type="button" (click)="logout()" class="dropdown-item important-action">
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                 <span>Đăng xuất</span>
-              </a>
+              </button>
             </li>
           </ul>
         </div>
       </div>
-    </nav>
+    </header>
 
     <div class="content">
       <router-outlet></router-outlet>

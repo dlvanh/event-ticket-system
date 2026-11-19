@@ -1,14 +1,16 @@
-<div class="interest-section">
-  <h3 class="section-title">Điểm đến thú vị</h3>
-  <div class="place-list">
-    <div class="place-card" *ngFor="let place of interestPlaces"    
-      (click)="onCityClick(place.name)"
-      style="cursor: pointer;">
-      <img [src]="place.image" [alt]="place.name" />
-      <div class="overlay">
-        <span>{{ place.name }}</span>
-      </div>
-    </div>
+<section class="ev-section">
+  <div class="ev-section-header">
+    <h2 class="ev-section-title">Điểm đến thú vị</h2>
   </div>
-</div>
 
+  <div class="place-list">
+    <article class="place-card" *ngFor="let place of interestPlaces">
+      <button type="button" class="place-trigger" (click)="onCityClick(place.name)">
+        <img [src]="place.image" [alt]="place.name" loading="lazy" />
+        <div class="overlay">
+          <span>{{ place.name }}</span>
+        </div>
+      </button>
+    </article>
+  </div>
+</section>
