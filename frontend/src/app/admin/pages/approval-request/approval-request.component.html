@@ -1,0 +1,481 @@
+<!-- event-management.component.html -->
+<div class="container-fluid py-4">
+  <!-- Statistics Cards -->
+  <div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ stats.total }}</h4>
+              <p class="mb-0">Tổng sự kiện</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-calendar-alt fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ stats.pending }}</h4>
+              <p class="mb-0">Chờ duyệt</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-clock fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ stats.approved }}</h4>
+              <p class="mb-0">Đã duyệt</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-check fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card bg-danger text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ stats.rejected }}</h4>
+              <p class="mb-0">Từ chối</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-times fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-calendar-check mr-2"></i>
+            Quản lý sự kiện
+          </h3>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Tìm kiếm sự kiện..."
+                  [(ngModel)]="searchKeyword"
+                  (input)="onSearch()">
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-outline-secondary" (click)="onSearch()">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <select class="form-control" [(ngModel)]="selectedStatus" (change)="onStatusChange()">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="pending">Chờ duyệt</option>
+                <option value="approved">Đã duyệt</option>
+                <option value="rejected">Từ chối</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select class="form-control" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
+                <option value="all">Tất cả danh mục</option>
+                <option *ngFor="let category of getUniqueCategories()" [value]="category">
+                  {{ category }}
+                </option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-primary btn-block" (click)="loadEvents()">
+                <i class="fas fa-sync mr-1"></i>
+                Làm mới
+              </button>
+            </div>
+          </div>
+
+
+        </div>
+
+        <!-- Events Table -->
+        <!-- Events Table -->
+<div class="card-body table-responsive p-0">
+  <table class="table table-hover text-nowrap">
+    <thead>
+      <tr>
+        <th style="width: 1%">
+          <input
+            type="checkbox"
+            [(ngModel)]="selectAll"
+            (change)="toggleSelectAll()">
+        </th>
+        <th style="width: 1%">#</th>
+        <th style="width: 25%">Thông tin sự kiện</th>
+        <th style="width: 15%">Người tổ chức</th>
+        <th style="width: 20%">Thời gian</th>
+
+        <th style="width: 12%" class="text-center">Trạng thái</th>
+        <th style="width: 15%" class="text-center">Hành động</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Existing code for loading and empty states -->
+      <tr *ngFor="let event of getPaginatedEvents(); let i = index">
+        <td>
+          <input
+            type="checkbox"
+            [checked]="isEventSelected(event.id)"
+            (change)="toggleEventSelection(event.id)">
+        </td>
+        <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+        <td>
+          <div class="d-flex align-items-center">
+            <div>
+              <div class="font-weight-bold">{{ event.title }}</div>
+              <small class="text-muted">Được tạo: {{ formatDate(event.createdDate) }}</small>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="d-flex align-items-center">
+            <div>
+              <div style="font-size: 0.9em; font-weight: 500;">{{ event.organizer.name }}</div>
+              <small class="text-muted">ID: {{ event.organizer.id }}</small>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="event-datetime">
+            <div>
+              <i class="fas fa-calendar mr-1"></i>
+              {{ formatDate(event.startDate) }}
+              <span *ngIf="event.endDate && event.endDate !== event.startDate">
+                - {{ formatDate(event.endDate) }}
+              </span>
+            </div>
+            <div>
+              <i class="fas fa-clock mr-1"></i>
+              {{ event.startTime }} - {{ event.endTime }}
+            </div>
+
+          </div>
+        </td>
+
+        <td class="text-center">
+          <span class="badge" [ngClass]="getStatusClass(event.status)">
+            <i [class]="getStatusIcon(event.status)" class="mr-1"></i>
+            {{ getStatusText(event.status) }}
+          </span>
+        </td>
+        <td class="text-center">
+          <div class="btn-group" role="group">
+            <!-- Pending Status Actions -->
+            <ng-container *ngIf="event.status === 'pending'">
+              <button
+                class="btn btn-success btn-sm"
+                (click)="approveEvent(event.id)"
+                title="Duyệt">
+                <i class="fas fa-check"></i>
+              </button>
+              <button
+                class="btn btn-danger btn-sm"
+                (click)="openRejectModal(event)"
+                title="Từ chối">
+                <i class="fas fa-times"></i>
+              </button>
+            </ng-container>
+
+            <!-- Approved Status Actions -->
+            <ng-container *ngIf="event.status === 'approved'">
+              <button
+                class="btn btn-warning btn-sm"
+                (click)="openConfirmModal('revoke', event)"
+                title="Thu hồi duyệt">
+                <i class="fas fa-undo"></i>
+              </button>
+            </ng-container>
+
+            <!-- Rejected Status Actions -->
+            <ng-container *ngIf="event.status === 'rejected'">
+              <button
+                class="btn btn-success btn-sm"
+                (click)="openConfirmModal('approve', event)"
+                title="Duyệt lại">
+                <i class="fas fa-check"></i>
+              </button>
+              <button
+                class="btn btn-secondary btn-sm"
+                (click)="viewRejectionReason(event)"
+                title="Xem lý do từ chối">
+                <i class="fas fa-comment"></i>
+              </button>
+            </ng-container>
+
+            <!-- Common Actions -->
+            <button
+              class="btn btn-info btn-sm"
+              (click)="viewEventDetail(event)"
+              title="Xem chi tiết">
+              <i class="fas fa-eye"></i>
+            </button>
+            <button
+              class="btn btn-danger btn-sm"
+              (click)="openConfirmModal('delete', event)"
+              title="Xóa">
+              <i class="fas fa-trash"></i>
+            </button>
+            <!-- Export Excel Button -->
+            <button
+              class="btn btn-primary btn-sm"
+              (click)="exportEventExcel(event.id)"
+              title="Xuất Excel">
+              <i class="fas fa-file-excel"></i>
+            </button>
+             <!-- Export PDF BUTTON -->
+                    <button
+                      class="btn btn-primary btn-sm"
+                      (click)="exportEventPdf(event.id)"
+                      title="Xuất PDF">
+                      <i class="fas fa-file-pdf"></i>
+                    </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+        <!-- Pagination -->
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-sm-12 col-md-5">
+              <div class="dataTables_info">
+                Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} đến
+                {{ getDisplayEndIndex() }} của {{ totalItems }} sự kiện
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-7">
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm float-right">
+                  <li class="page-item" [class.disabled]="currentPage === 1">
+                    <a class="page-link" href="#" (click)="goToPage(currentPage - 1); $event.preventDefault()">
+                      Trước
+                    </a>
+                  </li>
+                  <li
+                    class="page-item"
+                    *ngFor="let page of [].constructor(getTotalPages()); let i = index"
+                    [class.active]="currentPage === i + 1">
+                    <a class="page-link" href="#" (click)="goToPage(i + 1); $event.preventDefault()">
+                      {{ i + 1 }}
+                    </a>
+                  </li>
+                  <li class="page-item" [class.disabled]="currentPage === getTotalPages()">
+                    <a class="page-link" href="#" (click)="goToPage(currentPage + 1); $event.preventDefault()">
+                      Sau
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Event Detail Modal -->
+<!-- Trong file event-management.component.html -->
+<!-- Event Detail Modal -->
+<div class="modal fade" [class.show]="showDetailModal" [style.display]="showDetailModal ? 'block' : 'none'">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Chi tiết sự kiện</h4>
+        <button type="button" class="close" (click)="closeModal()">
+          <span>×</span>
+        </button>
+      </div>
+      <div class="modal-body" *ngIf="selectedEvent">
+        <div class="row">
+         <div class="col-md-4 box-img-event">
+            <!-- Logo sự kiện -->
+            <img
+              [src]="selectedEvent.imageUrl || 'https://via.placeholder.com/300x200/007bff/ffffff?text=Event'"
+              alt="Event Logo"
+              class="img-fluid rounded mb-3"
+              (click)="goToEventDetail(selectedEvent.id)">
+            <!-- Background sự kiện -->
+            <img
+              [src]="selectedEvent.backgroundUrl || 'https://via.placeholder.com/300x200/007bff/ffffff?text=Background'"
+              alt="Background"
+              class="modal-background"
+              (click)="goToEventDetail(selectedEvent.id)">
+          </div>
+          <div class="col-md-8">
+            <h5>{{ selectedEvent.title }}</h5>
+            <p>{{ selectedEvent.description }}</p>
+            <div class="row">
+              <div class="col-sm-6">
+                <strong>Người tổ chức:</strong><br>
+                {{ selectedEvent.organizer.name }}<br>
+                <img
+                  [src]="selectedEvent.organizer.avatar || '/assets/default.jpg'"
+                  alt="Organizer Avatar"
+                  class="rounded-circle mb-2"
+                  style="width: 32px; height: 32px; object-fit: cover;">
+                <br>
+                <strong>Tiểu sử:</strong> {{ selectedEvent.organizer.bio || 'Chưa có thông tin' }}<br>
+                <strong>Email:</strong> {{ selectedEvent.organizer.email || 'Chưa cung cấp' }}<br>
+                <strong>Số điện thoại:</strong> {{ selectedEvent.organizer.phoneNumber || 'Chưa cung cấp' }}
+              </div>
+              <div class="col-sm-6">
+                <strong>Danh mục:</strong><br>
+                {{ selectedEvent.category }}<br>
+                <strong>Trạng thái:</strong><br>
+                <span class="badge" [ngClass]="getStatusClass(selectedEvent.status)">
+                  {{ getStatusText(selectedEvent.status) }}
+                </span><br>
+                <strong>Lý do từ chối:</strong><br>
+                {{ selectedEvent.rejectionReason || 'Không có' }}
+              </div>
+              <div class="col-sm-6">
+                <strong>Thời gian:</strong><br>
+                {{ formatDate(selectedEvent.startDate) }} - {{ formatDate(selectedEvent.endDate) }}<br>
+                {{ selectedEvent.startTime }} - {{ selectedEvent.endTime }}
+              </div>
+              <div class="col-sm-6">
+                <strong>Địa điểm:</strong><br>
+                {{ selectedEvent.location }}
+              </div>
+              <div class="col-sm-6">
+                <strong>Ngày tạo:</strong><br>
+                {{ formatDateTime(selectedEvent.createdDate) }}
+              </div>
+              <div class="col-sm-6">
+                <strong>Ngày cập nhật:</strong><br>
+                {{ selectedEvent.updatedDate ? formatDateTime(selectedEvent.updatedDate) : 'Chưa cập nhật' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" [class.show]="showRejectModal" [style.display]="showRejectModal ? 'block' : 'none'">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Từ chối sự kiện</h4>
+        <button type="button" class="close" (click)="closeModal()">
+          <span>×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="rejectReason">Lý do từ chối:</label>
+          <textarea
+            id="rejectReason"
+            class="form-control"
+            rows="4"
+            [(ngModel)]="rejectReason"
+            placeholder="Nhập lý do từ chối sự kiện..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">
+          Hủy
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          (click)="selectedEvent ? rejectEvent(selectedEvent.id, rejectReason) : batchReject()"
+          [disabled]="!rejectReason.trim()">
+          Từ chối
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal fade" [class.show]="showConfirmModal" [style.display]="showConfirmModal ? 'block' : 'none'">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Xác nhận</h4>
+        <button type="button" class="close" (click)="closeModal()">
+          <span>×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p *ngIf="confirmAction === 'approve'">
+          Bạn có chắc chắn muốn duyệt sự kiện này?
+        </p>
+        <p *ngIf="confirmAction === 'revoke'">
+          Bạn có chắc chắn muốn thu hồi duyệt sự kiện này?
+        </p>
+        <p *ngIf="confirmAction === 'delete'">
+          Bạn có chắc chắn muốn xóa sự kiện này? Hành động này không thể hoàn tác.
+        </p>
+        <p *ngIf="confirmAction === 'batchDelete'">
+          Bạn có chắc chắn muốn xóa {{ selectedEvents.length }} sự kiện đã chọn? Hành động này không thể hoàn tác.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">
+          Hủy
+        </button>
+        <button
+          type="button"
+          class="btn"
+          [ngClass]="{
+            'btn-success': confirmAction === 'approve',
+            'btn-warning': confirmAction === 'revoke',
+            'btn-danger': confirmAction === 'delete' || confirmAction === 'batchDelete'
+          }"
+          (click)="confirmAction === 'batchDelete' ? batchDelete() : confirmModalAction()">
+          <span *ngIf="confirmAction === 'approve'">Duyệt</span>
+          <span *ngIf="confirmAction === 'revoke'">Thu hồi</span>
+          <span *ngIf="confirmAction === 'delete'">Xóa</span>
+          <span *ngIf="confirmAction === 'batchDelete'">Xóa tất cả</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop fade show" *ngIf="showDetailModal || showRejectModal || showConfirmModal"></div>

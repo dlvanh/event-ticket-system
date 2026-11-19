@@ -1,0 +1,17 @@
+<div class="modal show d-block fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center p-4">
+        <div class="spinner-wrapper mx-auto mb-3">
+          <div class="spinner-border text-success" role="status">
+            <span class="visually-hidden text-center">Loading...</span>
+          </div>
+          <div class="countdown-text">{{ countdown }}</div>
+        </div>
+  
+        <h5 class="modal-title mb-2">{{ message }}</h5>
+        <p>Bạn sẽ được chuyển về màn hình chính </p>
+        <button class="btn btn-sm btn-link mt-2" (click)="goNow()">Về ngay</button>
+      </div>
+    </div>
+</div>
+  

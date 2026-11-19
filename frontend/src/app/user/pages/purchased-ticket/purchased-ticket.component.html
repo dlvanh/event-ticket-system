@@ -1,0 +1,51 @@
+<div class="purchased-wrapper">
+    <div class="sidebar">
+        <app-nav-user></app-nav-user>
+    </div>
+
+    <div class="content"> 
+        <div class="container">
+            <h1 class="heading">Vé đã mua</h1>
+
+            <div class="filter-buttons">
+                <button class="filter-btn"  class="filter-btn" 
+                (click)="setTab('all')" 
+                [class.active]="selectedTab === 'all'"
+                [attr.aria-selected]="selectedTab === 'all'">Tất cả</button>
+                <button class="filter-btn" class="filter-btn" 
+                (click)="setTab('success')" 
+                [class.active]="selectedTab === 'success'"
+                [attr.aria-selected]="selectedTab === 'success'">Thành công</button>
+                <button class="filter-btn" class="filter-btn" 
+                (click)="setTab('processing')" 
+                [class.active]="selectedTab === 'processing'"
+                [attr.aria-selected]="selectedTab === 'processing'">Đang xử lý</button>
+                <button class="filter-btn" class="filter-btn" 
+                (click)="setTab('cancel')" 
+                [class.active]="selectedTab === 'cancel'"
+                [attr.aria-selected]="selectedTab === 'cancel'">Đã hủy</button>
+            </div>
+            <div class="no-ticket">
+                <div class="events-list">
+                    <ng-container *ngIf="selectedTab === 'all'">
+                        <app-all></app-all>
+                    </ng-container>
+                    
+                    <ng-container *ngIf="selectedTab === 'success'">
+                        <app-success></app-success>
+                    </ng-container>
+                    
+                    <ng-container *ngIf="selectedTab === 'processing'">
+                        <app-processing></app-processing>
+                    </ng-container>
+                    
+                    <ng-container *ngIf="selectedTab === 'cancel'">
+                        <app-cancel></app-cancel>
+                    </ng-container>
+                </div>
+
+                <button class="buy-btn" (click)="goToHome()">Mua vé ngay</button>
+            </div>
+        </div>
+    </div>
+</div>

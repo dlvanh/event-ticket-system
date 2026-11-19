@@ -1,0 +1,136 @@
+.event-section {
+  padding: 10px 15px;
+  color: #fff;
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  margin-bottom: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+.section-title {
+  font-size: clamp(16px, 4vw, 18px);
+  color: black;
+  font-weight: bold;
+  margin-bottom: 10px;
+  margin-left: 10px;
+}
+
+.event-carousel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+}
+
+.event-list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 15px;
+  padding-bottom: 10px;
+}
+
+.event-card {
+  width: clamp(250px, 45vw, 325px);
+  background-color: transparent;
+  border-radius: 12px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.event-image {
+  width: 100%;
+  height: clamp(130px, 22vw, 200px);
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+/* Navigation Buttons */
+.scroll-btn {
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  padding: clamp(6px, 2vw, 8px);
+  border-radius: 25%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  z-index: 100;
+  font-size: clamp(18px, 5vw, 24px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(30px, 8vw, 40px);
+  height: clamp(30px, 8vw, 40px);
+}
+
+.scroll-btn.left {
+  left: 10px;
+}
+
+.scroll-btn.right {
+  right: 10px;
+}
+
+/* Media Queries for Larger Screens */
+@media (min-width: 768px) {
+  .event-section {
+    padding: 20px 30px;
+  }
+
+  .event-card {
+    width: 325px;
+  }
+
+  .event-image {
+    height: 200px;
+  }
+
+  .scroll-btn {
+    padding: 8px;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .scroll-btn.left {
+    left: 0;
+  }
+
+  .scroll-btn.right {
+    right: 0;
+  }
+}
+
+/* Media Queries for Smaller Screens */
+@media (max-width: 480px) {
+  .event-section {
+    padding: 10px;
+  }
+
+  .event-card {
+    width: 80vw;
+  }
+
+  .event-image {
+    height: 130px;
+  }
+
+  .scroll-btn {
+    padding: 6px;
+    font-size: 18px;
+    width: 30px;
+    height: 30px;
+  }
+
+  .scroll-btn.left {
+    left: 5px;
+  }
+
+  .scroll-btn.right {
+    right: 5px;
+  }
+}

@@ -1,0 +1,93 @@
+<app-loading [show]="isLoading"></app-loading>
+<div class="header-border" *ngIf="!isLoading && eventDetail"
+     [ngStyle]="{ 'background-image': 'url(' + eventDetail.backgroundUrl + ')', 'background-size': 'cover', 'background-position': 'center' }">
+  
+  <!-- Overlay mờ -->
+  <div class="overlay">
+    <div class="event-header">
+      <div class="event-details">
+        <h1 class="event-title">{{ eventDetail.eventName }}</h1>
+        <hr class="event-divider" />
+        <p class="event-address">
+          <i class="fa fa-map-marker"></i> {{ eventDetail.address }}
+        </p>
+        <p class="event-time">
+          <i class="fa fa-calendar"></i>
+          {{ eventDetail.startTime | date:'HH:mm dd-MM-yyyy' }}
+        </p>
+      </div>
+
+      <div class="countdown-box">
+        <p class="countdown-title">Hoàn tất đặt vé trong</p>
+        <div class="timer-display">
+          <div class="time-unit"><span class="time-value">{{ minutes }}</span></div>
+          <div class="separator">:</div>
+          <div class="time-unit"><span class="time-value">{{ seconds }}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="payment-section" *ngIf="!isLoading">
+  <h2 class="section-title">Thanh toán</h2>
+    <div class="payment-container">
+        <div class="left-panel">
+            <div class="box">
+              <p class="box-title">Mã khuyến mãi</p>
+              
+              <div class="promo-box-v1">
+                <div class="promo-input-group-v1">
+                  <input type="text" [(ngModel)]="discountCode" placeholder="Nhập mã khuyến mãi" class="promo-input" />
+                  <button class="promo-button-v1" (click)="applyDiscount()">Áp dụng</button>
+                </div>
+              </div>    
+            </div>
+        </div>
+
+        <div class="right-panel" >
+            <div class="box">
+              <p class="box-order">Thông tin đặt vé</p>
+
+              <div class="info-row">
+                <div class="info-labels"> 
+                  <span><strong>Loại vé</strong></span>
+                  <span><strong>Số lượng</strong></span>
+                </div>
+              </div>
+
+              <ng-container *ngFor="let ticket of orderData?.tickets">
+                <div class="info-row">
+                  <span>{{ ticket.type }}</span>
+                  <span>{{ ticket.quantity | number:'2.0' }}</span>
+                </div>
+                <div class="info-row price-row">
+                  <span>{{ ticket.price | number:'1.0-0' }} đ</span>
+                  <span>{{ (ticket.price * ticket.quantity) | number:'1.0-0' }} đ</span>
+                </div>
+                <hr class="event-divider" />
+              </ng-container>
+            </div>
+              <div class="box">
+                <div class="info-row">
+                  <span>Tạm tính</span>
+                  <span>{{ orderData?.totalAmount | number: '1.0-0' }} đ</span>
+                </div>
+                  <hr class="event-divider" />
+                <div class="total-row">
+                  <span>Tổng tiền</span>
+                  <span>{{ getFinalAmount() | number: '1.0-0' }} đ</span>
+                </div>
+                <button class="pay-button" type="button" (click)="submitOrder()">
+                Thanh toán
+                </button>
+              </div>
+        </div>
+    </div>
+</div>
+
+<app-toast-notification
+  #notification
+  (onClose)="onNotificationClose()">
+</app-toast-notification>

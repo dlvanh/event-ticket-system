@@ -1,0 +1,348 @@
+<div class="container-fluid py-4">
+  <!-- Statistics Cards -->
+  <div class="row mb-4">
+    <div class="col-lg-3 col-md-6">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ stats.total }}</h4>
+              <p class="mb-0">Tổng đơn hàng</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-shopping-cart fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ stats.pending }}</h4>
+              <p class="mb-0">Chờ thanh toán</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-clock fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ stats.paid }}</h4>
+              <p class="mb-0">Đã thanh toán</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-check fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+      <div class="card bg-danger text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4>{{ stats.cancelled }}</h4>
+              <p class="mb-0">Đã hủy</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-times fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-shopping-cart mr-2"></i>
+            Quản lý đơn hàng
+          </h3>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Tìm kiếm đơn hàng..."
+                  [(ngModel)]="searchKeyword"
+                  (input)="onSearch()">
+                <div class="input-group-append">
+                  <button type="button" class="btn btn-outline-secondary" (click)="onSearch()">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <select class="form-control" [(ngModel)]="selectedStatus" (change)="onStatusChange()">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="pending">Chờ thanh toán</option>
+                <option value="paid">Đã thanh toán</option>
+                <option value="cancelled">Đã hủy</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="form-control"
+                  placeholder="Giá từ"
+                  [(ngModel)]="startAmount"
+                  (input)="onAmountChange()">
+                <input
+                  type="number"
+                  class="form-control ml-2"
+                  placeholder="Đến"
+                  [(ngModel)]="endAmount"
+                  (input)="onAmountChange()">
+              </div>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-primary btn-block" (click)="loadOrders()">
+                <i class="fas fa-sync mr-1"></i>
+                Làm mới
+              </button>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="input-group">
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  [(ngModel)]="startTime"
+                  (change)="onDateChange()">
+                <div class="input-group-append">
+                  <span class="input-group-text">Từ</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="input-group">
+                <input
+                  type="datetime-local"
+                  class="form-control"
+                  [(ngModel)]="endTime"
+                  (change)="onDateChange()">
+                <div class="input-group-append">
+                  <span class="input-group-text">Đến</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="card-body table-responsive p-0">
+          <table class="table table-hover text-nowrap">
+            <thead>
+              <tr>
+                <th style="width: 5%">#</th>
+                <th style="width: 15%">Mã đơn hàng</th>
+                <th style="width: 15%">Người đặt</th>
+                <th style="width: 15%">Email</th>
+                <th style="width: 10%">Mã PayOS</th>
+                <th style="width: 10%" class="text-center">Trạng thái</th>
+                <th style="width: 10%">Số tiền</th>
+                <th style="width: 15%">Ngày đặt</th>
+                <th style="width: 5%">Số vé</th>
+                <th style="width: 15%">Lý do hủy</th>
+                <th style="width: 5%" class="text-center">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="loading">
+                <td colspan="11" class="text-center py-4">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                  </div>
+                  <p class="mt-2 mb-0">Đang tải dữ liệu...</p>
+                </td>
+              </tr>
+              <tr *ngIf="!loading && getPaginatedOrders().length === 0">
+                <td colspan="11" class="text-center py-4">
+                  <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                  <p class="text-muted">Không có đơn hàng nào</p>
+                </td>
+              </tr>
+              <tr *ngFor="let order of getPaginatedOrders(); let i = index">
+                <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+                <td>{{ order.id }}</td>
+                <td>{{ order.userName }}</td>
+                <td>{{ order.userEmail }}</td>
+                <td>{{ order.orderPayOSCode }}</td>
+                <td class="text-center">
+                  <span class="badge" [ngClass]="getStatusClass(order.status)">
+                    <i [class]="getStatusIcon(order.status)" class="mr-1"></i>
+                    {{ getStatusText(order.status) }}
+                  </span>
+                </td>
+                <td>{{ formatCurrency(order.totalAmount) }}</td>
+                <td>{{ formatDateTime(order.orderDate) }}</td>
+                <td>{{ order.totalTicketsCount }}</td>
+                <td>{{ order.cancellationReason || 'Không có' }}</td>
+                <td class="text-center">
+                  <button
+                    class="btn btn-info btn-sm mr-1"
+                    (click)="viewOrderDetail(order)"
+                    title="Xem chi tiết">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button
+                    *ngIf="order.status !== 'cancelled'"
+                    class="btn btn-danger btn-sm"
+                    (click)="initiateCancelOrder(order)"
+                    title="Hủy đơn hàng">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="card-footer">
+          <div class="row">
+            <div class="col-sm-12 col-md-5">
+              <div class="dataTables_info">
+                Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} đến
+                {{ getDisplayEndIndex() }} của {{ totalItems }} đơn hàng
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-7">
+              <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm float-right">
+                  <li class="page-item" [class.disabled]="currentPage === 1">
+                    <a class="page-link" href="#" (click)="goToPage(currentPage - 1); $event.preventDefault()">
+                      Trước
+                    </a>
+                  </li>
+                  <li
+                    class="page-item"
+                    *ngFor="let page of [].constructor(getTotalPages()); let i = index"
+                    [class.active]="currentPage === i + 1">
+                    <a class="page-link" href="#" (click)="goToPage(i + 1); $event.preventDefault()">
+                      {{ i + 1 }}
+                    </a>
+                  </li>
+                  <li class="page-item" [class.disabled]="currentPage === getTotalPages()">
+                    <a class="page-link" href="#" (click)="goToPage(currentPage + 1); $event.preventDefault()">
+                      Sau
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <div class="modal fade" [class.show]="showDetailModal" [style.display]="showDetailModal ? 'block' : 'none'">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Chi tiết đơn hàng</h4>
+          <button type="button" class="close" (click)="closeDetailModal()">
+            <span>×</span>
+          </button>
+        </div>
+        <div class="modal-body" *ngIf="selectedOrderDetail && orderToCancel">
+          <div class="row">
+            <div class="col-md-6">
+              <strong>ID đơn hàng:</strong> {{ selectedOrderDetail.id }}<br>
+              <strong>Mã PayOS:</strong> {{ selectedOrderDetail.orderCode }}<br>
+              <strong>Người đặt:</strong> {{ orderToCancel.userName }}<br>
+              <strong>Email:</strong> {{ orderToCancel.userEmail }}<br>
+              <strong>Tổng số tiền:</strong> {{ formatCurrency(selectedOrderDetail.amount) }}<br>
+              <strong>Số tiền đã thanh toán:</strong> {{ formatCurrency(selectedOrderDetail.amountPaid) }}<br>
+              <strong>Số tiền còn lại:</strong> {{ formatCurrency(selectedOrderDetail.amountRemaining) }}<br>
+            </div>
+            <div class="col-md-6">
+              <strong>Trạng thái:</strong>
+              <span class="badge" [ngClass]="getStatusClass(selectedOrderDetail.status)">
+                {{ getStatusText(selectedOrderDetail.status) }}
+              </span><br>
+              <strong>Ngày tạo:</strong> {{ formatDateTime(selectedOrderDetail.createdAt) }}<br>
+              <strong>Ngày hủy:</strong> {{ selectedOrderDetail.canceledAt ? formatDateTime(selectedOrderDetail.canceledAt) : 'Không có' }}<br>
+              <strong>Lý do hủy:</strong> {{ selectedOrderDetail.cancellationReason || 'Không có' }}<br>
+              <strong>Giao dịch:</strong> {{ selectedOrderDetail.transactions.length > 0 ? selectedOrderDetail.transactions.length + ' giao dịch' : 'Không có' }}<br>
+              <strong>Số vé:</strong> {{ orderToCancel.totalTicketsCount }}<br>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            *ngIf="selectedOrderDetail && selectedOrderDetail.status !== 'CANCELLED' && orderToCancel"
+            type="button"
+            class="btn btn-danger mr-2"
+            (click)="initiateCancelOrder(orderToCancel)"
+            [disabled]="loading">
+            Hủy đơn hàng
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="closeDetailModal()">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Confirmation Modal -->
+  <div class="modal fade" [class.show]="showCancelModal" [style.display]="showCancelModal ? 'block' : 'none'">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">Xác nhận hủy đơn hàng</h4>
+          <button type="button" class="close" (click)="closeCancelModal()">
+            <span>×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Bạn có chắc chắn muốn hủy đơn hàng <strong>{{ orderToCancel?.orderPayOSCode }}</strong>?</p>
+          <div class="form-group">
+            <label for="cancellationReason">Lý do hủy:</label>
+            <textarea
+              id="cancellationReason"
+              class="form-control"
+              [(ngModel)]="cancellationReason"
+              placeholder="Nhập lý do hủy (tùy chọn)"
+              rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeCancelModal()">Hủy</button>
+          <button type="button" class="btn btn-danger" (click)="confirmCancelOrder()" [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+            Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop fade show" *ngIf="showDetailModal || showCancelModal"></div>
+</div>

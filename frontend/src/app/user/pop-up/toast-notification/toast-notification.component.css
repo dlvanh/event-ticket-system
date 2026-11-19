@@ -1,0 +1,140 @@
+.notification-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  pointer-events: none;
+}
+
+.notification-container.show {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+.notification-box {
+  background: #2d2d2d;
+  border-radius: 8px;
+  min-width: 300px;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid #444;
+  overflow: hidden;
+  position: relative;
+}
+
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px;
+  gap: 12px;
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-message {
+  flex: 1;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.4;
+  font-family: 'Inter', sans-serif;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.notification-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.notification-close:active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Base */
+.notification-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  animation: progress-bar linear forwards;
+  display: block;
+  z-index: 1;
+}
+
+/* Gradient theo loại */
+.notification-progress.success {
+  background: linear-gradient(90deg, #4caf50, #66bb6a);
+}
+
+.notification-progress.error {
+  background: linear-gradient(90deg, #f44336, #e57373);
+}
+
+.notification-progress.warning {
+  background: linear-gradient(90deg, #ff9800, #ffb74d);
+}
+
+.notification-progress.default {
+  background: linear-gradient(90deg, #2196f3, #64b5f6);
+}
+
+
+@keyframes progress-bar {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .notification-container {
+    right: 10px;
+    bottom: 10px;
+  }
+  
+  .notification-box {
+    min-width: 280px;
+    max-width: calc(100vw - 20px);
+  }
+  
+  .notification-content {
+    padding: 14px;
+  }
+  
+  .notification-message {
+    font-size: 13px;
+  }
+}
+
+/* Animation cho mobile */
+@media (max-width: 768px) {
+  .notification-container {
+    transform: translateX(100%);
+  }
+  
+  .notification-container.show {
+    transform: translateX(0);
+  }
+}

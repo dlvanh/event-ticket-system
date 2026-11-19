@@ -1,0 +1,91 @@
+<div class="content">
+  <div class="search-filter-section">
+    <!-- Ô tìm kiếm -->
+    <div class="search-section">
+      <div class="search-input-wrapper">
+        <i class="bi bi-search search-icon"></i>
+        <input
+          type="text"
+          placeholder="Tìm kiếm theo tên, địa điểm..."
+          class="search-input"
+          [(ngModel)]="searchTerm"
+          (input)="onSearchChange()"
+        />
+        <button 
+          *ngIf="searchTerm" 
+          class="clear-search-btn" 
+          (click)="clearSearch()"
+          type="button">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabs lọc -->
+    <div class="filter-tab">
+      <button 
+        class="filter-btn" 
+        [ngClass]="{ 'active': selectedTab === 'ongoing' }"
+        (click)="setTab('ongoing')">
+        Đang diễn ra
+      </button>
+      <button 
+        class="filter-btn" 
+        [ngClass]="{ 'active': selectedTab === 'upcoming' }"
+        (click)="setTab('upcoming')">
+        Sắp tới
+      </button>
+      <button 
+        class="filter-btn" 
+        [ngClass]="{ 'active': selectedTab === 'past' }"
+        (click)="setTab('past')">
+        Đã qua
+      </button>
+      <button 
+        class="filter-btn" 
+        [ngClass]="{ 'active': selectedTab === 'pending' }"
+        (click)="setTab('pending')">
+        Chờ duyệt
+      </button>
+    </div>
+  </div>
+
+  <!-- Nội dung động -->
+  <div class="events-list">
+    <app-ongoing 
+      *ngIf="selectedTab === 'ongoing'" 
+      [events]="filteredEvents"
+      (eventsSelected)="onEventSelected($event)">
+    </app-ongoing>  
+
+    <app-upcoming 
+      *ngIf="selectedTab === 'upcoming'" 
+      [events]="filteredEvents"
+      (eventsSelected)="onEventSelected($event)">
+    </app-upcoming>
+
+    <app-past 
+      *ngIf="selectedTab === 'past'" 
+      [events]="filteredEvents"
+      (eventsSelected)="onEventSelected($event)">
+    </app-past>
+
+    <app-pending 
+      *ngIf="selectedTab === 'pending'" 
+      [events]="filteredEvents"
+      (eventsSelected)="onEventSelected($event)">
+    </app-pending>
+  </div>
+
+  <!-- Hiển thị thông báo khi không tìm thấy kết quả -->
+  <div *ngIf="searchTerm && filteredEvents.length === 0" class="no-results">
+    <div class="no-results-content">
+      <i class="bi bi-search"></i>
+      <h3>Không tìm thấy sự kiện</h3>
+      <p>Không có sự kiện nào phù hợp với từ khóa "{{ searchTerm }}"</p>
+      <button class="clear-search-link" (click)="clearSearch()">
+        Xóa tìm kiếm
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,29 @@
+<div class="event-section">
+  <h2 class="section-title">Dành cho bạn</h2>
+  <div class="event-carousel">
+    <!-- Nút trái -->
+    <button *ngIf="canScrollLeft" class="scroll-btn left" (click)="scrollLeft()">
+      <span class="material-icons">chevron_left</span>
+    </button>
+
+    <!-- Danh sách sự kiện -->
+    <div class="event-list">
+      <div class="event-card" *ngFor="let item of visibleItems" (click)="goToEventDetail(item.id)">
+        <img [src]="item.backgroundUrl || '/assets/default.jpg'" class="event-image"  />
+        <div class="event-details">
+          <div class="event-title">{{ item.eventName }}</div>
+          <div class="event-price">Từ {{ item.price | number:'1.0-0'}} VNĐ</div>
+          <div class="event-date">
+            <span class="material-icons">calendar_today</span>
+            <span>{{ item.startTime | date: 'dd/MM/yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nút phải -->
+      <button *ngIf="canScrollRight" class="scroll-btn right" (click)="scrollRight()">
+        <span class="material-icons">chevron_right</span>
+      </button>
+    </div>
+  </div>
+</div>

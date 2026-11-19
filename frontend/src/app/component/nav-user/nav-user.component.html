@@ -1,0 +1,29 @@
+<div class="account-sidebar-container">
+  <img
+    [src]="avatarUrl" *ngIf="avatarUrl"
+    alt="User profile photo of a person in casual clothes"
+    width="50"
+    height="50"
+    class="profile-img"
+  />
+
+  <div class="account-info">
+    <p class="account-label">Tài khoản của <strong>{{ getFullName() }}</strong></p>
+    <p class="account-name"></p>
+
+    <ul class="account-links">
+      <li>
+        <a class="link" (click)="navigateToProfile()">
+          <i class="fas fa-user icon invisible"></i>
+          Thông tin tài khoản
+        </a>
+      </li>
+      <li>
+        <a class="link" (click)="navigateToPurchasedTickets()">
+          <i class="fas fa-ticket-alt icon"></i>
+          Vé đã mua
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>

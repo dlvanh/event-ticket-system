@@ -1,0 +1,70 @@
+<div class="event-container">
+  <div *ngIf="upcomingEvents.length === 0" class="no-events">
+    <p>Không có sự kiện sắp tới.</p>
+  </div>
+
+  <div class="event-list">
+    <div class="event-card" *ngFor="let event of pagedEvents">
+    <div class="images-container">
+      <img [src]="event.logoUrl" alt="Logo" class="event-logo" />
+    </div>
+    <div class="event-details">
+      <h3 class="event-name">{{ event.eventName }}</h3>
+      <p class="event-info"><span class="label">Bắt đầu:</span> {{ event.startTime | date:'dd/MM/yyyy, HH:mm' }}</p>
+      <p class="event-info"><span class="label">Kết thúc:</span> {{ event.endTime | date:'dd/MM/yyyy, HH:mm' }}</p>
+      <p class="event-info"><span class="label">Cập nhật:</span> {{ event.updateAt | date:'dd/MM/yyyy, HH:mm' }}</p>
+      <p class="event-info"><span class="label">Trạng thái:</span> 
+        <span class="status" [ngClass]="{
+          'status-approved': event.approvalStatus === 'approved',
+          'status-pending': event.approvalStatus === 'pending',
+          'status-rejected': event.approvalStatus === 'rejected'
+        }">{{ event.approvalStatus | statusTranslate }}</span>
+      </p>
+    </div>
+    <div class="event-actions">
+      <button class="btn btn-view" (click)="openDetail(event)">Xem chi tiết</button>
+    </div>
+  </div>
+
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <button class="btn" (click)="prevPage()" [disabled]="currentPage === 1">&laquo;</button>
+      <button class="btn"
+              *ngFor="let page of [].constructor(totalPages); let i = index"
+              [class.active]="currentPage === (i+1)"
+              (click)="goToPage(i+1)">
+        {{ i + 1 }}
+      </button>
+      <button class="btn" (click)="nextPage()" [disabled]="currentPage === totalPages">&raquo;</button>
+    </div>
+  </div>
+
+  <div class="event-detail-modal" *ngIf="selectedEvent">
+    <div class="modal-content">
+      <span class="close-button" (click)="closeDetail()">&times;</span>
+      <h2>{{ selectedEvent.eventName }}</h2>
+  
+      <div class="modal-images">
+        <img *ngIf="selectedEvent.logoUrl" [src]="selectedEvent.logoUrl" alt="Logo" class="modal-logo" />
+        <img *ngIf="selectedEvent.backgroundUrl" [src]="selectedEvent.backgroundUrl" alt="Background" class="modal-background" />
+      </div>
+  
+      <p><strong>Thời gian:</strong> {{ selectedEvent.startTime | date:'dd/MM/yyyy, HH:mm' }} - {{ selectedEvent.endTime | date:'dd/MM/yyyy, HH:mm' }}</p>
+      <p><strong>Địa điểm:</strong> {{ selectedEvent.address }}</p>
+      <p><strong>Danh mục:</strong> {{ selectedEvent.category }}</p>
+      <p><strong>Mô tả:</strong> {{ selectedEvent.description }}</p>
+      <p *ngIf="selectedEvent.approvalStatus === 'rejected' && selectedEvent.rejectReason">
+        <strong>Lý do từ chối duyệt:</strong> {{ selectedEvent.rejectReason }}
+      </p>
+      <div class="ticket-prices" *ngIf="selectedEvent.ticketPrices">
+      <p *ngIf="ticketPriceList.length">
+        <strong>Giá vé:</strong>
+      </p>
+      <ul class="ticket-price">
+        <li *ngFor="let ticket of ticketPriceList">
+          <span class="label">{{ ticket.type }}:</span> {{ ticket.price | number:'1.0-0' }} VND
+        </li>
+      </ul>
+    </div>
+    </div>
+  </div>  
+</div>

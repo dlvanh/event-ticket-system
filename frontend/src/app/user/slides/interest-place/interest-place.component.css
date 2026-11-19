@@ -1,0 +1,103 @@
+.interest-section {
+  padding: 16px;
+  color: #fff;
+  margin-left: 70px;
+  font-family: 'Inter', sans-serif;
+}
+
+.section-title {
+  font-size: clamp(16px, 4vw, 18px);
+  font-weight: bold;
+  margin-bottom: 16px;
+  margin-left: 35px;
+  color: black;
+}
+
+.place-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.place-card {
+  position: relative;
+  max-width: 1000px;
+  width: calc(23.40%);
+  height: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.place-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.place-card .overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 40%;
+  background: linear-gradient(to top, rgba(0, 255, 0, 0.6), transparent);
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+}
+
+.place-card .overlay span {
+  font-size: 26px;
+  font-weight: bold;
+  color: white;
+  height: 50%;
+  margin-left: 0;
+}
+
+/* Responsive adjustments for larger screens (>1440px) */
+@media screen and (min-width: 1441px) {
+  .interest-section {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1400px; /* Limit max width for centering */
+  }
+
+  .place-list {
+    justify-content: center; /* Center cards horizontally */
+  }
+}
+
+/* Responsive adjustments for smaller screens (<768px) */
+@media screen and (max-width: 767px) {
+  .interest-section {
+    margin-left: 10px; /* Reduce margin */
+    padding: 8px; /* Reduce padding */
+  }
+
+  .place-card {
+    width: calc(50% - 5px); /* Two cards per row */
+    height: 200px; /* Smaller height */
+  }
+
+  .place-card .overlay span {
+    font-size: 18px; /* Smaller text */
+  }
+}
+
+/* Extra small screens (<480px) */
+@media screen and (max-width: 479px) {
+  .place-card {
+    width: 100%; /* Full-width cards */
+    height: 150px; /* Further reduced height */
+  }
+
+  .place-card .overlay span {
+    font-size: 14px; /* Even smaller text */
+  }
+
+  .section-title {
+    font-size: 14px; /* Smaller title */
+    margin-left: 0; /* Remove left margin */
+  }
+}

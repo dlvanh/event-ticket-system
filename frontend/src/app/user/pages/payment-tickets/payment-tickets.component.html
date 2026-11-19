@@ -1,0 +1,50 @@
+<div class="container">
+  <div class="payment-box">
+    <h2 class="title">Thanh toán bằng VNPAY</h2>
+
+    <div class="content">
+      <div class="qr-box">
+        <img
+          src="https://storage.googleapis.com/a1aa/image/ddf33434-c4aa-40e4-8db9-8c483d345547.jpg"
+          alt="Placeholder image of a grey square representing a QR code"
+          class="qr-image"
+        />
+        <span class="total-amount">Tổng tiền : 660.000 đ</span>
+      </div>
+
+      <div class="instructions">
+        <ol class="step-list">
+          <li class="step-item">
+            <div class="step-number">1</div>
+            <p class="step-text">Mở ứng dụng Ngân hàng trên điện thoại</p>
+          </li>
+          <li class="step-item">
+            <div class="step-number">2</div>
+            <p class="step-text">Chọn biểu tượng Quét mã QR</p>
+          </li>
+          <li class="step-item">
+            <div class="step-number">3</div>
+            <p class="step-text">Quét mã QR ở trang này</p>
+          </li>
+          <li class="step-item">
+            <div class="step-number">4</div>
+            <p class="step-text">Thực hiện thanh toán và chờ xem thông báo giao dịch</p>
+          </li>
+        </ol>
+
+        <div class="countdown-box">
+          <p>Giao dịch sẽ kết thúc sau</p>
+            <div class="timer-display">
+                <div class="time-unit">
+                <span class="time-value">{{ minutes }}</span>
+                </div>
+                <div class="separator">:</div>
+                <div class="time-unit">
+                <span class="time-value">{{ seconds }}</span>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

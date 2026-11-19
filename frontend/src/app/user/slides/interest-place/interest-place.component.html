@@ -1,0 +1,14 @@
+<div class="interest-section">
+  <h3 class="section-title">Điểm đến thú vị</h3>
+  <div class="place-list">
+    <div class="place-card" *ngFor="let place of interestPlaces"    
+      (click)="onCityClick(place.name)"
+      style="cursor: pointer;">
+      <img [src]="place.image" [alt]="place.name" />
+      <div class="overlay">
+        <span>{{ place.name }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
