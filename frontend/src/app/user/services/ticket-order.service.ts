@@ -1,37 +1,30 @@
 import { Injectable } from '@angular/core';
-import { Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { HttpClient} from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { ApiResponse, CreateOrderRequest, CreateOrderResponse } from '../../core/models';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TicketOrderService {
   private orderData: any;
-  private apiUrl = 'http://localhost:8080/api';
+  private readonly apiUrl = environment.apiUrl;
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object,
-  private http: HttpClient) {}
+  constructor(private http: HttpClient) {}
 
-  setOrder(data: any) {
-    if (isPlatformBrowser(this.platformId)) {
-      sessionStorage.setItem('orderData', JSON.stringify(data));
-    }
+  setOrder(data: any): void {
+    sessionStorage.setItem('orderData', JSON.stringify(data));
     this.orderData = data;
   }
 
   getOrder(): any {
     if (this.orderData) return this.orderData;
-
-    if (isPlatformBrowser(this.platformId)) {
-      const data = sessionStorage.getItem('orderData');
-      if (data) {
-        this.orderData = JSON.parse(data);
-        return this.orderData;
-      }
+    const data = sessionStorage.getItem('orderData');
+    if (data) {
+      this.orderData = JSON.parse(data);
+      return this.orderData;
     }
-
     return null;
   }
 
@@ -39,18 +32,16 @@ export class TicketOrderService {
     eventId: number;
     tickets: { ticketId: number; quantity: number }[];
     discountCode?: string;
-  }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/orders`, orderData);
+  }): Observable<ApiResponse<CreateOrderResponse>> {
+    return this.http.post<ApiResponse<CreateOrderResponse>>(`${this.apiUrl}/orders`, orderData);
   }
 
-  payOrder(orderData: any): Observable<any> {
-    return this.http.post<any>('http://localhost:8080/api/orders', orderData);
+  payOrder(orderData: CreateOrderRequest | any): Observable<ApiResponse<CreateOrderResponse>> {
+    return this.http.post<ApiResponse<CreateOrderResponse>>(`${this.apiUrl}/orders`, orderData);
   }
 
-  clearOrder() {
-    if (isPlatformBrowser(this.platformId)) {
-      sessionStorage.removeItem('orderData');
-    }
+  clearOrder(): void {
+    sessionStorage.removeItem('orderData');
     this.orderData = null;
   }
 

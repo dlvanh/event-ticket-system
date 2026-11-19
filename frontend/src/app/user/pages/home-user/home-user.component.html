@@ -12,8 +12,8 @@
     <div class="carousel-wrapper" [style.transition]="transitionStyle">
       <div class="carousel-item" *ngFor="let item of visibleImages">
         <div class="image-wrapper">
-          <img [src]="item.backgroundUrl || '/assets/default.jpg'" />
-          <button class="detail-button" (click)="goToEventDetail(item.id)">Xem chi tiết </button>
+          <img [src]="item.backgroundUrl || '/assets/default.jpg'" alt="Sự kiện nổi bật" />
+          <button class="detail-button" (click)="goToEventDetail(item.id)">Xem chi tiết</button>
         </div>
       </div>
     </div>
@@ -32,15 +32,11 @@
   <app-trending-event></app-trending-event>
   <app-foryou-event></app-foryou-event>
   <app-timeline-event></app-timeline-event>
-  <app-livemusic-event></app-livemusic-event>
-  <app-stage-art-event></app-stage-art-event>
-  <app-sports-event></app-sports-event>
-  <app-workshop-event></app-workshop-event>
-  <app-others-event></app-others-event>
+  <app-event-carousel
+    *ngFor="let section of categoryCarousels"
+    [title]="section.title"
+    [category]="section.category"
+  ></app-event-carousel>
   <app-interest-place></app-interest-place>
 </div>
 <app-chatbot></app-chatbot>
-
-
-
-

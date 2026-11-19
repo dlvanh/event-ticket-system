@@ -208,16 +208,6 @@
               </button>
             </ng-container>
 
-            <!-- Approved Status Actions -->
-            <ng-container *ngIf="event.status === 'approved'">
-              <button
-                class="btn btn-warning btn-sm"
-                (click)="openConfirmModal('revoke', event)"
-                title="Thu hồi duyệt">
-                <i class="fas fa-undo"></i>
-              </button>
-            </ng-container>
-
             <!-- Rejected Status Actions -->
             <ng-container *ngIf="event.status === 'rejected'">
               <button
@@ -240,12 +230,6 @@
               (click)="viewEventDetail(event)"
               title="Xem chi tiết">
               <i class="fas fa-eye"></i>
-            </button>
-            <button
-              class="btn btn-danger btn-sm"
-              (click)="openConfirmModal('delete', event)"
-              title="Xóa">
-              <i class="fas fa-trash"></i>
             </button>
             <!-- Export Excel Button -->
             <button
@@ -444,15 +428,6 @@
         <p *ngIf="confirmAction === 'approve'">
           Bạn có chắc chắn muốn duyệt sự kiện này?
         </p>
-        <p *ngIf="confirmAction === 'revoke'">
-          Bạn có chắc chắn muốn thu hồi duyệt sự kiện này?
-        </p>
-        <p *ngIf="confirmAction === 'delete'">
-          Bạn có chắc chắn muốn xóa sự kiện này? Hành động này không thể hoàn tác.
-        </p>
-        <p *ngIf="confirmAction === 'batchDelete'">
-          Bạn có chắc chắn muốn xóa {{ selectedEvents.length }} sự kiện đã chọn? Hành động này không thể hoàn tác.
-        </p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeModal()">
@@ -460,17 +435,9 @@
         </button>
         <button
           type="button"
-          class="btn"
-          [ngClass]="{
-            'btn-success': confirmAction === 'approve',
-            'btn-warning': confirmAction === 'revoke',
-            'btn-danger': confirmAction === 'delete' || confirmAction === 'batchDelete'
-          }"
-          (click)="confirmAction === 'batchDelete' ? batchDelete() : confirmModalAction()">
+          class="btn btn-success"
+          (click)="confirmModalAction()">
           <span *ngIf="confirmAction === 'approve'">Duyệt</span>
-          <span *ngIf="confirmAction === 'revoke'">Thu hồi</span>
-          <span *ngIf="confirmAction === 'delete'">Xóa</span>
-          <span *ngIf="confirmAction === 'batchDelete'">Xóa tất cả</span>
         </button>
       </div>
     </div>

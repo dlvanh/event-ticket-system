@@ -39,8 +39,9 @@ export class LoginComponent implements OnInit {
 
       this.authService.login(email, password).subscribe({
         next: (res: any) => {
-          if (res.token) {
-            this.authService.setToken(res.token);
+          const token = res?.data?.token ?? res?.token;
+          if (token) {
+            this.authService.setToken(token);
 
             const redirectPath = sessionStorage.getItem('redirectAfterLogin');
 
@@ -50,19 +51,16 @@ export class LoginComponent implements OnInit {
               return;
             }
 
-            // 👉 Phân quyền điều hướng
             if (this.authService.isAdmin()) {
               this.router.navigate(['/admin']);
             } else if (this.authService.isSeller()) {
               this.router.navigate(['/organizer']);
-            } else if (this.authService.isCustomer()) {
-              this.router.navigate(['/']);
             } else {
               this.router.navigate(['/']);
             }
           }
         },
-        error: (err) => {
+        error: () => {
           this.notification.showNotification('Sai tài khoản hoặc mật khẩu!', 5000, 'error');
         }
       });
@@ -74,8 +72,7 @@ export class LoginComponent implements OnInit {
   }
 
   loginWithGoogle() {
-    console.log('Login with Google');
-    // Handle Google login
+    window.location.href = '/oauth2/authorization/google';
   }
 
   forgotPassword() {

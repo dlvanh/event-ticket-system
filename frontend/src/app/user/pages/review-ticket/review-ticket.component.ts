@@ -8,7 +8,6 @@ import { ToastNotificationComponent } from '../../pop-up/toast-notification/toas
 import { FormsModule } from '@angular/forms';
 import { isPlatformBrowser } from '@angular/common';
 import { Inject, PLATFORM_ID } from '@angular/core';
-import { error } from 'console';
 
 @Component({
   selector: 'app-review-ticket',

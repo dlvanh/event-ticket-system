@@ -1,66 +1,62 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { TrendingEventComponent } from '../../slides/trending-event/trending-event.component';
 import { ForyouEventComponent } from '../../slides/foryou-event/foryou-event.component';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
-import { TimelineEventComponent } from "../../slides/EventTimeline/timeline-event/timeline-event.component";
-import { LivemusicEventComponent } from "../../slides/livemusic-event/livemusic-event.component";
-import { StageArtEventComponent } from "../../slides/stage-art-event/stage-art-event.component";
-import { InterestPlaceComponent } from "../../slides/interest-place/interest-place.component";
+import { TimelineEventComponent } from '../../slides/EventTimeline/timeline-event/timeline-event.component';
+import { InterestPlaceComponent } from '../../slides/interest-place/interest-place.component';
 import { SpecialEventComponent } from '../../slides/special-event/special-event.component';
-import { EventsService } from '../../services/events.service';
-import { Router } from '@angular/router';
-import { SportsEventComponent } from '../../slides/sports-event/sports-event.component';
-import { WorkshopEventComponent } from '../../slides/workshop-event/workshop-event.component';
-import { OthersEventComponent } from '../../slides/others-event/others-event.component';
+import { EventCarouselComponent } from '../../../shared/components/event-carousel/event-carousel.component';
 import { ChatbotComponent } from '../../pop-up/chatbot/chatbot.component';
+import { EventsService } from '../../services/events.service';
 
 @Component({
   selector: 'app-home-user',
   standalone: true,
-  imports: [CommonModule, 
-    TrendingEventComponent, 
-    ForyouEventComponent, 
-    HttpClientModule, 
-    TimelineEventComponent, 
-    LivemusicEventComponent, 
-    StageArtEventComponent, 
-    InterestPlaceComponent, 
-    SpecialEventComponent, 
-    SportsEventComponent, 
-    WorkshopEventComponent,
-    OthersEventComponent,
-    ChatbotComponent],
+  imports: [
+    CommonModule,
+    TrendingEventComponent,
+    ForyouEventComponent,
+    TimelineEventComponent,
+    InterestPlaceComponent,
+    SpecialEventComponent,
+    EventCarouselComponent,
+    ChatbotComponent
+  ],
   templateUrl: './home-user.component.html',
   styleUrl: './home-user.component.css'
 })
 export class HomeUserComponent implements OnInit {
-  events: any[] = [];
+  events: { id: number; backgroundUrl: string }[] = [];
   currentIndex = 0;
   transitionStyle = 'transform 0.5s ease-in-out';
-  
 
-  constructor(private http: HttpClient, private eventService: EventsService, private router: Router) {}
+  readonly categoryCarousels = [
+    { title: 'Nhạc sống', category: 'Music' },
+    { title: 'Sân khấu & Nghệ thuật', category: 'Theatre-Arts' },
+    { title: 'Thể thao', category: 'Sport' },
+    { title: 'Workshop', category: 'Workshop' },
+    { title: 'Khác', category: 'Other' }
+  ];
+
+  constructor(private eventService: EventsService, private router: Router) {}
 
   ngOnInit(): void {
-    this.loadHotTrendingEvents()
+    this.loadHotTrendingEvents();
   }
 
-
-  loadHotTrendingEvents() {
+  loadHotTrendingEvents(): void {
     this.eventService.getRecommendedEvents(
-      undefined,        // category
-      undefined,        // address
-      undefined,        // startTime
-      undefined,        // endTime
-      undefined,        // name
-      'totalTicketSold:DESC',  // sortBy
-      1,                // page
-      100               // size
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      'totalTicketSold:DESC',
+      1,
+      100
     ).subscribe(res => {
       const allEvents = res?.data?.listEvents || [];
-
-      // 👉 Lấy top 4 từ danh sách đã được sort giảm dần theo totalTicketSold
       this.events = allEvents.slice(0, 4).map((event: any) => ({
         id: event.eventId,
         backgroundUrl: event.backgroundUrl
@@ -68,8 +64,8 @@ export class HomeUserComponent implements OnInit {
     });
   }
 
-  goToSearchEvents(category: string) {
-    const categoryMap: { [key: string]: string } = {
+  goToSearchEvents(category: string): void {
+    const categoryMap: Record<string, string> = {
       'Nhạc sống': 'Music',
       'Sân khấu & Nghệ thuật': 'Theatre-Arts',
       'Thể Thao': 'Sport',
@@ -78,17 +74,13 @@ export class HomeUserComponent implements OnInit {
     };
 
     const categoryParam = categoryMap[category];
-
     this.router.navigate(['/search-events'], {
-      queryParams: {
-        category: categoryParam
-      }
+      queryParams: { category: categoryParam }
     });
   }
 
   get visibleImages() {
     const total = this.events.length;
-
     if (total === 0) return [];
 
     const first = this.currentIndex % total;
@@ -97,7 +89,7 @@ export class HomeUserComponent implements OnInit {
     return [
       this.events[first],
       this.events.length > 1 ? this.events[second] : null
-    ].filter(Boolean);
+    ].filter((item): item is { id: number; backgroundUrl: string } => item !== null);
   }
 
   get dotIndicators(): number[] {
@@ -105,16 +97,16 @@ export class HomeUserComponent implements OnInit {
   }
 
   nextSlide(): void {
+    if (this.events.length === 0) return;
     this.currentIndex = (this.currentIndex + 1) % this.events.length;
   }
 
   prevSlide(): void {
+    if (this.events.length === 0) return;
     this.currentIndex = (this.currentIndex - 1 + this.events.length) % this.events.length;
   }
 
-  // detail-ticket.component.ts hoặc component list event
-  goToEventDetail(eventId: number) {
-    // Lưu đường dẫn vào sessionStorage
+  goToEventDetail(eventId: number): void {
     sessionStorage.setItem('redirectAfterLogin', `/detail-ticket/${eventId}`);
     this.router.navigate([`/detail-ticket/${eventId}`]);
   }

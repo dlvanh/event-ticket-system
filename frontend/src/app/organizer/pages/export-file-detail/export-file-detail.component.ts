@@ -1,9 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { Location, CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
 import { ListEventsService } from '../../services/list-events.service';
-import { AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
@@ -40,9 +38,9 @@ interface TicketStats {
   templateUrl: './export-file-detail.component.html',
   styleUrls: ['./export-file-detail.component.css'],
   standalone: true,
-  imports: [CommonModule, RouterModule, HttpClientModule]
+  imports: [CommonModule, RouterModule]
 })
-export class ExportFileDetailComponent implements OnInit {
+export class ExportFileDetailComponent implements OnInit, AfterViewInit {
   @ViewChild('pieChartCanvas', { static: false }) pieChartCanvas!: ElementRef<HTMLCanvasElement>;
   pieChart: Chart | null = null;
   eventId!: number;
@@ -66,25 +64,21 @@ export class ExportFileDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private location: Location,
-    private listEventsService: ListEventsService,
-    private http: HttpClient
+    private listEventsService: ListEventsService
   ) {}
 
   ngOnInit(): void {
     this.eventId = Number(this.route.snapshot.paramMap.get('id'));
     if (!this.eventId) {
-      console.error('ID sự kiện không hợp lệ!');
       this.isLoading = false;
       this.isLoadingStats = false;
       return;
     }
 
-    this.loadEventData();
-    this.loadTicketStatistics();
+    this.loadEventAndStatistics();
   }
 
   ngAfterViewInit(): void {
-    // Vẽ pie chart nếu đã có dữ liệu
     if (!this.isLoadingStats && this.ticketStats.ticketTypes.length > 0) {
       this.renderPieChart();
     }
@@ -94,63 +88,35 @@ export class ExportFileDetailComponent implements OnInit {
     this.location.back();
   }
 
-  private loadEventData(): void {
-    this.listEventsService.getEventById(this.eventId.toString()).subscribe({
+  private loadEventAndStatistics(): void {
+    this.listEventsService.getEventById(this.eventId).subscribe({
       next: res => {
-        this.eventData = res?.data || null;
+        const data = res?.data;
+        this.eventData = data || null;
         this.isLoading = false;
-      },
-      error: err => {
-        console.error('Lỗi khi tải thông tin sự kiện:', err);
-        this.eventData = null;
-        this.isLoading = false;
-      }
-    });
-  }
-
-  private loadTicketStatistics(): void {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('Không tìm thấy token!');
-      this.isLoadingStats = false;
-      return;
-    }
-
-    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-
-    this.http.get<{ data: any }>(
-      `http://localhost:8080/api/events/${this.eventId}`, { headers }
-    ).subscribe({
-      next: res => {
-        const data = res.data;
-        console.log('API Response:', data); // Debug log
 
         const ticketTypesStats: TicketTypeStats[] = [];
-
-        // Parse dữ liệu từ API response theo cấu trúc thực tế
-        if (data.ticketTypes && data.ticketPrices && data.ticketsTotal && data.ticketsSold) {
-          // Lặp qua các ticket types (ví dụ: {"14": "vip"})
+        if (data?.ticketTypes && data?.ticketPrices && data?.ticketsTotal && data?.ticketsSold) {
           Object.keys(data.ticketTypes).forEach(key => {
-            const ticketType = data.ticketTypes[key]; // "vip"
-            const price = data.ticketPrices[ticketType] || 0; // 10000.0
-            const totalQuantity = data.ticketsTotal[ticketType] || 0; // 10
-            const soldQuantity = data.ticketsSold[ticketType] || 0; // 0
-            
+            const ticketType = data.ticketTypes[key];
+            const price = Number(data.ticketPrices[ticketType] || 0);
+            const totalQuantity = Number(data.ticketsTotal[ticketType] || 0);
+            const soldQuantity = Number(data.ticketsSold[ticketType] || 0);
+
             ticketTypesStats.push({
-              ticketType: ticketType,
-              totalQuantity: totalQuantity,
-              soldQuantity: soldQuantity,
+              ticketType,
+              totalQuantity,
+              soldQuantity,
               remainingQuantity: totalQuantity - soldQuantity,
-              price: price,
-              revenue: soldQuantity * price,
+              price,
+              revenue: soldQuantity * price
             });
           });
         }
 
-        // Tính tổng từ dữ liệu đã parse
-        let totalTickets = ticketTypesStats.reduce((sum, t) => sum + t.totalQuantity, 0);
-        let soldTickets = ticketTypesStats.reduce((sum, t) => sum + t.soldQuantity, 0);
-        let totalRevenue = ticketTypesStats.reduce((sum, t) => sum + (t.soldQuantity * t.price), 0);
+        const totalTickets = ticketTypesStats.reduce((sum, t) => sum + t.totalQuantity, 0);
+        const soldTickets = ticketTypesStats.reduce((sum, t) => sum + t.soldQuantity, 0);
+        const totalRevenue = ticketTypesStats.reduce((sum, t) => sum + t.soldQuantity * t.price, 0);
 
         this.ticketStats = {
           totalTickets,
@@ -160,102 +126,84 @@ export class ExportFileDetailComponent implements OnInit {
           ticketTypes: ticketTypesStats
         };
 
-        console.log('Parsed ticket stats:', this.ticketStats); 
         this.isLoadingStats = false;
-
-        // Vẽ lại pie chart khi có dữ liệu
         setTimeout(() => this.renderPieChart(), 0);
       },
       error: err => {
-        console.error('Lỗi khi tải thống kê vé:', err);
+        console.error('Lỗi khi tải thông tin & thống kê sự kiện:', err);
+        this.eventData = null;
+        this.isLoading = false;
         this.isLoadingStats = false;
       }
     });
   }
-renderPieChart(): void {
-  if (!this.pieChartCanvas) return;
-  const ctx = this.pieChartCanvas.nativeElement.getContext('2d');
-  if (!ctx) return;
 
-  if (this.pieChart) {
-    this.pieChart.destroy();
-  }
+  renderPieChart(): void {
+    if (!this.pieChartCanvas) return;
+    const ctx = this.pieChartCanvas.nativeElement.getContext('2d');
+    if (!ctx) return;
 
-  const labels = this.ticketStats.ticketTypes.map(t => t.ticketType);
-  const data = this.ticketStats.ticketTypes.map(t => t.soldQuantity);
-  const backgroundColors = [
-    '#ff7e42', '#3498db', '#2ecc71', '#e74c3c',
-    '#9b59b6', '#f1c40f', '#1abc9c', '#34495e'
-  ];
-  const total = data.reduce((a, b) => a + b, 0);
+    if (this.pieChart) {
+      this.pieChart.destroy();
+    }
 
-  this.pieChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Số vé đã bán',
-        data,
-        backgroundColor: backgroundColors.slice(0, labels.length),
-        borderRadius: 6,
-        barThickness: 40
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context: any) {
-              const value = context.parsed.y;
-              return `${context.label}: ${value} vé`;
+    const labels = this.ticketStats.ticketTypes.map(t => t.ticketType);
+    const data = this.ticketStats.ticketTypes.map(t => t.soldQuantity);
+    const backgroundColors = [
+      '#ff7e42', '#3498db', '#2ecc71', '#e74c3c',
+      '#9b59b6', '#f1c40f', '#1abc9c', '#34495e'
+    ];
+
+    this.pieChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Số vé đã bán',
+          data,
+          backgroundColor: backgroundColors.slice(0, labels.length),
+          borderRadius: 6,
+          barThickness: 40
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => `${context.label}: ${context.parsed.y} vé`
+            }
+          },
+          datalabels: {
+            anchor: 'end',
+            align: 'start',
+            color: '#ffffffff',
+            font: { weight: 'bold', size: 13 },
+            formatter: (value: number, context: any) => {
+              const dataset = context.chart.data.datasets[0].data;
+              const totalSold = dataset.reduce((a: number, b: number) => a + b, 0);
+              const percent = totalSold ? ((value / totalSold) * 100).toFixed(1) : 0;
+              return `${percent}%`;
             }
           }
         },
-        datalabels: {
-          anchor: 'end',
-          align: 'start',
-          color: '#ffffffff',
-          font: {
-            weight: 'bold',
-            size: 13
+        scales: {
+          x: {
+            ticks: { color: '#fff' },
+            grid: { color: '#444' }
           },
-          formatter: function(value: number, context: any) {
-            const dataset = context.chart.data.datasets[0].data;
-            const totalSold = dataset.reduce((a: number, b: number) => a + b, 0);
-            const percent = totalSold ? ((value / totalSold) * 100).toFixed(1) : 0;
-            return `${percent}%`;
+          y: {
+            beginAtZero: true,
+            max: data.reduce((a, b) => a + b, 0) || undefined,
+            ticks: { color: '#fff' },
+            grid: { color: '#444' }
           }
         }
       },
-      scales: {
-        x: {
-          ticks: {
-            color: '#fff'
-          },
-          grid: {
-            color: '#444'
-          }
-        },
-        y: {
-          beginAtZero: true,
-          max: data.reduce((a, b) => a + b, 0),
-          ticks: {
-            color: '#fff'
-          },
-          grid: {
-            color: '#444'
-          }
-        }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
+      plugins: [ChartDataLabels]
+    });
   }
-
 
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('vi-VN', {
@@ -273,13 +221,6 @@ renderPieChart(): void {
   }
 
   private downloadReport(type: 'pdf' | 'excel'): void {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('Không tìm thấy token!');
-      return;
-    }
-
-    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
     const mimeType =
       type === 'pdf'
         ? 'application/pdf'
@@ -289,67 +230,33 @@ renderPieChart(): void {
     if (type === 'pdf') this.isDownloadingPdf = true;
     if (type === 'excel') this.isDownloadingExcel = true;
 
-    this.http
-      .get(`http://localhost:8080/api/events/${this.eventId}/report/${type}`, {
-        headers,
-        responseType: 'blob'
-      })
-      .subscribe({
-        next: data => {
-          const blob = new Blob([data], { type: mimeType });
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `event_report_${this.eventId}.${fileExt}`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-          if (type === 'pdf') this.isDownloadingPdf = false;
-          if (type === 'excel') this.isDownloadingExcel = false;
-        },
-        error: err => {
-          console.error(`Lỗi khi tải báo cáo ${type.toUpperCase()}:`, err);
-          if (type === 'pdf') this.isDownloadingPdf = false;
-          if (type === 'excel') this.isDownloadingExcel = false;
-        }
-      });
+    this.listEventsService.exportEventReport(this.eventId, type).subscribe({
+      next: data => {
+        this.triggerDownload(new Blob([data], { type: mimeType }), `event_report_${this.eventId}.${fileExt}`);
+        if (type === 'pdf') this.isDownloadingPdf = false;
+        if (type === 'excel') this.isDownloadingExcel = false;
+      },
+      error: err => {
+        console.error(`Lỗi khi tải báo cáo ${type.toUpperCase()}:`, err);
+        if (type === 'pdf') this.isDownloadingPdf = false;
+        if (type === 'excel') this.isDownloadingExcel = false;
+      }
+    });
   }
 
   downloadBuyerReport(type: 'pdf' | 'excel'): void {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    console.error('Không tìm thấy token!');
-    return;
-  }
+    const mimeType =
+      type === 'pdf'
+        ? 'application/pdf'
+        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const fileExt = type === 'pdf' ? 'pdf' : 'xlsx';
 
-  const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
-  const mimeType =
-    type === 'pdf'
-      ? 'application/pdf'
-      : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-  const fileExt = type === 'pdf' ? 'pdf' : 'xlsx';
+    if (type === 'pdf') this.isDownloadingBuyerPdf = true;
+    if (type === 'excel') this.isDownloadingBuyerExcel = true;
 
-  if (type === 'pdf') this.isDownloadingBuyerPdf = true;
-  if (type === 'excel') this.isDownloadingBuyerExcel = true;
-
-  this.http
-    .get(`http://localhost:8080/api/events/${this.eventId}/report/buyer-${type}`, {
-      headers,
-      responseType: 'blob'
-    })
-    .subscribe({
+    this.listEventsService.exportBuyerReport(this.eventId, type).subscribe({
       next: data => {
-        const blob = new Blob([data], { type: mimeType });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `buyers_event_${this.eventId}.${fileExt}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-
+        this.triggerDownload(new Blob([data], { type: mimeType }), `buyers_event_${this.eventId}.${fileExt}`);
         if (type === 'pdf') this.isDownloadingBuyerPdf = false;
         if (type === 'excel') this.isDownloadingBuyerExcel = false;
       },
@@ -359,5 +266,16 @@ renderPieChart(): void {
         if (type === 'excel') this.isDownloadingBuyerExcel = false;
       }
     });
+  }
+
+  private triggerDownload(blob: Blob, filename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   }
 }

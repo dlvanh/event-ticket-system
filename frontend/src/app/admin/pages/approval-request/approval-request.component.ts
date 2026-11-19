@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../service/admin.service';
-import { HttpClient } from '@angular/common/http'; // Add HttpClient import
+import { firstValueFrom } from 'rxjs';
 interface Event {
   id: number;
   title: string;
@@ -71,14 +71,14 @@ export class ApprovalRequestComponent {
     rejected: 0
   };
 
-  constructor(private adminService: AdminService, private http: HttpClient) {}
+  constructor(private adminService: AdminService) {}
 
   ngOnInit() {
     this.loadEvents();
     this.loadStatistics();
   }
 
- // Load events
+  // Load events
   loadEvents() {
     this.loading = true;
     this.adminService.getEvents().subscribe({
@@ -109,12 +109,10 @@ export class ApprovalRequestComponent {
             },
             rejectionReason: apiEvent.rejectReason || ''
           }));
-          console.log('Mapped events:', this.events);
           this.stats.total = this.events.length;
           this.stats.pending = this.events.filter(event => event.status === 'pending').length;
           this.stats.approved = this.events.filter(event => event.status === 'approved').length;
           this.stats.rejected = this.events.filter(event => event.status === 'rejected').length;
-          console.log('Stats:', this.stats);
           this.applyFilters();
         }
         this.loading = false;
@@ -149,8 +147,7 @@ export class ApprovalRequestComponent {
   // Export Excel for a single event
   exportEventExcel(eventId: number) {
     this.loading = true;
-    const url = `http://localhost:8080/api/events/${eventId}/report/excel`;
-    this.http.get(url, { responseType: 'blob' }).subscribe({
+    this.adminService.exportEventExcel(eventId).subscribe({
       next: (response: Blob) => {
         this.downloadFile(response, `event_${eventId}_report.xlsx`);
         this.showSuccess('Xuất file Excel thành công!');
@@ -164,7 +161,7 @@ export class ApprovalRequestComponent {
     });
   }
 
-  // Optional: Batch export Excel for selected events
+  // Batch export Excel for selected events
   batchExportExcel() {
     if (this.selectedEvents.length === 0) {
       this.showError('Vui lòng chọn ít nhất một sự kiện để xuất!');
@@ -172,14 +169,11 @@ export class ApprovalRequestComponent {
     }
 
     this.loading = true;
-    const exportPromises = this.selectedEvents.map(eventId => {
-      const url = `http://localhost:8080/api/events/${eventId}/report/excel`;
-      return this.http.get(url, { responseType: 'blob' }).toPromise().then((response: Blob | undefined) => {
-        if (response) {
-          this.downloadFile(response, `event_${eventId}_report.xlsx`);
-        }
-      });
-    });
+    const exportPromises = this.selectedEvents.map(eventId =>
+      firstValueFrom(this.adminService.exportEventExcel(eventId)).then((response: Blob) => {
+        this.downloadFile(response, `event_${eventId}_report.xlsx`);
+      })
+    );
 
     Promise.all(exportPromises)
       .then(() => {
@@ -201,11 +195,11 @@ export class ApprovalRequestComponent {
     link.click();
     window.URL.revokeObjectURL(link.href);
   }
-    // Export PDF for a single event
+
+  // Export PDF for a single event
   exportEventPdf(eventId: number) {
     this.loading = true;
-    const url = `http://localhost:8080/api/events/${eventId}/report/pdf`;
-    this.http.get(url, { responseType: 'blob' }).subscribe({
+    this.adminService.exportEventPdf(eventId).subscribe({
       next: (response: Blob) => {
         this.downloadFile(response, `event_${eventId}_report.pdf`);
         this.showSuccess('Xuất file PDF thành công!');
@@ -226,14 +220,11 @@ export class ApprovalRequestComponent {
       return;
     }
     this.loading = true;
-    const exportPromises = this.selectedEvents.map(eventId => {
-      const url = `http://localhost:8080/api/events/${eventId}/report/pdf`;
-      return this.http.get(url, { responseType: 'blob' }).toPromise().then((response: Blob | undefined) => {
-        if (response) {
-          this.downloadFile(response, `event_${eventId}_report.pdf`);
-        }
-      });
-    });
+    const exportPromises = this.selectedEvents.map(eventId =>
+      firstValueFrom(this.adminService.exportEventPdf(eventId)).then((response: Blob) => {
+        this.downloadFile(response, `event_${eventId}_report.pdf`);
+      })
+    );
     Promise.all(exportPromises)
       .then(() => {
         this.showSuccess(`Đã xuất ${this.selectedEvents.length} file PDF thành công!`);
@@ -359,34 +350,6 @@ export class ApprovalRequestComponent {
     });
   }
 
-  revokeApproval(eventId: number) {
-    this.adminService.revokeApproval(eventId).subscribe({
-      next: () => {
-        this.showSuccess('Đã thu hồi duyệt sự kiện!');
-        this.loadEvents();
-        this.loadStatistics();
-      },
-      error: (error) => {
-        console.error('Error revoking approval:', error);
-        this.showError('Có lỗi xảy ra khi thu hồi duyệt!');
-      }
-    });
-  }
-
-  deleteEvent(eventId: number) {
-    this.adminService.deleteEvent(eventId).subscribe({
-      next: () => {
-        this.showSuccess('Sự kiện đã được xóa!');
-        this.loadEvents();
-        this.loadStatistics();
-      },
-      error: (error) => {
-        console.error('Error deleting event:', error);
-        this.showError('Có lỗi xảy ra khi xóa sự kiện!');
-      }
-    });
-  }
-
   // Batch actions
   batchApprove() {
     if (this.selectedEvents.length === 0) return;
@@ -422,24 +385,6 @@ export class ApprovalRequestComponent {
       error: (error) => {
         console.error('Error rejecting events:', error);
         this.showError('Có lỗi xảy ra khi từ chối hàng loạt!');
-      }
-    });
-  }
-
-  batchDelete() {
-    if (this.selectedEvents.length === 0) return;
-
-    this.adminService.deleteEvents(this.selectedEvents).subscribe({
-      next: () => {
-        this.showSuccess(`Đã xóa ${this.selectedEvents.length} sự kiện!`);
-        this.selectedEvents = [];
-        this.selectAll = false;
-        this.loadEvents();
-        this.loadStatistics();
-      },
-      error: (error) => {
-        console.error('Error deleting events:', error);
-        this.showError('Có lỗi xảy ra khi xóa hàng loạt!');
       }
     });
   }
@@ -509,16 +454,8 @@ goToEventDetail(eventId: number) {
   confirmModalAction() {
     if (!this.selectedEvent) return;
 
-    switch (this.confirmAction) {
-      case 'approve':
-        this.approveEvent(this.selectedEvent.id);
-        break;
-      case 'revoke':
-        this.revokeApproval(this.selectedEvent.id);
-        break;
-      case 'delete':
-        this.deleteEvent(this.selectedEvent.id);
-        break;
+    if (this.confirmAction === 'approve') {
+      this.approveEvent(this.selectedEvent.id);
     }
 
     this.showConfirmModal = false;

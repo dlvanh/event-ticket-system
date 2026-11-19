@@ -1,102 +1,145 @@
-import { RouterModule, Routes } from '@angular/router';
-import { HomeOrganizerComponent } from './organizer/pages/home-organizer/home-organizer.component';
-import { NavOrganizerComponent } from './component/nav-organizer/nav-organizer.component';
-import { ExportFileComponent } from './organizer/pages/export-file/export-file.component';
-import { HomeUserComponent } from './user/pages/home-user/home-user.component';
-import { HomeAdminComponent } from './admin/pages/home-admin/home-admin.component';
-import { LoginComponent } from './auth/login/login.component';
-import { RegisterComponent } from './auth/register/register.component';
-import { ForgotPasswordComponent } from './auth/forgot-password/forgot-password.component';
-import { CreateEventComponent } from './organizer/pages/create-event/create-event.component';
-import { ProfileComponent } from './organizer/pages/profile/profile.component';
-import { DetailTicketComponent } from './user/pages/detail-ticket/detail-ticket.component';
-import { ApprovalRequestComponent } from './admin/pages/approval-request/approval-request.component';
-import { DashboardComponent } from './admin/pages/dashboard/dashboard.component';
-import { UserManagementComponent } from './admin/pages/user-management/user-management.component';
-import { SelectTicketComponent } from './user/pages/select-ticket/select-ticket.component';
-import { NgModule } from '@angular/core';
+import { Routes } from '@angular/router';
 import { RoleGuard } from './auth/services/role.guard';
-import { UserProfileComponent } from './user/pages/user-profile/user-profile.component';
-import { PurchasedTicketComponent } from './user/pages/purchased-ticket/purchased-ticket.component';
-import { OrderTicketComponent } from './user/pages/order-ticket/order-ticket.component';
-import { SearchEventsComponent } from './user/pages/search-events/search-events.component';
-import { PaymentTicketsComponent } from './user/pages/payment-tickets/payment-tickets.component';
-import { RegisterOrganizerComponent } from './auth/register-organizer/register-organizer.component';
-import { ExportFileDetailComponent } from './organizer/pages/export-file-detail/export-file-detail.component';
-import { SliderCaptchaComponent } from './user/pages/slider-captcha/slider-captcha.component';
-import { OrdersRequestComponent } from './admin/pages/orders-request/orders-request.component';
-import { ReviewsEventComponent } from './organizer/pages/reviews-event/reviews-event.component';
-import { ReviewTicketComponent } from './user/pages/review-ticket/review-ticket.component';
 import { PendingChangesGuard } from './auth/services/pending-changes.guard';
-import { AllComponent } from './user/pages/tabs/all/all.component';
-import { SuccessComponent } from './user/pages/tabs/success/success.component';
-import { ProcessingComponent } from './user/pages/tabs/processing/processing.component';
-import { CancelComponent } from './user/pages/tabs/cancel/cancel.component';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
-  { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'register-organizer', component: RegisterOrganizerComponent },
-
+  {
+    path: 'login',
+    loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent)
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('./auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'register-organizer',
+    loadComponent: () => import('./auth/register-organizer/register-organizer.component').then(m => m.RegisterOrganizerComponent)
+  },
   {
     path: 'organizer',
-    component: NavOrganizerComponent,
-    canActivate: [RoleGuard], data: { expectedRole: 'ROLE_organizer' },
+    loadComponent: () => import('./component/nav-organizer/nav-organizer.component').then(m => m.NavOrganizerComponent),
+    canActivate: [RoleGuard],
+    data: { expectedRole: 'ROLE_organizer' },
     children: [
       { path: '', redirectTo: 'events', pathMatch: 'full' },
-      { path: 'events', component: HomeOrganizerComponent },
-      { path: 'export-file', component: ExportFileComponent },
-      { path: 'create-event', component: CreateEventComponent },
-      { path: 'organizer-profile', component: ProfileComponent },
-      { path: 'review-event', component: ReviewsEventComponent },
-      { path: 'event-detail/:id', component: HomeOrganizerComponent },
-      { path: 'export-file-detail/:id', component: ExportFileDetailComponent },
+      {
+        path: 'events',
+        loadComponent: () => import('./organizer/pages/home-organizer/home-organizer.component').then(m => m.HomeOrganizerComponent)
+      },
+      {
+        path: 'export-file',
+        loadComponent: () => import('./organizer/pages/export-file/export-file.component').then(m => m.ExportFileComponent)
+      },
+      {
+        path: 'create-event',
+        loadComponent: () => import('./organizer/pages/create-event/create-event.component').then(m => m.CreateEventComponent)
+      },
+      {
+        path: 'organizer-profile',
+        loadComponent: () => import('./organizer/pages/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
+        path: 'review-event',
+        loadComponent: () => import('./organizer/pages/reviews-event/reviews-event.component').then(m => m.ReviewsEventComponent)
+      },
+      {
+        path: 'event-detail/:id',
+        loadComponent: () => import('./organizer/pages/home-organizer/home-organizer.component').then(m => m.HomeOrganizerComponent)
+      },
+      {
+        path: 'export-file-detail/:id',
+        loadComponent: () => import('./organizer/pages/export-file-detail/export-file-detail.component').then(m => m.ExportFileDetailComponent)
+      }
     ]
   },
-
-  // Home và các route liên quan
-  { path: 'home', component: HomeUserComponent },
-  { path: 'detail-ticket/:id', component: DetailTicketComponent },
-  { path: 'select-ticket/:id', component: SelectTicketComponent },
-  { path: 'user-profile', component: UserProfileComponent },
   {
-  path: 'purchased-ticket',
-  component: PurchasedTicketComponent,
-  children: [
-    { path: 'all', component: AllComponent },
-    { path: 'success', component: SuccessComponent },
-    { path: 'processing', component: ProcessingComponent },
-    { path: 'cancel', component: CancelComponent },
-    { path: '', redirectTo: 'all', pathMatch: 'full' }
-  ]
-}
-,
-  { path: 'order-ticket', component: OrderTicketComponent, canDeactivate: [PendingChangesGuard] },
-  { path: 'search-events', component: SearchEventsComponent },
-  { path: 'payment-tickets', component: PaymentTicketsComponent },
-  { path: 'slider-captcha', component: SliderCaptchaComponent },
-  { path: 'review-ticket/:id', component: ReviewTicketComponent },
-
+    path: 'home',
+    loadComponent: () => import('./user/pages/home-user/home-user.component').then(m => m.HomeUserComponent)
+  },
+  {
+    path: 'detail-ticket/:id',
+    loadComponent: () => import('./user/pages/detail-ticket/detail-ticket.component').then(m => m.DetailTicketComponent)
+  },
+  {
+    path: 'select-ticket/:id',
+    loadComponent: () => import('./user/pages/select-ticket/select-ticket.component').then(m => m.SelectTicketComponent)
+  },
+  {
+    path: 'user-profile',
+    loadComponent: () => import('./user/pages/user-profile/user-profile.component').then(m => m.UserProfileComponent)
+  },
+  {
+    path: 'purchased-ticket',
+    loadComponent: () => import('./user/pages/purchased-ticket/purchased-ticket.component').then(m => m.PurchasedTicketComponent),
+    children: [
+      {
+        path: 'all',
+        loadComponent: () => import('./user/pages/tabs/all/all.component').then(m => m.AllComponent)
+      },
+      {
+        path: 'success',
+        loadComponent: () => import('./user/pages/tabs/success/success.component').then(m => m.SuccessComponent)
+      },
+      {
+        path: 'processing',
+        loadComponent: () => import('./user/pages/tabs/processing/processing.component').then(m => m.ProcessingComponent)
+      },
+      {
+        path: 'cancel',
+        loadComponent: () => import('./user/pages/tabs/cancel/cancel.component').then(m => m.CancelComponent)
+      },
+      { path: '', redirectTo: 'all', pathMatch: 'full' }
+    ]
+  },
+  {
+    path: 'order-ticket',
+    loadComponent: () => import('./user/pages/order-ticket/order-ticket.component').then(m => m.OrderTicketComponent),
+    canDeactivate: [PendingChangesGuard]
+  },
+  {
+    path: 'search-events',
+    loadComponent: () => import('./user/pages/search-events/search-events.component').then(m => m.SearchEventsComponent)
+  },
+  {
+    path: 'payment-tickets',
+    loadComponent: () => import('./user/pages/payment-tickets/payment-tickets.component').then(m => m.PaymentTicketsComponent)
+  },
+  {
+    path: 'slider-captcha',
+    loadComponent: () => import('./user/pages/slider-captcha/slider-captcha.component').then(m => m.SliderCaptchaComponent)
+  },
+  {
+    path: 'review-ticket/:id',
+    loadComponent: () => import('./user/pages/review-ticket/review-ticket.component').then(m => m.ReviewTicketComponent)
+  },
   {
     path: 'admin',
-    component: HomeAdminComponent,
-    canActivate: [RoleGuard], data: { expectedRole: 'ROLE_admin' },
+    loadComponent: () => import('./admin/pages/home-admin/home-admin.component').then(m => m.HomeAdminComponent),
+    canActivate: [RoleGuard],
+    data: { expectedRole: 'ROLE_admin' },
     children: [
-      { path: '', component: DashboardComponent },
-      { path: 'approval-request', component: ApprovalRequestComponent },
-      { path: 'user-management', component: UserManagementComponent },
-      { path: 'orders-request', component: OrdersRequestComponent },
-    ],
+      {
+        path: '',
+        loadComponent: () => import('./admin/pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      {
+        path: 'approval-request',
+        loadComponent: () => import('./admin/pages/approval-request/approval-request.component').then(m => m.ApprovalRequestComponent)
+      },
+      {
+        path: 'user-management',
+        loadComponent: () => import('./admin/pages/user-management/user-management.component').then(m => m.UserManagementComponent)
+      },
+      {
+        path: 'orders-request',
+        loadComponent: () => import('./admin/pages/orders-request/orders-request.component').then(m => m.OrdersRequestComponent)
+      }
+    ]
   },
-
-  // Chuyển hướng mặc định
   { path: '', redirectTo: '/home', pathMatch: 'full' },
-  { path: '**', redirectTo: '/home' },
+  { path: '**', redirectTo: '/home' }
 ];
-
-@NgModule({
-  imports: [RouterModule.forRoot(routes)],
-  exports: [RouterModule],
-})
-export class AppRoutingModule {}

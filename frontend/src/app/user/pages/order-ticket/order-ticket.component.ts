@@ -216,9 +216,9 @@ export class OrderTicketComponent implements OnInit, OnDestroy, CanComponentDeac
 
     this.userService.getDiscountByCode(codeInput).subscribe({
       next: (res) => {
-        const discount = res?.data;
+        const discount: any = res?.data;
         const orderEventId = this.orderData?.eventId;
-        const discountEventId = discount?.event?.eventId;
+        const discountEventId = discount?.eventId ?? discount?.event?.eventId;
 
         if (!orderEventId || !discountEventId || orderEventId !== discountEventId) {
           this.discountAmount = 0;
@@ -245,7 +245,7 @@ export class OrderTicketComponent implements OnInit, OnDestroy, CanComponentDeac
           return;
         }
 
-        if (discount.maxUsage == 0) {
+        if (discount.maxUsage === 0) {
           this.discountAmount = 0;
           this.isDiscountValid = false;
           this.notification.showNotification('Mã giảm giá đã hết lượt sử dụng.', 3000, 'warning');
@@ -282,11 +282,12 @@ export class OrderTicketComponent implements OnInit, OnDestroy, CanComponentDeac
   }
 
   submitOrder() {
+    const origin = window.location.origin;
     const paymentData = {
       ...this.orderData,
-      discountCode: this.discountCode,
-      returnUrl: 'https://url.ngrok-free.app/success',
-      cancelUrl: 'https://url.ngrok-free.app/cancel'
+      discountCode: this.discountCode.trim() || undefined,
+      returnUrl: `${origin}/purchased-ticket/success`,
+      cancelUrl: `${origin}/purchased-ticket/cancel`
     };
 
     this.ticketOrderService.payOrder(paymentData).subscribe({

@@ -15,12 +15,13 @@ export class RegisterOrganizerComponent implements OnInit {
   registerForm!: FormGroup;
 
   currentStep = 1;
-  message: string = '';
+  message = '';
   isLoading = false;
-  registeredEmail: string = '';
+  registeredEmail = '';
   serverResponse: any = null;
 
   profilePicturePreview: string | null = null;
+  selectedProfilePictureFile: File | null = null;
   @ViewChild('profilePictureInput') profilePictureInputRef!: ElementRef<HTMLInputElement>;
 
   currentPassword = true;
@@ -39,7 +40,7 @@ export class RegisterOrganizerComponent implements OnInit {
       password: ['', [
         Validators.required,
         Validators.minLength(10),
-        Validators.pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/)
+        Validators.pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{10,}$/)
       ]],
       confirmPassword: ['', Validators.required],
       name: ['', [Validators.required, Validators.pattern(/^[a-zA-ZÀ-ỹ\s]+$/)]],
@@ -59,26 +60,17 @@ export class RegisterOrganizerComponent implements OnInit {
       this.message = 'Đang gửi code...';
 
       this.authService.sendVerificationCode(emailValue).subscribe({
-        next: (res: any) => {
-          // Thành công => tắt loading, lưu response, hiển thị message
+        next: (res) => {
           this.isLoading = false;
           this.serverResponse = res;
-          this.registeredEmail = emailValue; // Lưu email để dùng cho bước 2, 3
-          this.message = res.message || 'Đã gửi code xác thực tới email. Vui lòng kiểm tra!';
-          this.currentStep = 2; // Chuyển sang bước 2
+          this.registeredEmail = emailValue;
+          this.message = res?.message || 'Đã gửi code xác thực tới email. Vui lòng kiểm tra!';
+          this.currentStep = 2;
         },
-        error: (err: any) => {
-          // Lỗi => tắt loading, gán response, xử lý thông báo
+        error: (err) => {
           this.isLoading = false;
           this.serverResponse = err;
-
-          // Nếu server trả về mảng lỗi
-          if (Array.isArray(err.error) && err.error.length > 0) {
-            this.message = err.error.join('\n');
-          } else {
-            // Lấy err.error.message hoặc statusText
-            this.message = 'Gửi code thất bại: ' + (err?.error?.message || err.statusText);
-          }
+          this.message = 'Gửi code thất bại: ' + this.extractErrorMessage(err);
         }
       });
     } else {
@@ -96,19 +88,16 @@ export class RegisterOrganizerComponent implements OnInit {
       this.message = 'Đang kiểm tra mã xác thực...';
 
       this.authService.verifyCode(this.registeredEmail, code).subscribe({
-        next: res => {
+        next: (res) => {
           this.isLoading = false;
           this.serverResponse = res;
-          if (res.error) {
-            this.message = res.error;
-          } else {
-            this.message = res.message || 'Mã chính xác!';
-            this.currentStep = 3;
-          }
+          this.message = res?.message || 'Mã chính xác!';
+          this.currentStep = 3;
         },
-        error: () => {
+        error: (err) => {
           this.isLoading = false;
-          this.message = 'Xác minh thất bại!';
+          this.serverResponse = err;
+          this.message = this.extractErrorMessage(err) || 'Xác minh thất bại!';
         }
       });
     } else {
@@ -119,11 +108,11 @@ export class RegisterOrganizerComponent implements OnInit {
   onRegister() {
     if (this.currentStep !== 3) return;
     const password = this.registerForm.get('password')?.value;
-    const confirmPassword = this.registerForm.get('confirmPassword')?.value; 
+    const confirmPassword = this.registerForm.get('confirmPassword')?.value;
     const name = this.registerForm.get('name')?.value;
     const phoneNumber = this.registerForm.get('phoneNumber')?.value;
     const bio = this.registerForm.get('bio')?.value;
-    const profilePicture = this.registerForm.get('profilePicture')?.value;
+
     if (password !== confirmPassword) {
       this.message = 'Mật khẩu không trùng khớp!';
       return;
@@ -132,73 +121,73 @@ export class RegisterOrganizerComponent implements OnInit {
     this.isLoading = true;
     this.message = 'Đang đăng ký...';
 
-    this.authService.registerOrganizer(this.registeredEmail, name, bio, password, confirmPassword, phoneNumber, profilePicture).subscribe({
-      next: (res: any) => {
+    this.authService.registerOrganizer(
+      {
+        email: this.registeredEmail,
+        name,
+        bio,
+        password,
+        confirmPassword,
+        phoneNumber
+      },
+      this.selectedProfilePictureFile
+    ).subscribe({
+      next: (res) => {
         this.isLoading = false;
         this.serverResponse = res;
         this.message = res?.message || 'Đăng ký thành công!';
         this.router.navigate(['/login']);
       },
-      error: (err: any) => {
+      error: (err) => {
         this.isLoading = false;
         this.serverResponse = err;
-        let errorMsg = '';
-
-        try {
-          // Thử parse chuỗi JSON trả về từ server
-          const parsedError = JSON.parse(err.error);
-          if (Array.isArray(parsedError)) {
-            errorMsg = parsedError.join('\n');
-          } else if (parsedError.error) {
-            errorMsg = parsedError.error;
-          } else {
-            errorMsg = err.error;
-          }
-        } catch (e) {
-          errorMsg = err.error || err.statusText || 'Đăng ký thất bại!';
-        }
-
-        this.message = errorMsg;
+        this.message = this.extractErrorMessage(err) || 'Đăng ký thất bại!';
       }
     });
   }
 
   triggerFileInput(inputType: string): void {
-  if (inputType === 'profilePicture') {
-    this.profilePictureInputRef.nativeElement.click();
+    if (inputType === 'profilePicture') {
+      this.profilePictureInputRef.nativeElement.click();
+    }
   }
-  }
-
 
   onImageSelected(event: Event, type: string): void {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  if (!file.type.startsWith('image/')) {
-    alert('Vui lòng chọn file hình ảnh!');
-    return;
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    alert('Kích thước ảnh không được vượt quá 5MB!');
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    const imageDataUrl = reader.result as string;
-
-    if (type === 'profilePicture') {
-      this.profilePicturePreview = imageDataUrl;
-      this.registerForm.patchValue({ profilePicture: imageDataUrl });
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file hình ảnh!');
+      return;
     }
 
-    // Nếu có thêm loại ảnh khác, xử lý tại đây
-  };
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước ảnh không được vượt quá 5MB!');
+      return;
+    }
 
-  reader.readAsDataURL(file);
+    if (type === 'profilePicture') {
+      this.selectedProfilePictureFile = file;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.profilePicturePreview = reader.result as string;
+        this.registerForm.patchValue({ profilePicture: file.name });
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  private extractErrorMessage(err: any): string {
+    const body = err?.error;
+    if (!body) return err?.statusText || 'Có lỗi xảy ra';
+    if (typeof body === 'string') return body;
+    if (Array.isArray(body)) return body.join('\n');
+    if (body.errors && typeof body.errors === 'object') {
+      return Object.values(body.errors).join('\n');
+    }
+    return body.message || body.error || err?.statusText || 'Có lỗi xảy ra';
   }
 
   toggleCurrentPasswordVisibility() {

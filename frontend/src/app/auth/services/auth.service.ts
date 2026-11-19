@@ -1,186 +1,150 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { Router } from '@angular/router';
-import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../../environments/environment';
+import { ApiResponse, DecodedJwtPayload, LoginResponseDto, OrganizerRegistrationPayload } from '../../core/models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8080/api';
-  
+  private readonly apiUrl = environment.apiUrl;
+
   constructor(
     private http: HttpClient,
-    private router: Router,
-    @Inject(PLATFORM_ID) private platformId: Object
-  ) { }
-
-  // Helper method để kiểm tra có phải browser không
-  private isBrowser(): boolean {
-    return isPlatformBrowser(this.platformId);
-  }
-
-  // Helper method để truy cập localStorage an toàn
-  private getLocalStorage(): Storage | null {
-    return this.isBrowser() ? localStorage : null;
-  }
+    private router: Router
+  ) {}
 
   /** Gửi mã xác minh đến email */
-  sendVerificationCode(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/sendVerificationCode`, { email }, { responseType: 'text' });
+  sendVerificationCode(email: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/auth/sendVerificationCode`, { email });
   }
 
   /** Kiểm tra mã xác minh */
-  verifyCode(email: string, code: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/verifyCode`, { email, code }, { responseType: 'json' });
+  verifyCode(email: string, code: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/auth/verifyCode`, { email, code });
   }
 
   /** Đăng ký tài khoản mới */
-  register(email: string, password: string, confirmPassword: string, fullName: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/register`, { email, password, confirmPassword, fullName }, { responseType: 'text' });
+  register(
+    email: string,
+    password: string,
+    confirmPassword: string,
+    fullName: string
+  ): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/auth/register`, {
+      email,
+      password,
+      confirmPassword,
+      fullName
+    });
   }
 
+  /** Đăng ký tài khoản nhà tổ chức (multipart/form-data) */
   registerOrganizer(
-  email: string,
-  name: string,
-  bio: string,
-  password: string,
-  confirmPassword: string,
-  phoneNumber: string,
-  profilePicture: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/register-organizer`, { email,name, bio, password, confirmPassword, phoneNumber, profilePicture}, { responseType: 'text' });
-}
-
+    payload: OrganizerRegistrationPayload,
+    profilePicture?: File | null
+  ): Observable<ApiResponse<void>> {
+    const formData = new FormData();
+    formData.append(
+      'data',
+      new Blob([JSON.stringify(payload)], { type: 'application/json' })
+    );
+    if (profilePicture) {
+      formData.append('profilePicture', profilePicture, profilePicture.name);
+    }
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/auth/register-organizer`, formData);
+  }
 
   /** Đăng nhập */
-  login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/login`, { email, password }).pipe(
+  login(email: string, password: string): Observable<ApiResponse<LoginResponseDto>> {
+    return this.http.post<ApiResponse<LoginResponseDto>>(`${this.apiUrl}/auth/login`, { email, password }).pipe(
       tap((res: any) => {
-        if (res.token && this.isBrowser()) {
-          this.setToken(res.token);
-
-          try {
-            // Giải mã token để lấy thông tin user
-            const decodedToken: any = jwtDecode(res.token);
-            const storage = this.getLocalStorage();
-            if (storage) {
-              if (decodedToken.sub) {
-                storage.setItem('userId', decodedToken.sub);
-              }
-              
-              if (decodedToken.full_name) {
-                storage.setItem('fullName',decodedToken.full_name);
-              }
-            }
-
-          } catch (error) {
-            console.error('Lỗi khi giải mã token:', error);
+        const token: string | undefined = res?.data?.token ?? res?.token;
+        if (token) {
+          this.setToken(token);
+          const decodedToken = this.decodeToken(token);
+          if (decodedToken?.sub) {
+            localStorage.setItem('userId', decodedToken.sub);
+          }
+          if (decodedToken?.full_name) {
+            localStorage.setItem('fullName', decodedToken.full_name);
           }
         }
       })
     );
   }
 
-  // Đặt lại mật khẩu B1 gửi code
-  sendCode(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/send-code`, { email }, { responseType: 'text' });
+  /** Đặt lại mật khẩu B1: gửi mã xác thực */
+  sendCode(email: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/auth/send-code`, { email });
   }
 
-  // Đặt lại mật khẩu B2 xác thực code và đổi mật khẩu
-  resetPassword(payload: { email: string, code: string, newPassword: string, confirmNewPassword: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/reset-password-by-code`, payload, { responseType: 'text' });
+  /** Đặt lại mật khẩu B2: xác thực mã và đổi mật khẩu */
+  resetPassword(payload: {
+    email: string;
+    code: string;
+    newPassword: string;
+    confirmNewPassword: string;
+  }): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/auth/reset-password-by-code`, payload);
   }
 
-  // Lấy userid
-  getUserId(): number | null { 
-    if (!isPlatformBrowser(this.platformId)) {
-      return null;
+  getUserId(): number | null {
+    const token = this.getToken();
+    if (!token) return null;
+    const decoded = this.decodeToken(token);
+    return decoded?.sub ? Number(decoded.sub) : null;
+  }
+
+  setToken(token: string): void {
+    localStorage.setItem('token', token);
+    const decodedToken = this.decodeToken(token);
+    if (decodedToken?.role) {
+      localStorage.setItem('role', JSON.stringify(decodedToken.role));
     }
-
-    const token = localStorage.getItem('token'); 
-    if (!token) return null; 
-
-    try { 
-      const decodedToken: any = jwtDecode(token); 
-      return Number(decodedToken.sub); // ID người dùng 
-    } catch (error) { 
-      console.error('Lỗi khi giải mã token:', error); 
-      return null; 
-    } 
-  } 
-
-  /*Lưu token vào localStorage */
-  setToken(token: string): void { 
-    
-    localStorage.setItem('token', token); 
-    const decodedToken = this.decodeToken(token); 
-    if (decodedToken) { 
-      localStorage.setItem('role', JSON.stringify(decodedToken.role)); // Lưu role vào localStorage 
-    } 
-  } 
-
-  /*Lấy token */
-  getToken(): string | null {
-    return typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   }
 
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
 
-  /*Kiểm tra xem user có đăng nhập không */
   isLoggedIn(): boolean {
-    if (!this.isBrowser()) return false;
     const token = this.getToken();
     if (!token) return false;
-
-    try {
-      const decoded: any = jwtDecode(token);
-      // Kiểm tra hạn token (exp là giây)
-      if (decoded.exp && Date.now() >= decoded.exp * 1000) {
-        this.logout();
-        return false;
-      }
-      return true;
-    } catch {
+    const decoded = this.decodeToken(token);
+    if (!decoded) {
       this.logout();
       return false;
     }
-  }
-
-  /*Đăng xuất */
-  logout(): void {
-    if (!this.isBrowser()) return; 
-    localStorage.clear();
-    // Clear sessionStorage if available
-    if (typeof sessionStorage !== 'undefined') {
-      sessionStorage.clear();
+    if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+      this.logout();
+      return false;
     }
+    return true;
   }
 
-  /*Giải mã token */
-  decodeToken(token: string): any {
+  logout(): void {
+    localStorage.clear();
+    sessionStorage.clear();
+  }
+
+  decodeToken(token: string): DecodedJwtPayload | null {
     if (!token) return null;
     try {
-      return jwtDecode(token);
-    } catch (error) {
-      console.error('Invalid token:', error);
+      return jwtDecode<DecodedJwtPayload>(token);
+    } catch {
       return null;
     }
   }
 
-  /*Lấy role từ localStorage hoặc token */
-  getRole(): string | null { 
-    const token = this.getToken(); 
-    if (!token) return null; 
-
-    try { 
-      const decodedToken: any = jwtDecode(token); 
-      return decodedToken.role || null; // Lấy role từ JWT 
-    } catch (error) { 
-      console.error('Invalid token:', error); 
-      return null; 
-    } 
-  } 
+  getRole(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+    return this.decodeToken(token)?.role ?? null;
+  }
 
   isAdmin(): boolean {
     const role = this.getRole();

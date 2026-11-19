@@ -1,7 +1,6 @@
 
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../service/admin.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -10,7 +9,7 @@ import { forkJoin } from 'rxjs';
 @Component({
   selector: 'app-user-management',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './user-management.component.html',
   styleUrls: ['./user-management.component.css']
 })

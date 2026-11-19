@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
-import { SuccessPopupComponent } from "../success-popup/success-popup.component";
+import { SuccessPopupComponent } from '../success-popup/success-popup.component';
 
 @Component({
   selector: 'app-forgot-password',
@@ -15,10 +15,10 @@ import { SuccessPopupComponent } from "../success-popup/success-popup.component"
 export class ForgotPasswordComponent implements OnInit {
   forgotPasswordForm!: FormGroup;
   currentStep = 1;
-  message: string = '';
+  message = '';
   errors: string[] = [];
   isLoading = false;
-  registeredEmail: string = '';
+  registeredEmail = '';
   currentNewPassword = true;
   validateNewPassword = true;
   serverResponse: any = null;
@@ -27,7 +27,7 @@ export class ForgotPasswordComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.forgotPasswordForm = this.fb.group({
@@ -36,7 +36,7 @@ export class ForgotPasswordComponent implements OnInit {
       newPassword: ['', [
         Validators.required,
         Validators.minLength(10),
-        Validators.pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/)
+        Validators.pattern(/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{10,}$/)
       ]],
       confirmNewPassword: ['', [Validators.required]]
     });
@@ -67,13 +67,14 @@ export class ForgotPasswordComponent implements OnInit {
         next: (res) => {
           this.isLoading = false;
           this.serverResponse = res;
-          this.message = 'Mã xác thực đã được gửi!';
+          this.message = res?.message || 'Mã xác thực đã được gửi!';
           this.currentStep = 2;
         },
         error: err => {
           this.isLoading = false;
           this.serverResponse = err;
-          this.message = 'Lỗi: ' + (err?.error || 'Không xác định');
+          const msg = err?.error?.message || (typeof err?.error === 'string' ? err.error : 'Không xác định');
+          this.message = 'Lỗi: ' + msg;
         }
       });
     } else {
@@ -100,22 +101,26 @@ export class ForgotPasswordComponent implements OnInit {
       this.authService.resetPassword({
         email: this.registeredEmail,
         code: codeControl.value,
-        newPassword: newPassword,
-        confirmNewPassword: confirmNewPassword
+        newPassword,
+        confirmNewPassword
       }).subscribe({
-        next: () => {
+        next: (res) => {
           this.isLoading = false;
-          this.message = 'Đặt lại mật khẩu thành công!';
+          this.message = res?.message || 'Đặt lại mật khẩu thành công!';
           this.currentStep = 3;
         },
         error: err => {
           this.isLoading = false;
           this.serverResponse = err;
-          this.message = 'Đã xảy ra lỗi.';
-          if (Array.isArray(err.error)) {
+          this.message = err?.error?.message || 'Đã xảy ra lỗi.';
+          if (Array.isArray(err?.error)) {
             this.errors = err.error;
-          } else if (typeof err.error === 'string') {
+          } else if (err?.error?.errors && typeof err.error.errors === 'object') {
+            this.errors = Object.values(err.error.errors);
+          } else if (typeof err?.error === 'string') {
             this.errors = [err.error];
+          } else if (err?.error?.message) {
+            this.errors = [err.error.message];
           }
         }
       });
@@ -132,8 +137,7 @@ export class ForgotPasswordComponent implements OnInit {
     this.validateNewPassword = !this.validateNewPassword;
   }
 
-  onPopupClosed() {
-  }
+  onPopupClosed() {}
 
   goToHome() {
     this.router.navigate(['/']);

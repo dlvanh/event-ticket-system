@@ -44,9 +44,16 @@ export class ChatbotComponent implements OnInit {
 
     this.messages = this.chatbotService.getMessages();
 
-    this.chatbotService.chat(message).subscribe(() => {
-      this.messages = this.chatbotService.getMessages();
-      this.isLoading = false; 
+    this.chatbotService.chat(message).subscribe({
+      next: () => {
+        this.messages = this.chatbotService.getMessages();
+        this.isLoading = false;
+      },
+      error: () => {
+        this.chatbotService.addBotMessage('Xin lỗi, hiện không thể kết nối tới trợ lý ảo. Vui lòng thử lại sau.');
+        this.messages = this.chatbotService.getMessages();
+        this.isLoading = false;
+      }
     });
   }
 

@@ -4,7 +4,6 @@ import { FormsModule, FormBuilder, FormGroup, FormArray, Validators, ReactiveFor
 import { ImageCropperModule } from 'ngx-image-cropper';
 import { CreateEventsService } from '../../services/create-events.service';
 import { LocationService, Location as LocationData } from '../../services/location.service';
-import { HttpClientModule } from '@angular/common/http';
 import { ToastNotificationComponent } from '../../../user/pop-up/toast-notification/toast-notification.component';
 import { Router } from '@angular/router';
 import { timeout, catchError, of } from 'rxjs';
@@ -26,7 +25,7 @@ interface EventForm {
 @Component({
   selector: 'app-create-event',
   standalone: true,
-  imports: [CommonModule, FormsModule, ImageCropperModule, ReactiveFormsModule, HttpClientModule, ToastNotificationComponent],
+  imports: [CommonModule, FormsModule, ImageCropperModule, ReactiveFormsModule, ToastNotificationComponent],
   templateUrl: './create-event.component.html',
   styleUrls: ['./create-event.component.css']
 })
