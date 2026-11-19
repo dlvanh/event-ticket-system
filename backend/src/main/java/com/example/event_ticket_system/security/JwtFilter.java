@@ -43,7 +43,8 @@ public class JwtFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtUtil.extractAllClaims(jwt);
             if (!jwtUtil.isTokenValid(claims)) {
-                writeUnauthorized(response, "Token has expired");
+                SecurityContextHolder.clearContext();
+                chain.doFilter(request, response);
                 return;
             }
 
@@ -53,7 +54,8 @@ public class JwtFilter extends OncePerRequestFilter {
             String roleClaim = claims.get("role", String.class);
 
             if (roleClaim == null) {
-                writeUnauthorized(response, "Invalid token claims");
+                SecurityContextHolder.clearContext();
+                chain.doFilter(request, response);
                 return;
             }
 
@@ -69,8 +71,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             log.debug("Invalid JWT token on {}: {}", uri, e.getMessage());
-            writeUnauthorized(response, "Invalid or expired token");
-            return;
+            SecurityContextHolder.clearContext();
         }
 
         chain.doFilter(request, response);

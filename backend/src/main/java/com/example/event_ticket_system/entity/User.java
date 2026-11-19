@@ -21,6 +21,7 @@ import java.util.Objects;
 @Setter
 @NoArgsConstructor
 @Entity
+@org.hibernate.annotations.BatchSize(size = 20)
 @Table(name = "users")
 public class User {
 

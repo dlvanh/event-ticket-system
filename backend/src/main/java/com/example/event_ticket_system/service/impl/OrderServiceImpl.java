@@ -7,7 +7,9 @@ import com.example.event_ticket_system.entity.Order;
 import com.example.event_ticket_system.entity.OrderTicket;
 import com.example.event_ticket_system.entity.Ticket;
 import com.example.event_ticket_system.entity.User;
+import com.example.event_ticket_system.enums.ApprovalStatus;
 import com.example.event_ticket_system.enums.DiscountType;
+import com.example.event_ticket_system.enums.EventStatus;
 import com.example.event_ticket_system.enums.OrderStatus;
 import com.example.event_ticket_system.enums.UserRole;
 import com.example.event_ticket_system.exception.ApiException;
@@ -98,6 +100,16 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("Failed to create pending order");
         }
 
+        // Free / 100%-discounted orders skip PayOS and complete immediately
+        if (ctx.totalAmount().compareTo(BigDecimal.ZERO) == 0) {
+            paymentService.completeOrderPayment(ctx.payosOrderCode(), "Free/Discount100", null);
+            return CheckoutResponseData.builder()
+                    .orderCode(ctx.payosOrderCode())
+                    .amount(0)
+                    .status("PAID")
+                    .build();
+        }
+
         // External HTTP call to PayOS OUTSIDE database transaction
         int payosAmount = ctx.totalAmount().setScale(0, RoundingMode.HALF_UP).intValueExact();
         ItemData itemData = ItemData.builder()
@@ -148,6 +160,10 @@ public class OrderServiceImpl implements OrderService {
             }
             if (!ticket.getEvent().getEventId().equals(dto.getEventId())) {
                 throw new IllegalArgumentException("Ticket " + ticket.getTicketType() + " does not belong to event");
+            }
+            if (ticket.getEvent().getApprovalStatus() != ApprovalStatus.approved
+                    || ticket.getEvent().getStatus() == EventStatus.cancelled) {
+                throw new IllegalStateException("Event is not available for ticket booking");
             }
             if (ticket.getSaleStart() != null && now.isBefore(ticket.getSaleStart())) {
                 throw new IllegalArgumentException("Ticket sale for " + ticket.getTicketType() + " has not started");

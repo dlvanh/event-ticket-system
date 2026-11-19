@@ -23,6 +23,7 @@ public class OrderPaidEventListener {
                     event.recipientEmail(),
                     "Mã QR Vé Sự Kiện Của Bạn",
                     "Cảm ơn bạn đã mua vé! Vui lòng xuất trình các mã QR này tại lối vào sự kiện.",
+                    event.totalAmount(),
                     event.items()
             );
             log.info("Dispatched QR confirmation email for order {}", event.orderId());

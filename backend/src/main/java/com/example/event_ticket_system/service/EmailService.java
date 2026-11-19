@@ -40,6 +40,7 @@ public class EmailService {
     public void sendOrderConfirmationEmail(String to,
                                            String subject,
                                            String introText,
+                                           BigDecimal paidTotalAmount,
                                            List<OrderPaidEvent.TicketEmailItem> items) throws MessagingException {
         if (items == null || items.isEmpty()) {
             throw new IllegalArgumentException("Ticket items cannot be null or empty");
@@ -81,10 +82,11 @@ public class EmailService {
             emailContent.append("</tr>");
         }
 
+        BigDecimal displayTotal = paidTotalAmount != null ? paidTotalAmount : totalAmount;
         emailContent.append("<tr style='background-color: #f9f9f9; font-weight: bold;'>");
-        emailContent.append("<td colspan='3' style='padding: 8px;'>Tổng cộng:</td>");
+        emailContent.append("<td colspan='3' style='padding: 8px;'>Tổng thanh toán:</td>");
         emailContent.append("<td style='padding: 8px;'>")
-                .append(String.format(viLocale, "%,d", totalAmount.setScale(0, RoundingMode.HALF_UP).longValue()))
+                .append(String.format(viLocale, "%,d", displayTotal.setScale(0, RoundingMode.HALF_UP).longValue()))
                 .append(" VND</td>");
         emailContent.append("</tr></table><br>");
         emailContent.append("<p><strong>Lưu ý:</strong> Mỗi loại vé có một mã QR riêng được đính kèm. Vui lòng tải xuống và lưu trữ cẩn thận.</p>");
@@ -106,28 +108,5 @@ public class EmailService {
 
         log.info("Sending ticket QR email to {} with {} attachment(s)", to, items.size());
         mailSender.send(message);
-    }
-
-    public void sendMultipleQRCodeEmail(String to, String subject, String text,
-                                        List<byte[]> qrCodes, List<OrderTicket> orderTickets) throws MessagingException {
-        if (orderTickets == null || orderTickets.isEmpty()) {
-            throw new IllegalArgumentException("OrderTickets list cannot be null or empty");
-        }
-        if (qrCodes == null || qrCodes.size() != orderTickets.size()) {
-            throw new IllegalArgumentException("QR codes count must match OrderTickets count");
-        }
-        List<OrderPaidEvent.TicketEmailItem> items = new java.util.ArrayList<>(orderTickets.size());
-        for (int i = 0; i < orderTickets.size(); i++) {
-            OrderTicket ot = orderTickets.get(i);
-            items.add(new OrderPaidEvent.TicketEmailItem(
-                    ot.getOrderTicketId(),
-                    ot.getTicket().getEvent().getEventName(),
-                    ot.getTicket().getTicketType(),
-                    ot.getQuantity(),
-                    ot.getUnitPrice(),
-                    qrCodes.get(i)
-            ));
-        }
-        sendOrderConfirmationEmail(to, subject, text, items);
     }
 }

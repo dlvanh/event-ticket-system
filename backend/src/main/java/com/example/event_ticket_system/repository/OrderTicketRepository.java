@@ -26,10 +26,6 @@ public interface OrderTicketRepository extends JpaRepository<OrderTicket, Intege
     @Query("SELECT ot FROM OrderTicket ot JOIN FETCH ot.ticket t JOIN FETCH t.event e JOIN FETCH ot.order o WHERE o.orderId IN :orderIds")
     List<OrderTicket> findByOrderIdsWithDetails(@Param("orderIds") Collection<Integer> orderIds);
 
-    @Query("SELECT COALESCE(SUM(ot.quantity), 0) FROM OrderTicket ot " +
-           "WHERE ot.ticket.event = :event AND ot.order.status = com.example.event_ticket_system.enums.OrderStatus.paid")
-    long sumQuantityByEvent(@Param("event") Event event);
-
     @Query("SELECT ot.ticket.event.eventId, COALESCE(SUM(ot.quantity), 0) FROM OrderTicket ot " +
            "WHERE ot.ticket.event.eventId IN :eventIds " +
            "AND ot.order.status = com.example.event_ticket_system.enums.OrderStatus.paid " +
@@ -47,11 +43,28 @@ public interface OrderTicketRepository extends JpaRepository<OrderTicket, Intege
            "WHERE t.event = :event AND o.status = com.example.event_ticket_system.enums.OrderStatus.paid")
     List<OrderTicket> findAllByTicketEvent(@Param("event") Event event);
 
-    List<OrderTicket> findByOrderOrderId(Integer orderId);
-
     boolean existsByTicket(Ticket ticket);
 
     Optional<OrderTicket> findByCheckinToken(String checkinToken);
+
+    @org.springframework.data.jpa.repository.Query("SELECT ot FROM OrderTicket ot " +
+           "JOIN FETCH ot.order o " +
+           "JOIN FETCH ot.ticket t " +
+           "JOIN FETCH t.event e " +
+           "JOIN FETCH e.organizer " +
+           "WHERE ot.checkinToken = :token")
+    Optional<OrderTicket> findByCheckinTokenWithDetails(@Param("token") String token);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true, flushAutomatically = true)
+    @org.springframework.data.jpa.repository.Query("UPDATE OrderTicket ot SET ot.checkedInAt = :now " +
+           "WHERE ot.checkinToken = :token AND ot.order.status = com.example.event_ticket_system.enums.OrderStatus.paid " +
+           "AND ot.checkedInAt IS NULL")
+    int markCheckedIn(@Param("token") String token, @Param("now") java.time.LocalDateTime now);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(ot) > 0 FROM OrderTicket ot " +
+           "WHERE ot.order.user.id = :userId AND ot.ticket.event.eventId = :eventId " +
+           "AND ot.order.status = com.example.event_ticket_system.enums.OrderStatus.paid")
+    boolean existsPaidTicketByUserAndEvent(@Param("userId") Integer userId, @Param("eventId") Integer eventId);
 
     @Query("SELECT CAST(ot.order.orderDate AS LocalDate) AS date, " +
            "COALESCE(SUM(ot.quantity), 0) AS totalTicketSold " +

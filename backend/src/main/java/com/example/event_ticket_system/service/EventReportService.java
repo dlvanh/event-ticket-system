@@ -119,7 +119,7 @@ public class EventReportService {
             }
 
             for (int i = 0; i <= ticketTypes.size() + 2; i++) {
-                sheet.autoSizeColumn(i);
+                sheet.setColumnWidth(i, 20 * 256);
             }
 
             workbook.write(out);
@@ -211,7 +211,7 @@ public class EventReportService {
             totalRow.createCell(4).setCellValue(totalRevenue.doubleValue());
 
             for (int i = 0; i < headers.length; i++) {
-                sheet.autoSizeColumn(i);
+                sheet.setColumnWidth(i, 20 * 256);
             }
 
             workbook.write(out);

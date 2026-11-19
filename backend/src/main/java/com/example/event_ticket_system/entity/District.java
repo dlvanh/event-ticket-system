@@ -13,6 +13,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@org.hibernate.annotations.BatchSize(size = 20)
 @Table(name = "districts")
 public class District {
 
