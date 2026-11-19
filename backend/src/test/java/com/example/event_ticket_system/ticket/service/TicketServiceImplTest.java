@@ -1,25 +1,34 @@
 package com.example.event_ticket_system.ticket.service;
 
-import com.example.event_ticket_system.DTO.response.*;
-import com.example.event_ticket_system.Entity.Event;
-import com.example.event_ticket_system.Entity.Order;
-import com.example.event_ticket_system.Entity.OrderTicket;
-import com.example.event_ticket_system.Entity.Ticket;
-import com.example.event_ticket_system.Enums.OrderStatus;
-import com.example.event_ticket_system.Repository.EventRepository;
-import com.example.event_ticket_system.Repository.OrderRepository;
-import com.example.event_ticket_system.Repository.OrderTicketRepository;
-import com.example.event_ticket_system.Security.JwtUtil;
-import com.example.event_ticket_system.Service.Impl.TicketServiceImpl;
+import com.example.event_ticket_system.dto.response.DailyTicketSalesDTO;
+import com.example.event_ticket_system.dto.response.DailyTicketSalesProjection;
+import com.example.event_ticket_system.dto.response.DailyTicketTypeSalesDTO;
+import com.example.event_ticket_system.dto.response.DailyTicketTypeSalesProjection;
+import com.example.event_ticket_system.dto.response.TicketResponseDTO;
+import com.example.event_ticket_system.entity.Event;
+import com.example.event_ticket_system.entity.Order;
+import com.example.event_ticket_system.entity.OrderTicket;
+import com.example.event_ticket_system.entity.Ticket;
+import com.example.event_ticket_system.entity.User;
+import com.example.event_ticket_system.enums.OrderStatus;
+import com.example.event_ticket_system.enums.UserRole;
+import com.example.event_ticket_system.repository.EventRepository;
+import com.example.event_ticket_system.repository.OrderRepository;
+import com.example.event_ticket_system.repository.OrderTicketRepository;
+import com.example.event_ticket_system.security.CustomUserPrincipal;
+import com.example.event_ticket_system.service.impl.TicketServiceImpl;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -36,9 +45,6 @@ import static org.mockito.Mockito.when;
 class TicketServiceImplTest {
 
     @Mock
-    private JwtUtil jwtUtil;
-
-    @Mock
     private OrderRepository orderRepository;
 
     @Mock
@@ -46,9 +52,6 @@ class TicketServiceImplTest {
 
     @Mock
     private OrderTicketRepository orderTicketRepository;
-
-    @Mock
-    private HttpServletRequest request;
 
     @InjectMocks
     private TicketServiceImpl ticketService;
@@ -60,6 +63,7 @@ class TicketServiceImplTest {
     @BeforeEach
     void setUp() {
         event = new Event();
+        event.setEventId(10);
         event.setEventName("Concert A");
         event.setStartTime(LocalDateTime.of(2025, 8, 20, 19, 0));
         event.setEndTime(LocalDateTime.of(2025, 8, 20, 22, 0));
@@ -71,112 +75,102 @@ class TicketServiceImplTest {
         ticket.setTicketType("VIP");
         ticket.setEvent(event);
 
-        orderTicket = new OrderTicket();
-        orderTicket.setOrderTicketId(1001);
-        orderTicket.setTicket(ticket);
-        orderTicket.setUnitPrice(50.0);
-        orderTicket.setQuantity(2);
-
         order = new Order();
         order.setOrderId(5001);
         order.setOrderDate(LocalDateTime.of(2025, 8, 1, 10, 0));
-        order.setTotalAmount(100.0);
+        order.setTotalAmount(new BigDecimal("100.00"));
         order.setStatus(OrderStatus.paid);
         order.setPayosOrderCode(123456789L);
-        order.setCancellationReason(null);
+
+        orderTicket = new OrderTicket();
+        orderTicket.setOrderTicketId(1001);
+        orderTicket.setOrder(order);
+        orderTicket.setTicket(ticket);
+        orderTicket.setUnitPrice(new BigDecimal("50.00"));
+        orderTicket.setQuantity(2);
+        orderTicket.setCheckinToken("v1:5001:1001:101:1:10:2.sig");
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticateAs(Integer userId, UserRole role) {
+        CustomUserPrincipal principal = new CustomUserPrincipal(userId, "user" + userId + "@test.com", "User " + userId, role);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities())
+        );
     }
 
     @Test
-    void getTicketsByUserId_ShouldReturnTicketResponse_WhenValidRequest() {
+    void getTicketsByUserId_ShouldReturnTicketResponse_WhenValidCustomer() {
         Integer userId = 1;
-        String token = "mockToken";
+        authenticateAs(userId, UserRole.customer);
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_customer");
-        when(jwtUtil.extractUserId(token)).thenReturn(userId);
-        when(orderRepository.findByUserId(userId)).thenReturn(Collections.singletonList(order));
-        when(orderTicketRepository.findByOrderOrderId(order.getOrderId())).thenReturn(Collections.singletonList(orderTicket));
+        when(orderRepository.findByUserIdOrderByOrderDateDesc(userId)).thenReturn(Collections.singletonList(order));
+        when(orderTicketRepository.findByOrderIdsWithDetails(List.of(order.getOrderId())))
+                .thenReturn(Collections.singletonList(orderTicket));
 
-        List<TicketResponseDTO> result = ticketService.getTicketsByUserId(userId, request);
+        List<TicketResponseDTO> result = ticketService.getTicketsByUserId(userId);
 
         assertThat(result).hasSize(1);
         TicketResponseDTO response = result.getFirst();
         assertThat(response.getOrderId()).isEqualTo(5001);
         assertThat(response.getStatus()).isEqualTo(OrderStatus.paid);
+        assertThat(response.getTotalAmount()).isEqualByComparingTo("100.00");
         assertThat(response.getTickets()).hasSize(1);
         assertThat(response.getTickets().getFirst().getEventName()).isEqualTo("Concert A");
         assertThat(response.getTickets().getFirst().getTicketType()).isEqualTo("VIP");
+        assertThat(response.getTickets().getFirst().getCheckinToken()).isEqualTo("v1:5001:1001:101:1:10:2.sig");
     }
 
     @Test
     void getTicketsByUserId_ShouldThrowSecurityException_WhenRoleIsNotCustomer() {
-        Integer userId = 1;
-        String token = "mockToken";
+        authenticateAs(1, UserRole.admin);
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_admin");
-
-        assertThatThrownBy(() -> ticketService.getTicketsByUserId(userId, request))
+        assertThatThrownBy(() -> ticketService.getTicketsByUserId(1))
                 .isInstanceOf(SecurityException.class)
                 .hasMessage("You do not have permission to view tickets for this user.");
     }
 
     @Test
     void getTicketsByUserId_ShouldThrowSecurityException_WhenUserIdMismatch() {
-        Integer userId = 1;
-        String token = "mockToken";
+        authenticateAs(99, UserRole.customer);
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_customer");
-        when(jwtUtil.extractUserId(token)).thenReturn(99);
-
-        assertThatThrownBy(() -> ticketService.getTicketsByUserId(userId, request))
+        assertThatThrownBy(() -> ticketService.getTicketsByUserId(1))
                 .isInstanceOf(SecurityException.class)
                 .hasMessage("You do not have permission to view tickets for this user.");
     }
 
     @Test
-    void getTicketsByUserId_ShouldThrowIllegalArgumentException_WhenNoOrders() {
-        Integer userId = 1;
-        String token = "mockToken";
+    void getTicketsByUserId_ShouldReturnEmptyList_WhenNoOrders() {
+        authenticateAs(1, UserRole.customer);
+        when(orderRepository.findByUserIdOrderByOrderDateDesc(1)).thenReturn(Collections.emptyList());
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_customer");
-        when(jwtUtil.extractUserId(token)).thenReturn(userId);
-        when(orderRepository.findByUserId(userId)).thenReturn(Collections.emptyList());
+        List<TicketResponseDTO> result = ticketService.getTicketsByUserId(1);
 
-        assertThatThrownBy(() -> ticketService.getTicketsByUserId(userId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("No tickets found for this user.");
+        assertThat(result).isEmpty();
     }
 
     @Test
     void getTicketsSoldPerDay_ShouldReturnData_WhenOrganizerOwnsEvent() {
         Integer eventId = 10;
-        String token = "mockToken";
         Integer userId = 1;
+        authenticateAs(userId, UserRole.organizer);
 
-        // Mock request + JWT
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_organizer");
-        when(jwtUtil.extractUserId(token)).thenReturn(userId);
-
-        // Mock Event
-        event.setEventId(eventId);
-        event.setOrganizer(new com.example.event_ticket_system.Entity.User());
-        event.getOrganizer().setId(userId);
+        User organizer = new User();
+        organizer.setId(userId);
+        event.setOrganizer(organizer);
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
 
-        // Mock projection data
         DailyTicketSalesProjection projection = mock(DailyTicketSalesProjection.class);
         when(projection.getDate()).thenReturn(LocalDate.of(2025, 8, 18));
         when(projection.getTotalTicketSold()).thenReturn(50L);
-
         when(orderTicketRepository.findTicketSoldPerDayByEventId(eventId))
                 .thenReturn(Collections.singletonList(projection));
 
-        // Call method
-        List<DailyTicketSalesDTO> result = ticketService.getTicketsSoldPerDay(eventId, request);
+        List<DailyTicketSalesDTO> result = ticketService.getTicketsSoldPerDay(eventId);
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getDate()).isEqualTo(LocalDate.of(2025, 8, 18));
@@ -184,132 +178,67 @@ class TicketServiceImplTest {
     }
 
     @Test
-    void getTicketsSoldPerDay_ShouldThrowSecurityException_WhenRoleMismatch() {
-        String token = "mockToken";
-        Integer eventId = 101;
-
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_customer");
-
-        assertThatThrownBy(() -> ticketService.getTicketsSoldPerDay(eventId, request))
-                .isInstanceOf(SecurityException.class)
-                .hasMessage("You do not have permission to view this event's ticket sales.");
-    }
-
-    @Test
-    void getTicketsSoldPerDay_ShouldThrowSecurityException_WhenUserIdMismatch() {
-        String token = "mockToken";
-        Integer eventId = 101;
-        Integer organizerId = 10;
-        Integer userId = 99;
-
-        event.setEventId(eventId);
-        event.setOrganizer(new com.example.event_ticket_system.Entity.User());
-        event.getOrganizer().setId(organizerId);
-
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_organizer");
-        when(jwtUtil.extractUserId(token)).thenReturn(userId);
-        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
-
-        assertThatThrownBy(() -> ticketService.getTicketsSoldPerDay(eventId, request))
-                .isInstanceOf(SecurityException.class)
-                .hasMessage("You do not have permission to view this event's ticket sales.");
-    }
-
-    @Test
-    void getTicketsSoldPerTicketType_ShouldThrowSecurityException_WhenRoleMismatch() {
-        String token = "mockToken";
-        Integer eventId = 101;
-
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_customer");
-
-        assertThatThrownBy(() -> ticketService.getTicketsSoldPerTicketType(eventId, "VIP", request))
-                .isInstanceOf(SecurityException.class)
-                .hasMessage("You do not have permission to view this event's ticket sales.");
-    }
-
-    @Test
-    void getTicketsSoldPerTicketType_ShouldThrowSecurityException_WhenUserIdMismatch() {
-        String token = "mockToken";
-        Integer eventId = 101;
-        Integer organizerId = 10;
-        Integer userId = 99;
-
-        event.setEventId(eventId);
-        event.setOrganizer(new com.example.event_ticket_system.Entity.User());
-        event.getOrganizer().setId(organizerId);
-
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_organizer");
-        when(jwtUtil.extractUserId(token)).thenReturn(userId);
-        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
-
-        assertThatThrownBy(() -> ticketService.getTicketsSoldPerTicketType(eventId, "VIP", request))
-                .isInstanceOf(SecurityException.class)
-                .hasMessage("You do not have permission to view this event's ticket sales.");
-    }
-
-    @Test
-    void getTicketsSoldPerTicketType_ShouldThrowEntityNotFound_WhenEventDoesNotExist() {
-        String token = "mockToken";
-        Integer eventId = 101;
-
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_organizer");
-        when(jwtUtil.extractUserId(token)).thenReturn(1);
-        when(eventRepository.findById(eventId)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> ticketService.getTicketsSoldPerTicketType(eventId, "VIP", request))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Event with ID " + eventId + " does not exist.");
-    }
-
-    @Test
-    void getTicketsSoldPerDay_ShouldThrowSecurityException_WhenRoleIsNotOrganizer() {
+    void getTicketsSoldPerDay_ShouldReturnData_WhenAdmin() {
         Integer eventId = 10;
-        String token = "mockToken";
+        authenticateAs(999, UserRole.admin);
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_customer");
+        User organizer = new User();
+        organizer.setId(1);
+        event.setOrganizer(organizer);
+        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+        when(orderTicketRepository.findTicketSoldPerDayByEventId(eventId)).thenReturn(List.of());
 
-        assertThatThrownBy(() -> ticketService.getTicketsSoldPerDay(eventId, request))
+        List<DailyTicketSalesDTO> result = ticketService.getTicketsSoldPerDay(eventId);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getTicketsSoldPerDay_ShouldThrowSecurityException_WhenRoleIsCustomer() {
+        authenticateAs(1, UserRole.customer);
+
+        assertThatThrownBy(() -> ticketService.getTicketsSoldPerDay(101))
+                .isInstanceOf(SecurityException.class)
+                .hasMessage("You do not have permission to view this event's ticket sales.");
+    }
+
+    @Test
+    void getTicketsSoldPerDay_ShouldThrowSecurityException_WhenOrganizerDoesNotOwnEvent() {
+        Integer eventId = 101;
+        authenticateAs(99, UserRole.organizer);
+
+        User owner = new User();
+        owner.setId(10);
+        event.setEventId(eventId);
+        event.setOrganizer(owner);
+        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+
+        assertThatThrownBy(() -> ticketService.getTicketsSoldPerDay(eventId))
                 .isInstanceOf(SecurityException.class)
                 .hasMessage("You do not have permission to view this event's ticket sales.");
     }
 
     @Test
     void getTicketsSoldPerDay_ShouldThrowEntityNotFound_WhenEventDoesNotExist() {
-        Integer eventId = 10;
-        String token = "mockToken";
+        authenticateAs(1, UserRole.organizer);
+        when(eventRepository.findById(10)).thenReturn(Optional.empty());
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_organizer");
-        when(jwtUtil.extractUserId(token)).thenReturn(1);
-        when(eventRepository.findById(eventId)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> ticketService.getTicketsSoldPerDay(eventId, request))
+        assertThatThrownBy(() -> ticketService.getTicketsSoldPerDay(10))
                 .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Event with ID " + eventId + " does not exist.");
+                .hasMessage("Event with ID 10 does not exist.");
     }
 
     @Test
     void getTicketsSoldPerTicketType_ShouldFilterByTicketType() {
         Integer eventId = 10;
-        String token = "mockToken";
         Integer userId = 1;
+        authenticateAs(userId, UserRole.organizer);
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_organizer");
-        when(jwtUtil.extractUserId(token)).thenReturn(userId);
-
-        event.setEventId(eventId);
-        event.setOrganizer(new com.example.event_ticket_system.Entity.User());
-        event.getOrganizer().setId(userId);
+        User owner = new User();
+        owner.setId(userId);
+        event.setOrganizer(owner);
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
 
-        // Mock projection data
         DailyTicketTypeSalesProjection projection1 = mock(DailyTicketTypeSalesProjection.class);
         when(projection1.getDate()).thenReturn(LocalDate.of(2025, 8, 18));
         when(projection1.getTicketType()).thenReturn("VIP");
@@ -321,8 +250,7 @@ class TicketServiceImplTest {
         when(orderTicketRepository.findTicketSoldPerTicketTypeByEventId(eventId))
                 .thenReturn(Arrays.asList(projection1, projection2));
 
-        // Call method with filter = VIP
-        List<DailyTicketTypeSalesDTO> result = ticketService.getTicketsSoldPerTicketType(eventId, "VIP", request);
+        List<DailyTicketTypeSalesDTO> result = ticketService.getTicketsSoldPerTicketType(eventId, "VIP");
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getTicketType()).isEqualTo("VIP");
@@ -332,16 +260,12 @@ class TicketServiceImplTest {
     @Test
     void getTicketsSoldPerTicketType_ShouldReturnAll_WhenTicketTypeIsNull() {
         Integer eventId = 10;
-        String token = "mockToken";
         Integer userId = 1;
+        authenticateAs(userId, UserRole.organizer);
 
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractRole(token)).thenReturn("ROLE_organizer");
-        when(jwtUtil.extractUserId(token)).thenReturn(userId);
-
-        event.setEventId(eventId);
-        event.setOrganizer(new com.example.event_ticket_system.Entity.User());
-        event.getOrganizer().setId(userId);
+        User owner = new User();
+        owner.setId(userId);
+        event.setOrganizer(owner);
         when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
 
         DailyTicketTypeSalesProjection projection = mock(DailyTicketTypeSalesProjection.class);
@@ -352,7 +276,7 @@ class TicketServiceImplTest {
         when(orderTicketRepository.findTicketSoldPerTicketTypeByEventId(eventId))
                 .thenReturn(Collections.singletonList(projection));
 
-        List<DailyTicketTypeSalesDTO> result = ticketService.getTicketsSoldPerTicketType(eventId, null, request);
+        List<DailyTicketTypeSalesDTO> result = ticketService.getTicketsSoldPerTicketType(eventId, null);
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().getTicketType()).isEqualTo("VIP");
